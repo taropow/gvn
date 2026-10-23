@@ -1,6 +1,8 @@
 #include <winver.h>
 #include "@CMAKE_CURRENT_SOURCE_DIR@/include/gvn/resources.h"
 
+IDW_GVN_PIP WAVE "@CMAKE_CURRENT_SOURCE_DIR@/src/assets/command-pip.wav"
+
 IDI_GVN_APP ICON "@CMAKE_CURRENT_SOURCE_DIR@/src/assets/gvn.ico"
 
 1 VERSIONINFO

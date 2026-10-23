@@ -1712,3 +1712,14 @@ TEST(modern_ui_preferences_persist_and_clamp_without_changing_bindings){
     WritePrivateProfileSectionW(L"Viewer",L"allow_multiple=1\0\0",path.c_str());
     Settings after;after.load(path);CHECK(after.ui_theme==2&&after.ui_density==1&&!after.toolbar_overflow&&after.keys_for(Copy)==keys);WritePrivateProfileStringW(L"Interface",L"ui_theme",L"99",path.c_str());after.load(path);CHECK(after.ui_theme==2);std::filesystem::remove(path);
 }
+
+TEST(command_feedback_settings_defaults_persist_and_clamp){
+    Settings value;CHECK(value.toast_enabled&&value.command_sound&&!value.toast_view_commands&&value.toast_duration==2000);
+    const auto path=std::filesystem::temp_directory_path()/L"gvn-feedback-settings-test.ini";
+    value.toast_enabled=false;value.command_sound=false;value.toast_view_commands=true;value.toast_duration=750;value.save(path);
+    WritePrivateProfileSectionW(L"Interface",L"ui_theme=1\0\0",path.c_str());
+    Settings next;next.load(path);CHECK(!next.toast_enabled&&!next.command_sound&&next.toast_view_commands&&next.toast_duration==750);
+    WritePrivateProfileStringW(L"Feedback",L"toast_duration",L"1",path.c_str());next.load(path);CHECK(next.toast_duration==500);
+    WritePrivateProfileStringW(L"Feedback",L"toast_duration",L"999999",path.c_str());next.load(path);CHECK(next.toast_duration==10000);
+    std::filesystem::remove(path);
+}

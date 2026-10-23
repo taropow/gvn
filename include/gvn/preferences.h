@@ -27,7 +27,7 @@ namespace preference_id {
 constexpr int Groups=103,Search=104,SearchResults=105,ResetField=106,Related=107;
 constexpr int Tabs = 100, ApplyButton = 101, Reset = 102, PageBase = 1000, ScrollBase = 1500;
 enum : int {
-    UiTheme=650,UiDensity,ToolbarOverflow,
+    UiTheme=650,UiDensity,ToolbarOverflow,ToastEnabled,CommandSound,ToastViewCommands,ToastDuration,
     Undo = 200,
     History,
     PasteNew,

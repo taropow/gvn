@@ -1,4 +1,6 @@
 #include "gvn/color_dialog.h"
+#include "gvn/command_toast.h"
+#include <exception>
 #include "gvn/loader.h"
 #include "gvn/archive.h"
 #include "gvn/renderer.h"
@@ -102,6 +104,7 @@ class App {
         decltype(std::function{gvn::choose_brightness}) brightness = gvn::choose_brightness;
         decltype(std::function{gvn::choose_levels}) levels = gvn::choose_levels;
         std::function<void()> boundary_beep = [] { MessageBeep(MB_OK); };
+        std::function<void()> command_pip=gvn::play_command_pip;
         decltype(std::function{gvn::show_preferences}) preferences_ui = gvn::show_preferences;
         std::function<UINT(HWND, HMENU, POINT)> popup = [](HWND owner, HMENU menu, POINT point) {
             ui_theme_menu(menu);return TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON, point.x, point.y, 0, owner, nullptr);
@@ -302,6 +305,7 @@ class App {
         }
     }
     void rollback_load() {
+        cancel_load_feedback();
         if (before_load) {
             if (before_load->replaced)
                 restore_location(std::move(*before_load->replaced));
@@ -920,7 +924,8 @@ class App {
         renderer.viewport_left=left;
         layout_status_parts();
         sync_canvas_scrollbars();
-        renderer.resize(rc.right, rc.bottom);
+        renderer.resize(rc.right,rc.bottom);
+        if(toast.window()&&(GetWindowLongPtrW(toast.window(),GWL_STYLE)&WS_VISIBLE))toast.layout(toast_area());
         ime.apply(hwnd, settings.disable_ime);
         InvalidateRect(hwnd, nullptr, FALSE);
     }
@@ -1044,6 +1049,7 @@ class App {
         else if(!needed&&ants_timer){KillTimer(hwnd,39);ants_timer=false;}
     }
 #include "viewer_presentation.inc"
+#include "viewer_feedback.inc"
     void update() {
         sync_ants_timer();
         sync_canvas_scrollbars();
@@ -1113,8 +1119,10 @@ class App {
         std::filesystem::path second;
         if (comic && index + 1 < files.size())
             second = files[index + 1].path;
+        const auto previous_sequence=loader->sequence();
         loader->request(requested, force, second, settings.comic_rtl, [&]{auto options=settings.comic_options();options.down=canonical_display_filter(options.down);options.up=canonical_display_filter(options.up);return options;}(),
                         settings.loading_options());
+        if(load_feedback&&load_feedback->sequence==previous_sequence)load_feedback->sequence=loader->sequence();
         update();
     }
     void open(std::filesystem::path path, bool force = false, bool ask = true,
@@ -1302,9 +1310,8 @@ class App {
         apply_display_policy(no_activate);
         refresh_menu();
         update();
-        prefetch_neighbors();
-        if (slideshow)
-            SetTimer(hwnd, 2, settings.interval, nullptr);
+        prefetch_neighbors();complete_load_feedback(result->sequence);
+        if (slideshow)SetTimer(hwnd,2,settings.interval,nullptr);
         ready_ms =
             std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - started)
                 .count();
@@ -1534,6 +1541,7 @@ class App {
     void edit(const std::function<Image(const Image &)> &operation,bool use_selection=true) {
         if (!begin_edit())
             return;
+        if(feedback_command)feedback_begin(feedback_command,std::wstring(command_name(feedback_command))+L"を処理中…");
         auto frame = still_frame(*image, player.frame);
         frame.metadata=current_metadata();
         if (image->animated() || image->format == L"見開き")
@@ -1920,6 +1928,7 @@ class App {
                 return false;
         }
         const auto metadata=current_metadata();
+        feedback_begin(as?SaveAs:Save,L"保存中…");
         save_image(*image, player.frame, target, proposed, exists,&metadata);
         proposed.last_format = save_format(target);
         const bool persist_saving =
@@ -1957,8 +1966,8 @@ class App {
             sort_list();
         }
         update();
-        if (persist_saving && !config.empty())
-            save_settings();
+        if (persist_saving && !config.empty())save_settings();
+        feedback_done(as?SaveAs:Save,target.filename().wstring()+L" を保存しました");
         return true;
     }
     void bind_file(const std::filesystem::path &target) {
@@ -2095,6 +2104,7 @@ class App {
             dialogs.ask(hwnd, L"保存先の同名ファイルを上書きしますか？", target.c_str(),
                         MB_YESNO | MB_ICONQUESTION) != IDYES)
             return;
+        feedback_begin(move?FileMove:FileCopy,move?L"ファイルを移動中…":L"ファイルをコピー中…");
         if (move) {
             move_file_checked(source, target, exists);
             bind_file(target);
@@ -2106,8 +2116,8 @@ class App {
                 scan_folder(directory);
             }
             update();
-        } else
-            copy_file_checked(source, target, exists);
+        } else copy_file_checked(source,target,exists);
+        feedback_done(move?FileMove:FileCopy,move?L"ファイルを移動しました":L"ファイルをコピーしました");
     }
     ExternalContext external_context(const ExternalApplication &entry) const {
         ExternalContext result;
@@ -2157,8 +2167,10 @@ class App {
             auto frame = copied_image();
             copy_current_selection(frame);
         }
-        if (dialogs.external_launch(hwnd, launch) && launch.quit_after_launch)
-            PostMessageW(hwnd, WM_CLOSE, 0, 0);
+        if(dialogs.external_launch(hwnd,launch)){
+            feedback_done(External,L"編集ソフトへファイルを渡しました");
+            if(launch.quit_after_launch)PostMessageW(hwnd,WM_CLOSE,0,0);
+        }
     }
     void render_settings() {
         sync_ui_theme();
@@ -2241,7 +2253,9 @@ class App {
         const bool full_bounds = full && next.full_hide_taskbar != settings.full_hide_taskbar;
         const bool recombine = next.comic_rtl != settings.comic_rtl ||
                                next.comic_options().key() != settings.comic_options().key();
-        settings = std::move(next);
+        if(next.command_sound!=settings.command_sound)feedback_sound_known=false;
+        settings=std::move(next);
+        if(!settings.toast_enabled)toast.dismiss();
         ime.apply(hwnd, settings.disable_ime);
         if (cache_changed) {
             loader->configure(static_cast<size_t>(settings.cache_mib) * 1024 * 1024,
@@ -2348,15 +2362,17 @@ class App {
         if(automatic!=settings.info_auto_colors){settings.info_auto_colors=automatic;settings.save(config);}
     }
 #include "viewer_editor.inc"
-    void command(UINT id) {
+    void command(UINT id,bool keyboard=false) {
         if(!common_command_enabled(id,command_context()))return;
         // Resolve clipboard input before cancelling an in-progress edit or asking
         // to discard the current document. Unusable input is an intentional no-op.
+        FeedbackCommand feedback(*this,id,keyboard);
+        const auto decoding=[&]{if(!feedback_busy)feedback_begin(id,L"貼り付け中…");};
         std::optional<ClipboardContent> paste_input;
         std::optional<SelectionClipboard> selection_input;
         try {
-            if(id==Paste||id==NewPaste||id==NewWindowPaste)paste_input=paste_clipboard(hwnd);
-            if(id==PasteSelection){if(loading)return;selection_input=paste_selection_clipboard(hwnd);}
+            if(id==Paste||id==NewPaste||id==NewWindowPaste)paste_input=paste_clipboard(hwnd,decoding);
+            if(id==PasteSelection){if(loading)return;selection_input=paste_selection_clipboard(hwnd,decoding);}
         } catch(const std::exception &) {return;}
         if(id==ToolPen||id==ToolText){choose_tool(id==ToolPen?SelectionTool::Pen:SelectionTool::Text);return;}
         if(id==ToolCrop){begin_crop();return;}
@@ -2376,7 +2392,10 @@ class App {
             if(leaving)cancel_floating();
             else if(!viewing&&id!=PasteSelection){status_text(image?4:0,L"先に貼り付けを確定するか、中止してください");return;}
         }
-        if(id==PasteSelection){try{begin_floating(std::move(*selection_input));}catch(const std::exception &){}return;}
+        if(id==PasteSelection){try{
+            feedback_begin(id,L"選択範囲を貼り付け中…");begin_floating(std::move(*selection_input));
+            feedback_done(id,L"貼り付けを配置中 · Enterで確定");
+        }catch(const std::exception &){feedback_cancel();}return;}
         if(id==CommitSelection||id==CancelSelection||id==TransformSelection)return;
         if ((id >= PopupAll && id <= PopupExternal) || id == ViewRotate || id == Wallpaper) {
             popup_menu(id, cursor_screen());
@@ -2510,8 +2529,10 @@ class App {
             choose();
             break;
         case Reload:
-            if (!requested.empty())
-                open(requested, true, true, OpenOrigin::WithinFolder);
+            if(!requested.empty()){
+                const auto sequence=loader->sequence();open(requested,true,true,OpenOrigin::WithinFolder);
+                if(loading&&loader->sequence()!=sequence)start_load_feedback(id);
+            }
             break;
         case Exit:
             PostMessageW(hwnd, WM_CLOSE, 0, 0);
@@ -2594,8 +2615,7 @@ class App {
             if (pending_open)
                 cancel_load();
             if (archive.empty() && !folder.empty()) {
-                scan_folder(folder);
-                update();
+                feedback_begin(id,L"一覧を更新中…");scan_folder(folder);update();feedback_done(id,L"一覧を更新しました");
             }
             break;
         case SortReverse:
@@ -2814,16 +2834,18 @@ class App {
             break;
         case Copy:
             if (image) {
-                auto frame = copied_image();
-                copy_current_selection(frame);
+                feedback_begin(id,L"コピー中…");auto frame=copied_image();copy_current_selection(frame);
+                feedback_done(id,L"コピーしました · "+std::to_wstring(frame.width)+L"×"+std::to_wstring(frame.height));
             }
             break;
         case Paste:
         case NewPaste: {
             try {
             auto content = std::move(*paste_input);
+            feedback_begin(id,L"貼り付け中…");
             if (auto path = std::get_if<std::filesystem::path>(&content)) {
-                open(*path,false,true,OpenOrigin::Clipboard);
+                const auto sequence=loader->sequence();open(*path,false,true,OpenOrigin::Clipboard);
+                if(loading&&loader->sequence()!=sequence)start_load_feedback(id);
                 break;
             }
             auto pasted = std::move(std::get<Image>(content));
@@ -2833,11 +2855,12 @@ class App {
                                                     : selection;
                 const auto before=image;
                 edit([&](const Image &source) { return paste_region(source, pasted, rect); });
-                if(image!=before)editor_chrome.reset_export_name();
+                if(image!=before){editor_chrome.reset_export_name();feedback_done(id,L"画像に貼り付けました");}
                 break;
             }
             if (discard()) {
                 replace_clipboard_document(std::move(pasted));
+                feedback_done(id,L"貼り付けました · "+std::to_wstring(image->width)+L"×"+std::to_wstring(image->height));
             }
             } catch(const std::exception &) {} // Failed paste keeps the document and stays silent.
             break;
@@ -2867,6 +2890,7 @@ class App {
             break;
         case Cut:
             if (image && !selection.empty()) {
+                feedback_begin(id,L"切り取り中…");const auto before=image;
                 auto frame = copied_image();
                 copy_current_selection(frame);
                 const auto rect = selection;
@@ -2883,10 +2907,12 @@ class App {
                             out.frames[0].pixels[static_cast<size_t>(y) * out.width + x] = fill;
                     return out;
                 });
+                if(image!=before)feedback_done(id,L"選択範囲を切り取りました");
             }
             break;
         case ArmDrag:
             drag_armed = true;
+            feedback_done(id,L"ファイルをドラッグできます · Escで解除");
             SetFocus(hwnd);
             break;
         case Undo:history_step(false);break;
@@ -3238,7 +3264,7 @@ class App {
                             entry.path = target;
                             entry.display_name = target.filename().wstring();
                         }
-                    bind_file(target);
+                    bind_file(target);feedback_done(id,L"ファイル名を変更しました");
                     if (settings.rename_resort && !removed_current)
                         sort_list();
                 }
@@ -3262,7 +3288,8 @@ class App {
                                           : L"このファイルを完全に削除しますか？",
                             current_name.c_str(), MB_YESNO | MB_ICONQUESTION) == IDYES) {
                 const auto path = image->path;
-                dialogs.delete_file(hwnd, path, recycle);
+                feedback_begin(id,recycle?L"ごみ箱へ移動中…":L"ファイルを削除中…");
+                dialogs.delete_file(hwnd,path,recycle);feedback_done(id,recycle?L"ごみ箱へ移動しました":L"ファイルを削除しました");
                 bind_file({});
                 requested = path;
                 current_name = path.filename().wstring();
@@ -3307,6 +3334,7 @@ class App {
                 if (memory.value && !SetClipboardData(CF_UNICODETEXT, memory.value))
                     throw std::runtime_error("Cannot copy the file name to the clipboard");
                 memory.value = nullptr;
+                if(text)feedback_done(id,id==CopyFileName?L"ファイル名をコピーしました":id==CopyFolderName?L"フォルダ名をコピーしました":L"パスをコピーしました");
             }
             break;
         case ConfigureDestinations:
@@ -3345,7 +3373,8 @@ class App {
                 else
                     content = std::move(std::get<Image>(pasted));
             }
-            dialogs.new_viewer(viewer_executable(), config, content);
+            dialogs.new_viewer(viewer_executable(),config,content);
+            feedback_done(id,L"新しいウィンドウへ渡しました");
             break;
         }
         case Print:
@@ -4192,7 +4221,7 @@ class App {
             if (reinterpret_cast<HWND>(l) == toolbar.hwnd && comic && settings.comic_rtl &&
                 settings.comic_toolbar_reverse && (id == Previous || id == Next))
                 id = id == Previous ? Next : Previous;
-            command(id);
+            command(id,HIWORD(w)==1);
             SetFocus(hwnd);
             return 0;
         }
@@ -4435,8 +4464,7 @@ class App {
             if(w==VK_DELETE&&!mods&&!selection.empty()){command(DeleteSelection);return 0;}
             if(w=='I'&&mods==3){command(InvertSelection);return 0;}
             if(w=='D'&&mods==1){command(ClearSelection);return 0;}
-            if (auto id = settings.command_for(static_cast<UINT>(w), mods))
-                command(id);
+            if(auto id=settings.command_for(static_cast<UINT>(w),mods))command(id,true);
             else if (msg == WM_SYSKEYDOWN)
                 return DefWindowProcW(hwnd, msg, w, l);
             return 0;
@@ -4454,6 +4482,7 @@ class App {
             DestroyWindow(hwnd);
             return 0;
         case WM_DESTROY:
+            toast.dismiss();
             ime.restore();
             KillTimer(hwnd, kForwardRetryTimer);
             forwarded_file.reset();

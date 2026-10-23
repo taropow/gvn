@@ -332,6 +332,10 @@ std::vector<Field> fields() {
     combo(Page::General,cid::UiTheme,L"外観のテーマ",&Settings::ui_theme,{L"OSに合わせる",L"ライト",L"ダーク"});
     combo(Page::General,cid::UiDensity,L"操作部の密度",&Settings::ui_density,{L"コンパクト",L"ゆったり"});
     check(Page::Bars,cid::ToolbarOverflow,L"狭いウィンドウでは操作を「…」にまとめる",&Settings::toolbar_overflow);
+    check(Page::General,cid::ToastEnabled,L"操作のトースト通知を表示する",&Settings::toast_enabled);
+    check(Page::General,cid::CommandSound,L"操作完了時に短い確認音を鳴らす",&Settings::command_sound);
+    check(Page::General,cid::ToastViewCommands,L"最前面・見開き・ループなどの表示切り替えも通知する",&Settings::toast_view_commands);
+    number(Page::General,cid::ToastDuration,L"トーストの表示時間（ms）",&Settings::toast_duration,500,10000);
     return out;
 }
 constexpr const wchar_t *titles[]{L"全般",       L"背景", L"ウィンドウ", L"表示",         L"ズーム",

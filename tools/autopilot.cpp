@@ -561,7 +561,7 @@ const std::map<std::string, int> preference_ids{
     P(FullUp),
     P(HideTaskbar),
     P(HideWait),
-    P(Tabs),P(Groups),P(Search),P(SearchResults),P(ResetField),P(Related),P(UiTheme),P(UiDensity),P(ToolbarOverflow),
+    P(Tabs),P(Groups),P(Search),P(SearchResults),P(ResetField),P(Related),P(UiTheme),P(UiDensity),P(ToolbarOverflow),P(ToastEnabled),P(CommandSound),P(ToastViewCommands),P(ToastDuration),
     P(WindowCenter),
     P(WindowToolbarMin),
     P(StartupPosition),
@@ -845,7 +845,7 @@ struct Autopilot {
     unsigned settings_visibility_waits{};
     unsigned transfer_visibility_waits{}, folder_browse_substitutions{}, incoming_folder_drops{};
     bool boundary_open{};
-    unsigned boundary_dialogs{}, boundary_beeps{}, boundary_visibility_waits{};
+    unsigned boundary_dialogs{}, boundary_beeps{}, boundary_visibility_waits{},command_pips{};
     ULONGLONG boundary_wait_started{};
     std::deque<std::filesystem::path> folder_browse_replies;
     bool probing_window_move{};
@@ -1062,6 +1062,7 @@ struct Autopilot {
             return choose_boundary(owner, forward, folder);
         };
         app.dialogs.boundary_beep = [&] { ++boundary_beeps; };
+        app.dialogs.command_pip=[&]{++command_pips;};
         app.dialogs.save_file = [&](HWND owner, const auto &initial, const auto &name, SaveOptions &options) {
             if (!save_target.empty()) {
                 const auto target = std::exchange(save_target, {});
@@ -1642,6 +1643,10 @@ struct Autopilot {
             if (name == "jump.ok_enabled")
                 return IsWindowEnabled(jump_widget("OK")) != FALSE;
         }
+        if(name=="toast.visible")return app.toast.window()&&(GetWindowLongPtrW(app.toast.window(),GWL_STYLE)&WS_VISIBLE);
+        if(name=="toast.pending")return app.toast.pending();
+        if(name=="toast.timer")return app.toast.timer_active();
+        if(name=="toast.sounds")return command_pips;
         if (name == "boundary.count")
             return boundary_dialogs;
         if (name == "boundary.beeps")
@@ -2367,6 +2372,9 @@ struct Autopilot {
             return;
         }
         const auto &op = s.at(0);
+        if(op=="toast_contains"){require(app.toast.text().find(widen(s.at(1)))!=std::wstring::npos,"Toast text differs");return;}
+        if(op=="toast_key"){require(app.toast.key()==widen(s.at(1)),"Toast shortcut differs");return;}
+        if(op=="toast_clear"){require(!app.feedback_busy&&!app.load_feedback,"Toast is still pending");app.toast.dismiss();return;}
         if (op == "wallpaper_fail_next_apply") { wallpaper_fail_apply = true; return; }
         if (op == "popup_choice") { popup_choice = command_ids.at(s.at(1)); return; }
         if (op == "wallpaper_expect") {
@@ -4628,6 +4636,7 @@ struct Autopilot {
                << ",\"missing_combo_capture_rejections\":" << missing_combo_capture_rejections
                << ",\"boundary_dialogs\":" << boundary_dialogs
                << ",\"boundary_beep_requests\":" << boundary_beeps
+               << ",\"command_pip_requests\":" << command_pips
                << ",\"boundary_visibility_waits\":" << boundary_visibility_waits
                << ",\"preview_decoder_gate_used\":" << (preview_gate ? "true" : "false")
                << ",\"preview_decoder_gate_forced_release\":"

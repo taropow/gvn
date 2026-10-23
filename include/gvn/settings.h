@@ -25,6 +25,8 @@ struct Settings {
     static constexpr Rect initial_window_rect{0, 0, 480, 360};
     int ui_theme{},ui_density{};
     bool toolbar_overflow{true};
+    bool toast_enabled{true},command_sound{true},toast_view_commands{};
+    int toast_duration{2000};
     bool allow_multiple{true}, activate_reused{true}, activate_dropped{true};
     bool reopen_last{};
     bool disable_ime{true};

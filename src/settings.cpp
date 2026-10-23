@@ -257,6 +257,10 @@ void Settings::load(const std::filesystem::path &path) {
     ui_theme=integer(L"ui_theme",ui_theme,0,2,L"Interface");
     ui_density=integer(L"ui_density",ui_density,0,1,L"Interface");
     toolbar_overflow=integer(L"toolbar_overflow",toolbar_overflow,0,1,L"Interface")!=0;
+    toast_enabled=integer(L"toast_enabled",toast_enabled,0,1,L"Feedback")!=0;
+    command_sound=integer(L"command_sound",command_sound,0,1,L"Feedback")!=0;
+    toast_view_commands=integer(L"toast_view_commands",toast_view_commands,0,1,L"Feedback")!=0;
+    toast_duration=integer(L"toast_duration",toast_duration,500,10000,L"Feedback");
     GVN_BOOL(allow_multiple);
     GVN_BOOL(activate_reused);
     GVN_BOOL(activate_dropped);
@@ -763,6 +767,10 @@ void Settings::save(const std::filesystem::path &path) const {
     write(L"Interface",L"ui_theme",std::to_wstring(ui_theme));
     write(L"Interface",L"ui_density",std::to_wstring(ui_density));
     write(L"Interface",L"toolbar_overflow",std::to_wstring(toolbar_overflow));
+    write(L"Feedback",L"toast_enabled",std::to_wstring(toast_enabled));
+    write(L"Feedback",L"command_sound",std::to_wstring(command_sound));
+    write(L"Feedback",L"toast_view_commands",std::to_wstring(toast_view_commands));
+    write(L"Feedback",L"toast_duration",std::to_wstring(toast_duration));
     GVN_SAVE(allow_multiple);
     GVN_SAVE(activate_reused);
     GVN_SAVE(activate_dropped);

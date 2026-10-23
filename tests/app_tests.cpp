@@ -31,7 +31,7 @@ struct AppAudit {
     std::vector<bool> jump_directions;
     std::vector<JumpOptions> jump_options;
     std::vector<bool> boundary_directions;
-    size_t boundary_beeps{};
+    size_t boundary_beeps{},command_pips{};
     std::vector<std::wstring> notices;
     std::vector<std::filesystem::path> save_folders;
     std::vector<NewWindowContent> new_windows;
@@ -77,6 +77,7 @@ struct AppAudit {
             return answer;
         };
         app.dialogs.boundary_beep = [&] { ++boundary_beeps; };
+        app.dialogs.command_pip=[&]{++command_pips;};
         app.dialogs.new_viewer = [&](const auto &executable, const auto &config, const auto &content) {
             CHECK(executable == viewer_executable() && config == app.config);
             new_windows.push_back(decode_new_window(encode_new_window(content)));
@@ -6968,6 +6969,7 @@ void background_changes_preserve_image_animation_copy_save_and_ole() {
 #include "skitch_app_cases.inc"
 #include "modern_app_cases.inc"
 #include "responsive_app_cases.inc"
+#include "feedback_app_cases.inc"
 };
 } // namespace gvn
 
@@ -7340,3 +7342,10 @@ APP_TEST(modern_details_state_and_command_shortcuts_preserve_edits)
 APP_TEST(responsive_native_update_and_layout_benchmark)
 APP_TEST(responsive_native_updates_preserve_status_theme_and_document)
 APP_TEST(responsive_animation_controls_only_write_changed_values)
+
+APP_TEST(feedback_copy_paste_alpha_shortcuts_and_timer)
+APP_TEST(feedback_silent_paste_failures_keep_document_and_pending_edit)
+APP_TEST(feedback_settings_independent_sound_throttle_and_reused_window)
+APP_TEST(feedback_async_clipboard_file_complete_failure_and_cancel)
+APP_TEST(feedback_edit_save_transfer_success_and_cancel)
+APP_TEST(feedback_preferences_native_controls_apply_reset)

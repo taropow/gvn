@@ -6,6 +6,7 @@
 #include <objidl.h>
 #include <wrl/client.h>
 #include <variant>
+#include <functional>
 
 namespace gvn {
 // Packed DIB payloads use straight alpha. PNG remains the preferred interchange.
@@ -15,8 +16,8 @@ void copy_image(HWND owner, const Image &image, size_t frame,std::optional<Selec
 Image paste_image(HWND owner);
 // Pixel data retains alpha; file references go through the viewer's normal open path.
 using ClipboardContent = std::variant<Image, std::filesystem::path>;
-ClipboardContent paste_clipboard(HWND owner);
-SelectionClipboard paste_selection_clipboard(HWND owner);
+ClipboardContent paste_clipboard(HWND owner,const std::function<void()> &decoding={});
+SelectionClipboard paste_selection_clipboard(HWND owner,const std::function<void()> &decoding={});
 std::filesystem::path drag_path(const Image &image, size_t frame, bool modified,const ImageMetadata *metadata=nullptr);
 std::filesystem::path export_drag_path(const Image &,size_t,const std::wstring &name,SaveFormat,const SaveOptions &,const ImageMetadata *metadata=nullptr);
 Microsoft::WRL::ComPtr<IDataObject> file_data_object(const std::filesystem::path &path);

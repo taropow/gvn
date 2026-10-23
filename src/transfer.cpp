@@ -245,7 +245,7 @@ void copy_image(HWND owner, const Image &image, size_t frame,std::optional<Selec
     dib_memory.publish(CF_DIBV5);
     if(positioned)positioned->publish(position_format);
 }
-static ClipboardContent read_open_clipboard() {
+static ClipboardContent read_open_clipboard(const std::function<void()> &decoding={}) {
     // Some producers publish a broken optional format. Continue to the next advertised representation.
     std::string error;
     struct Format {
@@ -270,7 +270,8 @@ static ClipboardContent read_open_clipboard() {
         if (format.id && IsClipboardFormatAvailable(format.id)) {
             try {
                 auto data = clipboard_bytes(format.id);
-                if (!data.empty()) {
+                if(!data.empty()) {
+                    if(decoding)decoding();
                     auto image = format.dib ? read_dib(data) : decode(data, L"");
                     image.path.clear();
                     return image;
@@ -283,7 +284,8 @@ static ClipboardContent read_open_clipboard() {
         auto bitmap = static_cast<HBITMAP>(GetClipboardData(CF_BITMAP));
         BITMAP bm{};
         require(GetObjectW(bitmap, sizeof(bm), &bm) != 0, "Cannot read clipboard bitmap");
-        const size_t count = checked_pixels(bm.bmWidth, bm.bmHeight);
+        const size_t count=checked_pixels(bm.bmWidth,bm.bmHeight);
+        if(decoding)decoding();
         std::vector<uint8_t> data(sizeof(BITMAPINFOHEADER) + count * 4);
         auto *info = reinterpret_cast<BITMAPINFO *>(data.data());
         info->bmiHeader = {sizeof(BITMAPINFOHEADER),
@@ -304,14 +306,15 @@ static ClipboardContent read_open_clipboard() {
         require(lines == bm.bmHeight, "Cannot read clipboard bitmap pixels");
         return read_dib(data);
     }
-    if (const auto path = clipboard_file(); !path.empty())
-        return path;
+    if(const auto path=clipboard_file();!path.empty()){
+        if(decoding)decoding();return path;
+    }
     throw std::runtime_error(error.empty() ? "Clipboard does not contain an image or a supported image path"
                                            : error);
 }
-ClipboardContent paste_clipboard(HWND owner) {
+ClipboardContent paste_clipboard(HWND owner,const std::function<void()> &decoding) {
     Clipboard clipboard(owner);
-    return read_open_clipboard();
+    return read_open_clipboard(decoding);
 }
 Image paste_image(HWND owner) {
     auto content = paste_clipboard(owner);
@@ -319,16 +322,18 @@ Image paste_image(HWND owner) {
         return std::move(*image);
     throw std::runtime_error("Clipboard contains a file path rather than image pixels");
 }
-SelectionClipboard paste_selection_clipboard(HWND owner) {
+SelectionClipboard paste_selection_clipboard(HWND owner,const std::function<void()> &decoding) {
     bool invalid{};
     ClipboardContent content;
     {
         Clipboard clipboard(owner);
         const auto format=RegisterClipboardFormatW(selection_clipboard_format);
         if(format&&IsClipboardFormatAvailable(format))try {
-            return decode_selection_clipboard(clipboard_bytes(format));
+            const auto data=clipboard_bytes(format);
+            if(data.size()>=64&&memcmp(data.data(),"GVNSEL1",7)==0&&decoding)decoding();
+            return decode_selection_clipboard(data);
         }catch(const std::exception &){invalid=true;}
-        content=read_open_clipboard();
+        content=read_open_clipboard(decoding);
     }
     if(auto image=std::get_if<Image>(&content))return {std::move(*image),{},invalid};
     // A file reference remains image input for this explicit selection command.

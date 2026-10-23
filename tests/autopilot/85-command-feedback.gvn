@@ -1,0 +1,60 @@
+# All native toast windows belong to the private desktop. Sound requests are counted.
+resize	1000	760
+settings
+tab	General
+set	ToastEnabled	true
+set	CommandSound	true
+set	ToastViewCommands	false
+set	ToastDuration	2000
+click	OK
+open	${fixtures}/display-alpha.png
+wait
+focus	Main
+key	Ctrl+C
+toast_contains	コピーしました
+toast_key	Ctrl+C
+expect	toast.visible	true
+expect	toast.pending	false
+expect	toast.timer	true
+expect	toast.sounds	1
+snapshot	feedback-copy.png
+settings
+tab	General
+set	CommandSound	false
+click	OK
+clipboard_data	PNG	${fixtures}/alpha.png
+focus	Main
+key	Ctrl+V
+toast_contains	貼り付けました
+toast_key	Ctrl+V
+expect	toast.sounds	1
+snapshot	feedback-paste.png
+command	ToolCrop
+editor_click	Apply
+toast_contains	トリミングを適用しました
+snapshot	feedback-applied.png
+toast_clear
+clipboard_data	text/plain	${fixtures}/invalid.bin
+focus	Main
+key	Ctrl+V
+expect	toast.visible	false
+expect	toast.timer	false
+expect	toast.sounds	1
+settings
+tab	General
+set	ToastEnabled	false
+click	OK
+command	Copy
+expect	toast.visible	false
+expect	toast.sounds	1
+settings
+tab	General
+set	ToastEnabled	true
+set	ToastViewCommands	true
+set	UiTheme	2
+click	OK
+command	Checker
+expect	toast.visible	true
+snapshot	feedback-dark.png
+expect	toast.sounds	1
+expect	error_count	0

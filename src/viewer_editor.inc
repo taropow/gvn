@@ -41,6 +41,7 @@
     void commit_crop() {
         if(!cropping)return;if(image!=cropping->origin){cancel_crop();return;}
         apply_editor_bounds();if(!begin_edit())return;
+        feedback_begin(CommitSelection,L"トリミングを処理中…");
         auto frame=still_frame(*image,player.frame,false);frame.metadata=current_metadata();
         if(image->animated()||image->format==L"見開き")frame.path.clear();
         auto result=std::make_shared<Image>(crop_oriented(frame,cropping->box,cropping->scale,edit_memory()));
@@ -62,7 +63,7 @@
     void editor_notification(int id,int code) {
         using namespace editor_id;
         // Editing native text fields must keep their keyboard focus and IME.
-        if(id==Apply){if(cropping)commit_crop();else if(floating){if(floating->text_annotation)refresh_text();else apply_editor_bounds();commit_floating();}SetFocus(hwnd);return;}
+        if(id==Apply){FeedbackCommand feedback(*this,CommitSelection,false);if(cropping)commit_crop();else if(floating){if(floating->text_annotation)refresh_text();else apply_editor_bounds();commit_floating();}SetFocus(hwnd);return;}
         if(id==Cancel){command(CancelSelection);SetFocus(hwnd);return;}
         if(id==Drag){export_drag();return;}
         if(id==Details){editor_chrome.notification(id,code);layout();update();return;}

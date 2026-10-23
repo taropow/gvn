@@ -25,6 +25,7 @@
         if(!floating)return;
         if(image!=floating->origin){cancel_floating();return;}
         if(image&&!begin_edit())return;
+        feedback_begin(CommitSelection,L"自由変形を適用中…");
         auto result=paste_floating(*floating->canvas,*floating->source,floating->box,edit_memory());
         if(image){result.metadata=current_metadata();if(image->animated()||image->format==L"見開き")result.path.clear();}
         // Finish every allocation before discarding the uncommitted placement.
