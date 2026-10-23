@@ -4,6 +4,7 @@
 #include "gvn/loader.h"
 #include "gvn/archive.h"
 #include "gvn/renderer.h"
+#include "gvn/display_sampler.h"
 #include "gvn/transfer.h"
 #include "gvn/edit.h"
 #include "gvn/settings.h"
@@ -54,6 +55,7 @@
 namespace gvn {
 constexpr UINT kLoaded = WM_APP + 1;
 constexpr UINT kForwarded = WM_APP + 2;
+constexpr UINT kDisplayReady = WM_APP + 3;
 constexpr UINT_PTR kPreviewCleanupTimer = 37;
 constexpr UINT_PTR kForwardRetryTimer = 38;
 constexpr UINT kKeyBase = 2000;
@@ -1063,6 +1065,7 @@ class App {
         sync_ants_timer();
         if(!layout_synced)sync_canvas_scrollbars();
         render_settings();
+        cancel_invalid_sampling();
         if(!layout_synced)layout_status_parts();
         update_caption_and_status();
         if(image&&image->animated())
@@ -1587,6 +1590,7 @@ class App {
     }
     const Image *presented_image() const {return floating?floating->canvas.get():previewing_mask()?mask_preview_image.get():image.get();}
     size_t presented_frame() const {return previewing_mask()?0:player.frame;}
+#include "viewer_async_display.inc"
     HRESULT render_scene(HDC dc=nullptr, std::span<const RECT> damage={}) {
         renderer.selection_region=&selection;
         renderer.crop_box=cropping?std::optional<FloatingBox>(cropping->box):std::nullopt;
@@ -1594,6 +1598,11 @@ class App {
         const auto previous=renderer.dragging_low;renderer.dragging_low=previous||previewing_mask();
         struct Restore {bool &value;bool previous;~Restore(){value=previous;}} restore{renderer.dragging_low,previous};
         const auto frame=floating?size_t(0):presented_frame();
+        if(!dc&&renderer.resizing&&display_sampler&&renderer.can_draw_cached(presented_image(),frame)){
+            display_sampler->cancel();return renderer.draw_cached(hwnd,presented_image(),frame,view,top,bottom,floating?nullptr:&selection,damage);
+        }
+        if(!dc&&request_display_sample())return renderer.draw_cached(hwnd,presented_image(),frame,view,top,bottom,floating?nullptr:&selection,damage);
+        if(!dc&&display_sampler&&!asynchronous_display())display_sampler->cancel();
         return dc?renderer.print(hwnd,dc,presented_image(),frame,view,top,floating?nullptr:&selection)
                  :renderer.draw(hwnd,presented_image(),frame,view,top,bottom,floating?nullptr:&selection,damage);
     }
@@ -4262,6 +4271,8 @@ class App {
             SetFocus(hwnd);
             return 0;
         }
+        case kDisplayReady:
+            accept_display_sample();return 0;
         case kLoaded:
             accept(std::unique_ptr<Loaded>(reinterpret_cast<Loaded *>(l)));
             return 0;
@@ -4517,6 +4528,7 @@ class App {
             DestroyWindow(hwnd);
             return 0;
         case WM_DESTROY:
+            display_sampler.reset();
             toast.dismiss();
             ime.restore();
             KillTimer(hwnd, kForwardRetryTimer);

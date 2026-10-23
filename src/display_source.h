@@ -10,6 +10,7 @@ struct DisplaySource {
     std::span<const uint8_t> bytes;
     uint32_t width{}, height{};
     bool straight_rgba{};
+    const std::function<bool()> *cancelled{};
     void copy_row(uint32_t y, uint32_t x, uint32_t count, uint8_t *out) const {
         const auto input = bytes.data() + (static_cast<size_t>(y) * width + x) * 4;
         if (!straight_rgba) {
@@ -32,11 +33,16 @@ class DisplayRows {
     uint64_t clock{};
 
   public:
+    void check_cancelled() const {
+        if(source.cancelled&&*source.cancelled&&(*source.cancelled)())
+            throw std::runtime_error("Display sampling cancelled");
+    }
     // Returned rows start at first, not at the left edge of the full image.
     DisplayRows(DisplaySource input, uint32_t left, uint32_t width)
         : source(input), capacity(std::clamp<size_t>(1024 * 1024 / (width * 4ull), 1, rows.size())),
           first(left), count(width) {}
     const uint8_t *get(uint32_t y) {
+        check_cancelled();
         if (!source.straight_rgba)
             return source.bytes.data() + (static_cast<size_t>(y) * source.width + first) * 4;
         auto oldest = &rows[0];

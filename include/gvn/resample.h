@@ -1,6 +1,7 @@
 #pragma once
 #include "core.h"
 #include <span>
+#include <functional>
 namespace gvn {
 enum DisplayFilter {
     DisplaySimple,
@@ -39,5 +40,5 @@ DisplayTile resample_display(std::span<const uint8_t> premultiplied_bgra, uint32
                              const View &view, int method);
 // Borrows immutable straight RGBA and converts only requested rows; output remains premultiplied BGRA.
 DisplayTile resample_rgba_display(std::span<const Pixel> rgba, uint32_t width, uint32_t height,
-                                  const View &view, int method);
+                                  const View &view, int method,const std::function<bool()> &cancelled={});
 } // namespace gvn

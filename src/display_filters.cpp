@@ -169,6 +169,7 @@ void horizontal_first(detail::DisplayRows &source, uint32_t left, uint32_t right
             cache.splice(cache.begin(), cache, std::prev(cache.end()));
         } else
             cache.emplace_front();
+        source.check_cancelled();
         auto &result = cache.front();
         result.source = source_y;
         result.values.resize(stride);
@@ -190,6 +191,7 @@ void horizontal_first(detail::DisplayRows &source, uint32_t left, uint32_t right
     };
     std::vector<double> sum(stride);
     for (size_t y = 0; y < tile.height; ++y) {
+        source.check_cancelled();
         std::fill(sum.begin(), sum.end(), 0);
         const auto span = vertical.spans[y];
         for (auto i = span.first; i < span.last; ++i) {
@@ -210,6 +212,7 @@ void average_tile(detail::DisplayRows &rows, uint32_t left, uint32_t right,
                   const Axis &horizontal, const Axis &vertical, DisplayTile &tile) {
     std::vector<uint32_t> columns(static_cast<size_t>(right - left) * 4);
     for (size_t y = 0; y < tile.height; ++y) {
+        rows.check_cancelled();
         std::fill(columns.begin(), columns.end(), 0);
         const auto span = vertical.spans[y];
         for (auto i = span.first; i < span.last; ++i)
@@ -249,6 +252,7 @@ void detail::resample_source_tile(DisplaySource source, uint32_t scaled_width, u
         const auto left = *low;
         DisplayRows rows(source, left, *high - left + 1);
         for (uint32_t line = 0; line < tile.height; ++line) {
+            rows.check_cancelled();
             const auto source_y =
                 height - 1 - simple_position(height, scaled_height, scaled_height - 1 - y - line);
             const auto source_pixels = rows.get(source_y);
@@ -291,6 +295,7 @@ void detail::resample_source_tile(DisplaySource source, uint32_t scaled_width, u
     const size_t stride = static_cast<size_t>(tile.width) * 4;
     std::vector<double> intermediate(static_cast<size_t>(right - left) * 4);
     for (size_t destination_y = 0; destination_y < tile.height; ++destination_y) {
+        rows.check_cancelled();
         std::fill(intermediate.begin(), intermediate.end(), 0);
         const auto span = vertical.spans[destination_y];
         for (auto i = span.first; i < span.last; ++i) {

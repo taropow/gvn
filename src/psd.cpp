@@ -10,6 +10,7 @@
 #include "PsdParseImageDataSection.h"
 #include "miniz.h"
 #include <cstring>
+#include <array>
 #include <map>
 #include <malloc.h>
 
@@ -58,7 +59,8 @@ class Arena final : public psd::Allocator {
     }
 };
 class BoundedFile final : public psd::File {
-    std::span<const uint8_t> bytes;
+    std::array<std::span<const uint8_t>, 3> parts{};
+    size_t size{};
     bool DoOpenRead(const wchar_t *) override {
         return false;
     }
@@ -69,9 +71,22 @@ class BoundedFile final : public psd::File {
         return true;
     }
     ReadOperation DoRead(void *target, uint32_t count, uint64_t offset) override {
-        if (offset > bytes.size() || count > bytes.size() - offset)
+        if (offset > size || count > size - offset)
             throw std::runtime_error("PSD read outside source");
-        std::memcpy(target, bytes.data() + offset, count);
+        auto *out = static_cast<uint8_t *>(target);
+        for (auto part : parts) {
+            if (offset >= part.size()) {
+                offset -= part.size();
+                continue;
+            }
+            const size_t used = std::min<size_t>(count, part.size() - static_cast<size_t>(offset));
+            std::memcpy(out, part.data() + offset, used);
+            out += used;
+            count -= static_cast<uint32_t>(used);
+            offset = 0;
+            if (!count)
+                break;
+        }
         return nullptr;
     }
     bool DoWaitForRead(ReadOperation &) override {
@@ -84,11 +99,13 @@ class BoundedFile final : public psd::File {
         return false;
     }
     uint64_t DoGetSize() const override {
-        return bytes.size();
+        return size;
     }
 
   public:
-    BoundedFile(psd::Allocator *allocator, std::span<const uint8_t> data) : File(allocator), bytes(data) {}
+    BoundedFile(psd::Allocator *allocator, std::span<const uint8_t> data,
+                std::span<const uint8_t> table = {}, std::span<const uint8_t> pixels = {})
+        : File(allocator), parts{data, table, pixels}, size(data.size() + table.size() + pixels.size()) {}
 };
 void validate_rle(std::span<const uint8_t> row, size_t expected) {
     size_t input = 0, output = 0;
@@ -129,78 +146,142 @@ Image decode_psd(std::span<const uint8_t> bytes, size_t limit) {
     }
     const auto compression = be16(bytes, offset);
     const size_t start = offset + 2;
-    std::vector<uint8_t> normalized;
+    const size_t plane_size = pixels * (bits / 8);
+    std::array<std::pair<size_t, size_t>, 56> channel_ranges{};
     if (compression == 0) {
         if (planar_size > bytes.size() - start)
             throw std::runtime_error("PSD has no complete merged image");
+        for (size_t c = 0; c < channels; ++c)
+            channel_ranges[c] = {start + c * plane_size, plane_size};
     } else if (compression == 1) {
         const size_t rows = static_cast<size_t>(channels) * h;
         if (rows > (bytes.size() - start) / 2)
             throw std::runtime_error("Truncated PSD RLE table");
         size_t at = start + rows * 2;
-        for (size_t row = 0; row < rows; ++row) {
-            const auto length = be16(bytes, start + row * 2);
-            if (length > bytes.size() - at)
-                throw std::runtime_error("Truncated PSD RLE data");
-            validate_rle(bytes.subspan(at, length), static_cast<size_t>(w) * (bits / 8));
-            at += length;
-        }
-    } else if (compression == 2 || compression == 3) {
-        std::vector<uint8_t> decoded(static_cast<size_t>(planar_size));
-        if (tinfl_decompress_mem_to_mem(decoded.data(), decoded.size(), bytes.data() + start,
-                                        bytes.size() - start, TINFL_FLAG_PARSE_ZLIB_HEADER) != decoded.size())
-            throw std::runtime_error("PSD ZIP decompression failed");
-        if (compression == 3) {
-            const size_t stride = static_cast<size_t>(w) * (bits / 8);
-            for (size_t row = 0; row < static_cast<size_t>(h) * channels; ++row) {
-                uint16_t previous = 0;
-                for (size_t x = 0; x < w; ++x) {
-                    const size_t at = row * stride + x * (bits / 8);
-                    if (bits == 8) {
-                        previous = static_cast<uint8_t>(decoded[at] + previous);
-                        decoded[at] = static_cast<uint8_t>(previous);
-                    } else {
-                        previous = static_cast<uint16_t>(be16(decoded, at) + previous);
-                        decoded[at] = static_cast<uint8_t>(previous >> 8);
-                        decoded[at + 1] = static_cast<uint8_t>(previous);
-                    }
-                }
+        for (size_t c = 0; c < channels; ++c) {
+            const size_t first = at;
+            for (size_t y = 0; y < h; ++y) {
+                const auto length = be16(bytes, start + (c * h + y) * 2);
+                if (length > bytes.size() - at)
+                    throw std::runtime_error("Truncated PSD RLE data");
+                validate_rle(bytes.subspan(at, length), static_cast<size_t>(w) * (bits / 8));
+                at += length;
             }
+            channel_ranges[c] = {first, at - first};
         }
-        normalized.assign(bytes.begin(), bytes.begin() + 26);
-        normalized.resize(40, 0);
-        normalized.insert(normalized.end(), decoded.begin(), decoded.end());
-        bytes = normalized;
-    } else
+    } else if (compression != 2 && compression != 3)
         throw std::runtime_error("Unknown PSD compression");
     Arena arena(limit + 1024 * 1024);
     BoundedFile file(&arena, bytes);
     auto *document = psd::CreateDocument(&file, &arena);
     if (!document)
         throw std::runtime_error("PSD header could not be decoded");
-    auto *section = psd::ParseImageDataSection(document, &file, &arena);
-    if (!section || !section->images || section->imageCount < channels)
-        throw std::runtime_error("PSD merged image unavailable");
     Image image;
     image.width = w;
     image.height = h;
     image.format = L"PSD";
     image.frames.resize(1);
-    image.frames[0].pixels.resize(pixels);
-    auto sample = [&](size_t channel, size_t index) -> uint8_t {
-        if (bits == 8)
-            return static_cast<const uint8_t *>(section->images[channel].data)[index];
-        return static_cast<uint8_t>(
-            (static_cast<const uint16_t *>(section->images[channel].data)[index] + 128u) / 257u);
+    image.frames[0].pixels.assign(pixels, Pixel{0, 0, 0, 255});
+    const size_t colors = mode == 3 ? 3 : 1, needed = std::min<size_t>(channels, colors + 1);
+    const auto apply = [&](size_t channel, const void *data, bool big_endian) {
+        const auto *raw = static_cast<const uint8_t *>(data);
+        for (size_t i = 0; i < pixels; ++i) {
+            const auto value = bits == 8 ? raw[i]
+                : big_endian ? uint16_t((uint16_t(raw[i * 2]) << 8) | raw[i * 2 + 1])
+                             : static_cast<const uint16_t *>(data)[i];
+            const auto sample = static_cast<uint8_t>(bits == 8 ? value : (value + 128u) / 257u);
+            auto &p = image.frames[0].pixels[i];
+            if (channel == colors)
+                p.a = sample;
+            else if (mode == 1)
+                p.r = p.g = p.b = sample;
+            else if (channel == 0)
+                p.r = sample;
+            else if (channel == 1)
+                p.g = sample;
+            else
+                p.b = sample;
+        }
     };
-    for (size_t i = 0; i < pixels; ++i) {
-        auto &p = image.frames[0].pixels[i];
-        p.r = sample(0, i);
-        p.g = mode == 3 ? sample(1, i) : p.r;
-        p.b = mode == 3 ? sample(2, i) : p.r;
-        p.a = channels > (mode == 3 ? 3 : 1) ? sample(mode == 3 ? 3 : 1, i) : 255;
+    if (compression < 2) {
+        // Give the SDK a bounded view of one channel, retaining its RLE/16-bit decoder.
+        // No encoded plane or whole planar image is copied into a normalized PSD.
+        auto single = *document;
+        single.channelCount = 1;
+        single.imageDataSection.offset = 0;
+        const auto prefix = bytes.subspan(offset, 2);
+        for (size_t c = 0; c < needed; ++c) {
+            const auto [at, size] = channel_ranges[c];
+            const auto table = compression == 1 ? bytes.subspan(start + c * h * 2, h * 2)
+                                                 : std::span<const uint8_t>{};
+            const auto data = bytes.subspan(at, size);
+            BoundedFile channel(&arena, prefix, table, data);
+            single.imageDataSection.length = prefix.size() + table.size() + data.size();
+            auto *section = psd::ParseImageDataSection(&single, &channel, &arena);
+            if (!section || !section->images || section->imageCount != 1 || !section->images[0].data)
+                throw std::runtime_error("PSD merged image unavailable");
+            apply(c, section->images[0].data, false);
+            psd::DestroyImageDataSection(section, &arena);
+        }
+    } else {
+        struct Inflate {
+            mz_stream stream{};
+            Inflate() {
+                if (mz_inflateInit(&stream) != MZ_OK)
+                    throw std::runtime_error("PSD ZIP initialization failed");
+            }
+            ~Inflate() { mz_inflateEnd(&stream); }
+        } inflater;
+        auto &z = inflater.stream;
+        z.next_in = bytes.data() + start;
+        z.avail_in = static_cast<unsigned>(bytes.size() - start);
+        std::vector<uint8_t> plane(plane_size);
+        int status = MZ_OK;
+        for (size_t c = 0; c < channels; ++c) {
+            z.next_out = plane.data();
+            z.avail_out = static_cast<unsigned>(plane.size());
+            while (z.avail_out) {
+                if (status == MZ_STREAM_END)
+                    throw std::runtime_error("Incomplete PSD ZIP channel");
+                const auto old_in = z.avail_in, old_out = z.avail_out;
+                status = mz_inflate(&z, MZ_NO_FLUSH);
+                if ((status != MZ_OK && status != MZ_STREAM_END) ||
+                    (old_in == z.avail_in && old_out == z.avail_out))
+                    throw std::runtime_error("PSD ZIP decompression failed");
+            }
+            if (c >= needed)
+                continue;
+            if (compression == 3) {
+                const size_t stride = static_cast<size_t>(w) * (bits / 8);
+                for (size_t y = 0; y < h; ++y) {
+                    uint16_t previous = 0;
+                    for (size_t x = 0; x < w; ++x) {
+                        const size_t at = y * stride + x * (bits / 8);
+                        if (bits == 8) {
+                            previous = static_cast<uint8_t>(plane[at] + previous);
+                            plane[at] = static_cast<uint8_t>(previous);
+                        } else {
+                            previous = static_cast<uint16_t>(be16(plane, at) + previous);
+                            plane[at] = static_cast<uint8_t>(previous >> 8);
+                            plane[at + 1] = static_cast<uint8_t>(previous);
+                        }
+                    }
+                }
+            }
+            apply(c, plane.data(), true);
+        }
+        // Consume the zlib trailer and reject output beyond the declared channels.
+        uint8_t extra{};
+        while (status != MZ_STREAM_END) {
+            z.next_out = &extra;
+            z.avail_out = 1;
+            const auto old_in = z.avail_in;
+            status = mz_inflate(&z, MZ_NO_FLUSH);
+            if (!z.avail_out || (status != MZ_OK && status != MZ_STREAM_END) ||
+                (status != MZ_STREAM_END && old_in == z.avail_in))
+                throw std::runtime_error("PSD ZIP length mismatch");
+        }
     }
-    psd::DestroyImageDataSection(section, &arena);
     psd::DestroyDocument(document, &arena);
     read_container_metadata(image,bytes);
     return image;

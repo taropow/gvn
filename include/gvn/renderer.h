@@ -69,9 +69,9 @@ class Renderer {
     HRESULT scene(ID2D1RenderTarget *context, ID2D1Bitmap *pixels, ID2D1BitmapBrush *pattern,
                   ID2D1BitmapBrush *viewport_pattern,
                   ID2D1SolidColorBrush *drawing_brush, const Image *image, const View &view, int top,
-                  const Rect *selection, std::span<const RECT> damage = {});
+                  const Rect *selection, std::span<const RECT> damage = {},bool tile_allowed=true);
     void scene_content(ID2D1RenderTarget *, ID2D1Bitmap *, ID2D1BitmapBrush *, ID2D1BitmapBrush *,
-                       ID2D1SolidColorBrush *, const Image *, const View &, int, const Rect *);
+                       ID2D1SolidColorBrush *, const Image *, const View &, int, const Rect *,bool);
 
   public:
     // Optional diagnostics; ordinary painting does not query the clock.
@@ -143,6 +143,12 @@ class Renderer {
     }
     HRESULT draw(HWND hwnd, const Image *image, size_t frame, const View &view, int top, int bottom,
                  const Rect *selection = nullptr, std::span<const RECT> damage = {});
+    bool can_draw_cached(const Image *image,size_t frame) const {
+        return image&&((sampled==image&&sampled_frame==frame&&!tile.bgra.empty()) ||
+            (uploaded==image&&uploaded_frame==frame&&bitmap));
+    }
+    void adopt_sample(const Image *,size_t,const View &,int,DisplayTile);
+    HRESULT draw_cached(HWND,const Image *,size_t,const View &,int,int,const Rect * = nullptr,std::span<const RECT> = {});
     void resize(UINT width, UINT height);
     HRESULT print(HWND hwnd, HDC dc, const Image *image, size_t frame, const View &view, int top,
                   const Rect *selection);

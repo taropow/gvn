@@ -288,6 +288,24 @@ ComPtr<ID2D1Bitmap> Renderer::tile_bitmap(ID2D1RenderTarget *context) {
                                      &result));
     return result;
 }
+void Renderer::adopt_sample(const Image *image,size_t frame,const View &view,int method,DisplayTile value) {
+    tile=std::move(value);sampled=image;sampled_frame=frame;sampled_view=view;sampled_method=method;++sample_builds;
+    sampled_bitmap.Reset();bitmap.Reset();uploaded=prepared=nullptr;uploaded_frame=prepared_frame=SIZE_MAX;
+    std::vector<uint8_t>().swap(premultiplied);surface_valid=false;
+}
+HRESULT Renderer::draw_cached(HWND hwnd,const Image *image,size_t frame,const View &view,int top,int bottom,
+                              const Rect *selection,std::span<const RECT> damage) {
+    ensure(hwnd);
+    const bool use_tile=image&&sampled==image&&sampled_frame==frame&&!tile.bgra.empty();
+    ID2D1Bitmap *pixels=nullptr;
+    if(use_tile){if(!sampled_bitmap)sampled_bitmap=tile_bitmap(target.Get());pixels=sampled_bitmap.Get();}
+    else if(image&&uploaded==image&&uploaded_frame==frame)pixels=bitmap.Get();
+    if(background_tiled&&!background_checker)background_checker=checker_for(target.Get(),true);
+    if(image&&checkerboard&&!checker)checker=checker_for(target.Get(),false);
+    const auto result=scene(target.Get(),pixels,checker.Get(),background_checker.Get(),brush.Get(),image,view,top,selection,
+        surface_valid?damage:std::span<const RECT>{},use_tile);
+    surface_valid=SUCCEEDED(result);if(result==D2DERR_RECREATE_TARGET)reset_background();(void)bottom;return result;
+}
 void Renderer::resize(UINT width, UINT height) {
     if (target){const auto before=target->GetPixelSize(),next=D2D1::SizeU(std::max(1u,width),std::max(1u,height));
         if(before.width!=next.width||before.height!=next.height){surface_valid=false;if(FAILED(target->Resize(next)))reset_background();}}
@@ -347,18 +365,18 @@ HRESULT Renderer::draw(HWND hwnd, const Image *image, size_t frame, const View &
 HRESULT Renderer::scene(ID2D1RenderTarget *context, ID2D1Bitmap *pixels, ID2D1BitmapBrush *pattern,
                          ID2D1BitmapBrush *viewport_pattern, ID2D1SolidColorBrush *drawing_brush,
                          const Image *image, const View &view, int top, const Rect *selection,
-                         std::span<const RECT> damage) {
+                         std::span<const RECT> damage,bool tile_allowed) {
     context->BeginDraw();
     last_damage_pixels = 0; last_damage_regions = damage.empty() ? 1 : damage.size();
     if (damage.empty()) {
         const auto size = context->GetPixelSize();
         last_damage_pixels = uint64_t(size.width) * size.height;
-        scene_content(context,pixels,pattern,viewport_pattern,drawing_brush,image,view,top,selection);
+        scene_content(context,pixels,pattern,viewport_pattern,drawing_brush,image,view,top,selection,tile_allowed);
     } else for (const auto &rect : damage) {
         if (rect.right <= rect.left || rect.bottom <= rect.top) continue;
         last_damage_pixels += uint64_t(rect.right-rect.left)*(rect.bottom-rect.top);
         context->PushAxisAlignedClip(D2D1::RectF(float(rect.left),float(rect.top),float(rect.right),float(rect.bottom)),D2D1_ANTIALIAS_MODE_ALIASED);
-        scene_content(context,pixels,pattern,viewport_pattern,drawing_brush,image,view,top,selection);
+        scene_content(context,pixels,pattern,viewport_pattern,drawing_brush,image,view,top,selection,tile_allowed);
         context->PopAxisAlignedClip();
     }
     return context->EndDraw();
@@ -366,7 +384,7 @@ HRESULT Renderer::scene(ID2D1RenderTarget *context, ID2D1Bitmap *pixels, ID2D1Bi
 void Renderer::scene_content(ID2D1RenderTarget *context, ID2D1Bitmap *pixels, ID2D1BitmapBrush *pattern,
                         ID2D1BitmapBrush *viewport_pattern,
                         ID2D1SolidColorBrush *drawing_brush, const Image *image, const View &view, int top,
-                        const Rect *selection) {
+                        const Rect *selection,bool tile_allowed) {
     overlay_rect = {};
     context->Clear(D2D1::ColorF(background));
     context->SetTransform(D2D1::Matrix3x2F::Translation(float(viewport_left),0));
@@ -397,7 +415,7 @@ void Renderer::scene_content(ID2D1RenderTarget *context, ID2D1Bitmap *pixels, ID
         }
         auto sampled_destination = destination;
         const int method = filter(view);
-        const bool sampled_tile = sampled == image && !tile.bgra.empty();
+        const bool sampled_tile = tile_allowed && sampled == image && !tile.bgra.empty();
         if (sampled_tile) {
             const double dx = view.left() - sampled_view.left(), dy = view.top() - sampled_view.top();
             sampled_destination =
@@ -405,10 +423,17 @@ void Renderer::scene_content(ID2D1RenderTarget *context, ID2D1Bitmap *pixels, ID
                             static_cast<float>(top + (actual ? std::floor(tile.top + dy) : tile.top + dy)),
                             static_cast<float>(actual ? std::floor(tile.right + dx) : tile.right + dx),
                             static_cast<float>(top + (actual ? std::floor(tile.bottom + dy) : tile.bottom + dy)));
+            if(view.scale!=sampled_view.scale){
+                const double ratio=view.scale/sampled_view.scale;
+                sampled_destination=D2D1::RectF(float(view.left()+(tile.left-sampled_view.left())*ratio),
+                    float(top+view.top()+(tile.top-sampled_view.top())*ratio),
+                    float(view.left()+(tile.right-sampled_view.left())*ratio),
+                    float(top+view.top()+(tile.bottom-sampled_view.top())*ratio));
+            }
         }
         if (pixels)
             context->DrawBitmap(pixels, sampled_destination, 1,
-                                sampled_tile || method == 0 || std::abs(view.scale - 1) < 1e-9
+                                (sampled_tile && sampled_view.scale==view.scale) || method == 0 || std::abs(view.scale - 1) < 1e-9
                                     ? D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR
                                     : D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
         if (selection && !selection->empty()) {

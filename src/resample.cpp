@@ -131,9 +131,9 @@ DisplayTile resample_display(std::span<const uint8_t> data, uint32_t width, uint
     return resample_source({data, width, height, false}, view, method);
 }
 DisplayTile resample_rgba_display(std::span<const Pixel> data, uint32_t width, uint32_t height,
-                                  const View &view, int method) {
+                                  const View &view, int method,const std::function<bool()> &cancelled) {
     return resample_source(
-        {{reinterpret_cast<const uint8_t *>(data.data()), data.size_bytes()}, width, height, true}, view,
+        {{reinterpret_cast<const uint8_t *>(data.data()), data.size_bytes()}, width, height, true, &cancelled}, view,
         method);
 }
 } // namespace gvn

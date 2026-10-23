@@ -5,6 +5,7 @@
 #include "test_desktop.h"
 #include "../src/pixel_conversion.h"
 #include "../src/display_math.h"
+#include "gvn/display_sampler.h"
 #include <cmath>
 #include <cstring>
 using namespace gvn;
@@ -1110,6 +1111,28 @@ struct RendererAudit {
             CHECK(SUCCEEDED(fresh.print(surface.window,surface.dc,&image,0,view,20,&selection)));GdiFlush();
             CHECK(std::equal(expected.begin(),expected.end(),static_cast<const uint32_t *>(surface.pixels)));
         }
+        // A growing translucent stroke must match a fresh full paint, including
+        // its joins, outline and shadow at fractional and enlarged views.
+        for(double scale:{.5,1.,2.}){
+            view.scale=scale;renderer.pen_points={{40,90},{110,95}};
+            renderer.pen_style.width=8;renderer.pen_style.color.a=173;
+            renderer.pen_style.effects.outline=true;renderer.pen_style.effects.outline_width=2;
+            renderer.pen_style.effects.shadow=true;renderer.pen_style.effects.shadow_offset=4;
+            renderer.pen_style.effects.shadow_blur=3;
+            fresh.pen_style=renderer.pen_style;
+            CHECK(SUCCEEDED(renderer.scene(target.Get(),pixels.Get(),checker.Get(),background.Get(),brush.Get(),&image,view,20,nullptr)));
+            renderer.pen_points.push_back({130,105});fresh.pen_points=renderer.pen_points;
+            const double padding=16*scale+4;
+            const RECT pen_damage{LONG(std::floor(28+110*scale-padding)),LONG(std::floor(20+95*scale-padding)),
+                LONG(std::ceil(28+130*scale+padding)),LONG(std::ceil(20+105*scale+padding))};
+            CHECK(SUCCEEDED(renderer.scene(target.Get(),pixels.Get(),checker.Get(),background.Get(),brush.Get(),&image,view,20,nullptr,{&pen_damage,1})));
+            GdiFlush();std::copy_n(static_cast<const uint32_t *>(surface.pixels),expected.size(),expected.begin());
+            // Use the same source bitmap and sampling path: print() deliberately
+            // resamples the .5x source differently from this direct-bitmap scene.
+            CHECK(SUCCEEDED(renderer.scene(target.Get(),pixels.Get(),checker.Get(),background.Get(),brush.Get(),&image,view,20,nullptr)));GdiFlush();
+            CHECK(std::equal(expected.begin(),expected.end(),static_cast<const uint32_t *>(surface.pixels)));
+        }
+        renderer.pen_points.clear();fresh.pen_points.clear();view.scale=1;
         const RECT tiny{70,55,80,65};
         CHECK(SUCCEEDED(renderer.draw(surface.window,&image,0,view,20,0,&selection,{&tiny,1})));
         CHECK(renderer.last_damage_pixels==360*260); // a new HWND surface must be complete
@@ -1123,4 +1146,38 @@ struct RendererAudit {
 }
 TEST(partial_native_selection_frames_match_full_paint_and_reset_forces_complete_surface) {
     RendererAudit::partial_pixels();
+}
+TEST(display_worker_matches_synchronous_pixels_and_releases_cancelled_sources) {
+    auto source=std::make_shared<Image>(new_image(1024,768));
+    for(size_t n=0;n<source->frames[0].pixels.size();++n)source->frames[0].pixels[n]={uint8_t(n*17),uint8_t(n*31),uint8_t(n*7),uint8_t(n)};
+    View view;view.resize(256,192);view.set_image(1024,768);
+    DisplaySampler worker;const auto id=worker.request({source,0,view,DisplayLanczos3});
+    CHECK(worker.request({source,0,view,DisplayLanczos3})==id);
+    CHECK(worker.wait_idle(std::chrono::seconds(5)));auto result=worker.take();
+    CHECK(result&&result->sequence==id&&result->method==DisplayLanczos3&&!result->failed);
+    CHECK(result->tile.bgra==resample_rgba_display(source->frames[0].pixels,1024,768,view,DisplayLanczos3).bgra);
+    auto large=std::make_shared<Image>(new_image(4096,2048));std::weak_ptr<const Image> retired=large;
+    auto old=view;old.set_image(4096,2048);worker.request({large,0,old,DisplayLanczos3});large.reset();
+    auto next=view;next.scale=.3125;next.manual=true;
+    const auto latest=worker.request({source,0,next,DisplayLanczos3});
+    CHECK(worker.wait_idle(std::chrono::seconds(5)));result=worker.take();
+    CHECK(result&&result->sequence==latest&&result->request.same({source,0,next,DisplayLanczos3}));
+    CHECK(retired.expired());
+    CHECK(result->tile.bgra==resample_rgba_display(source->frames[0].pixels,1024,768,next,DisplayLanczos3).bgra);
+    auto invalid=std::make_shared<Image>();invalid->width=invalid->height=5;invalid->frames.resize(1);
+    worker.request({invalid,0,view,DisplayLanczos3});CHECK(worker.wait_idle(std::chrono::seconds(5)));
+    const auto failure=worker.take();CHECK(failure&&failure->failed);
+    worker.request({source,0,view,DisplayLanczos3});worker.cancel();
+    CHECK(worker.wait_idle(std::chrono::seconds(5))&&!worker.take());
+    for(int method:{DisplaySimple,DisplayLinear,DisplayLanczos3}){
+        unsigned checks{};const std::function<bool()> cancel=[&]{return ++checks>2;};
+        THROWS(resample_rgba_display(source->frames[0].pixels,1024,768,view,method,cancel));CHECK(checks==3);
+    }
+    auto closing_source=std::make_shared<Image>(new_image(4096,2048));
+    std::weak_ptr<const Image> closing=closing_source;
+    {
+        DisplaySampler shutdown;shutdown.request({closing_source,0,old,DisplayLanczos3});
+        closing_source.reset(); // Destruction cancels and joins even with unfinished work.
+    }
+    CHECK(closing.expired());
 }

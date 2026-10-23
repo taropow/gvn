@@ -3,6 +3,7 @@
 #include "loading.h"
 #include "image_metadata.h"
 #include "animation_indices.h"
+#include "apng_frames.h"
 #include <array>
 #include <cstring>
 #include <utility>
@@ -238,6 +239,9 @@ Image decode_animation(std::span<const uint8_t> bytes, size_t limit, const Loadi
                      (!std::memcmp(bytes.data(), "GIF87a", 6) || !std::memcmp(bytes.data(), "GIF89a", 6));
     if (gif)
         return decode_gif_framewise(bytes, limit, options);
+    if (is_apng(bytes))
+        if (auto image = decode_apng_framewise(bytes, limit, options))
+            return std::move(*image);
     if (gif && bytes.size() >= 13)
         checked_pixels(bytes[6] | (uint32_t(bytes[7]) << 8), bytes[8] | (uint32_t(bytes[9]) << 8), 1, limit);
     const auto extensions = gif ? gif_extensions(bytes, options.gif_speed) : GifExtensions{};

@@ -66,3 +66,30 @@
         CHECK(app.image==original&&original->frames[0].pixels==rgba);
         CHECK(notices.empty());
     }
+    void everyday_async_display_accepts_commands_preserves_quality_and_discards_stale_jobs() {
+        app.settings.confirm_unsaved=false;app.settings.display_down=DisplayLanczos3;
+        app.replace(selection_fixture(4096,2048),false,true);command(FitImage);
+        const auto source=app.image;CHECK(app.view.scale<1&&app.asynchronous_display());
+        const auto original=source->frames[0].pixels;
+        const auto start=std::chrono::steady_clock::now();CHECK(SUCCEEDED(app.render_scene()));
+        const auto receipt=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
+        CHECK(app.display_sampler);const bool editor=app.editor_mode;command(ToggleEditor);CHECK(app.editor_mode!=editor);
+        const auto settle=[&]{const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(10);
+            while(!app.renderer.sample_current(app.image.get(),app.player.frame,app.view)&&std::chrono::steady_clock::now()<deadline){
+                app.render_scene();pump();Sleep(1);
+            }
+            CHECK(app.renderer.sample_current(app.image.get(),app.player.frame,app.view));};
+        settle();CHECK(app.renderer.filter(app.view)==DisplayLanczos3&&app.renderer.source_bytes()==0);
+        const auto elapsed=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
+        std::cout<<"ASYNC_DISPLAY {\"initial_receipt_ms\":"<<receipt<<",\"final_quality_ms\":"<<elapsed<<"}\n";
+        app.message(WM_ENTERSIZEMOVE,0,0);app.view.resize(app.view.width+20,app.view.height+10);
+        CHECK(SUCCEEDED(app.render_scene())&&app.renderer.source_bytes()==0);
+        app.message(WM_EXITSIZEMOVE,0,0);settle();
+        command(ZoomOut);CHECK(SUCCEEDED(app.render_scene()));
+        app.replace(selection_fixture(32,24),false,true);pump();
+        CHECK(app.image!=source&&app.image->width==32);
+        CHECK(SUCCEEDED(app.render_scene()));
+        if(app.display_sampler){CHECK(app.display_sampler->wait_idle(std::chrono::seconds(5)));pump();}
+        CHECK(app.image->width==32&&source->frames[0].pixels==original);
+        command(CloseImage);CHECK(!app.image);CHECK(notices.empty());
+    }
