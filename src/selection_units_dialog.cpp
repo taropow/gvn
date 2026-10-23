@@ -1,3 +1,4 @@
+#include "gvn/ui_theme.h"
 #include "gvn/selection_units_dialog.h"
 #include <commctrl.h>
 namespace gvn {
@@ -58,7 +59,7 @@ struct SelectionUnitsDialog::Impl {
     }
     static INT_PTR CALLBACK proc(HWND h,UINT msg,WPARAM w,LPARAM l) {
         auto *self=reinterpret_cast<Impl*>(GetWindowLongPtrW(h,DWLP_USER));
-        if(msg==WM_INITDIALOG){self=reinterpret_cast<Impl*>(l);self->hwnd=h;SetWindowLongPtrW(h,DWLP_USER,LONG_PTR(self));try{self->initialize();return TRUE;}catch(...){DestroyWindow(h);return FALSE;}}
+        if(msg==WM_INITDIALOG){self=reinterpret_cast<Impl*>(l);self->hwnd=h;SetWindowLongPtrW(h,DWLP_USER,LONG_PTR(self));try{self->initialize();apply_ui_theme(h);return TRUE;}catch(...){DestroyWindow(h);return FALSE;}}
         if(!self)return FALSE;
         if(msg==WM_COMMAND) {
             const int key=LOWORD(w);

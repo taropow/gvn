@@ -1,4 +1,5 @@
 #include "gvn/renderer.h"
+#include "gvn/viewport_transform.h"
 #include "pixel_conversion.h"
 #include <chrono>
 #include <cmath>
@@ -378,9 +379,8 @@ HRESULT Renderer::scene(ID2D1RenderTarget *context, ID2D1Bitmap *pixels, ID2D1Bi
     return context->EndDraw();
 }
 void Renderer::draw_editor_overlay(ID2D1RenderTarget *context,ID2D1SolidColorBrush *drawing_brush,const View &view,int top,const D2D1_RECT_F &canvas){
-    const bool actual=std::abs(view.scale-1)<1e-9;
-    const double left=actual?std::floor(view.left()):view.left(),y=actual?std::floor(view.top()):view.top();
-    const auto screen=[&](FloatPoint p){return D2D1::Point2F(float(left+p.x*view.scale),float(top+y+p.y*view.scale));};
+    const ViewportTransform transform(view,0,top);
+    const auto screen=[&](FloatPoint p){const auto q=transform.to_client(p);return D2D1::Point2F(float(q.x),float(q.y));};
     Microsoft::WRL::ComPtr<ID2D1Factory> owner;context->GetFactory(&owner);
     if(!pen_points.empty()){
         context->PushAxisAlignedClip(canvas,D2D1_ANTIALIAS_MODE_ALIASED);
@@ -419,10 +419,9 @@ void Renderer::draw_editor_overlay(ID2D1RenderTarget *context,ID2D1SolidColorBru
 }
 void Renderer::draw_selection_lines(ID2D1RenderTarget *context,ID2D1SolidColorBrush *drawing_brush,std::span<const SelectionLine> lines,const View &view,int top){
     const auto previous=context->GetAntialiasMode();context->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
-    const bool actual=std::abs(view.scale-1)<1e-9;
-    const double left=actual?std::floor(view.left()):view.left(),image_top=actual?std::floor(view.top()):view.top();
+    const ViewportTransform transform(view,0,top);
     // Project first; the stroke itself always uses the target's physical pixel space (96 dpi).
-    const auto screen=[&](FloatPoint p){return D2D1::Point2F(float(std::floor(left+p.x*view.scale)+.5),float(std::floor(top+image_top+p.y*view.scale)+.5));};
+    const auto screen=[&](FloatPoint p){const auto q=transform.to_client(p);return D2D1::Point2F(float(std::floor(q.x)+.5),float(std::floor(q.y)+.5));};
     auto &style=ants_styles[ants_phase%ants_styles.size()];
     if(!style){const float pattern[]{4,4};auto properties=D2D1::StrokeStyleProperties();
         properties.dashStyle=D2D1_DASH_STYLE_CUSTOM;properties.dashOffset=float(ants_phase%8);
@@ -450,16 +449,15 @@ void Renderer::draw_floating(ID2D1RenderTarget *context,ID2D1SolidColorBrush *dr
     const bool cached=context==target.Get();auto &pixels=cached?floating_bitmap:local;
     if(!pixels)verify(context->CreateBitmap(D2D1::SizeU(floating_width,floating_height),floating_pixels.data(),floating_width*4,
         D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,D2D1_ALPHA_MODE_PREMULTIPLIED)),&pixels));
-    const bool actual=std::abs(view.scale-1)<1e-9;
-    const double left=actual?std::floor(view.left()):view.left(),image_top=actual?std::floor(view.top()):view.top();
-    const float cx=float(left+floating_box.cx*view.scale),cy=float(top+image_top+floating_box.cy*view.scale);
+    const auto center=ViewportTransform(view,0,top).to_client({floating_box.cx,floating_box.cy});
+    const float cx=float(center.x),cy=float(center.y);
     const float width=float(floating_box.width*view.scale),height=float(floating_box.height*view.scale);
     context->PushAxisAlignedClip(canvas,D2D1_ANTIALIAS_MODE_ALIASED);
     D2D1_MATRIX_3X2_F previous_transform;context->GetTransform(&previous_transform);
     context->SetTransform(D2D1::Matrix3x2F::Rotation(float(floating_box.angle),D2D1::Point2F(cx,cy))*previous_transform);
     context->DrawBitmap(pixels.Get(),D2D1::RectF(cx-width/2,cy-height/2,cx+width/2,cy+height/2),1,D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
     context->SetTransform(previous_transform);context->PopAxisAlignedClip();
-    const auto handles=floating_box.handles();auto screen=[&](FloatPoint p){return D2D1::Point2F(float(left+p.x*view.scale),float(top+image_top+p.y*view.scale));};
+    const auto handles=floating_box.handles();const ViewportTransform transform(view,0,top);auto screen=[&](FloatPoint p){const auto q=transform.to_client(p);return D2D1::Point2F(float(q.x),float(q.y));};
     std::array<SelectionLine,4> lines;for(int n=0;n<4;++n)lines[n]={handles[n*2],handles[(n*2+2)%8]};
     draw_selection_lines(context,drawing_brush,lines,view,top);
     const float radius=3.5f;

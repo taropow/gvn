@@ -20,6 +20,7 @@ bool initialize_controls() {
 constexpr UINT kPauseIcon = 65000;
 const wchar_t *command_label(UINT id) {
     switch (id) {
+    case MoreCommands:return L"その他の操作";
     case Open:
         return L"開く (Ctrl+O)";
     case Save:
@@ -343,6 +344,7 @@ static HBITMAP icon_bitmap(UINT id, int size) {
             line(19, 14, 19, 18, blue, 1);
         }
         break;
+    case MoreCommands:for(int x:{4,10,16})circle(x-1,9,x+1,11,RGB(50,55,63),RGB(50,55,63));break;
     case Preferences:
         circle(3, 3, 17, 17, RGB(162, 174, 190), RGB(72, 86, 107));
         circle(7, 7, 13, 13, paper, RGB(72, 86, 107));
@@ -386,6 +388,10 @@ static HBITMAP icon_bitmap(UINT id, int size) {
                 }
             target[y * size + x] = ((a / 16) << 24) | ((r / 16) << 16) | ((g / 16) << 8) | (b / 16);
         }
+    const auto ink=ui_palette().text;
+    for(int pixel_index=0;pixel_index<size*size;++pixel_index){const auto p=target[pixel_index],coverage=p>>24;const auto brightness=(((p>>16)&255)*30+((p>>8)&255)*59+(p&255)*11)/100;
+        // Keep the original glyph's white cut-outs and its antialiased coverage.
+        const auto a=coverage>brightness?std::min(coverage,2*(coverage-brightness)):0;target[pixel_index]=(a<<24)|((GetRValue(ink)*a/255)<<16)|((GetGValue(ink)*a/255)<<8)|(GetBValue(ink)*a/255);}
     SelectObject(dc, old);
     DeleteObject(source);
     DeleteDC(dc);
@@ -394,7 +400,7 @@ static HBITMAP icon_bitmap(UINT id, int size) {
 static constexpr UINT buttons[]{
     Open, Save,         FileDelete,  0, Copy,      Paste, ArmDrag, Undo,    0,        Info,   Previous,
     Next, ParentFolder, ChildFolder, 0, Slideshow, 0,     ZoomIn,  ZoomOut, FitImage, Actual, Fullscreen,
-    0,    ToggleEditor, Preferences,  Help};
+    0,    ToggleEditor, Preferences,  Help,MoreCommands};
 static constexpr UINT tool_buttons[]{ToolPan,ToolPen,ToolText,SelectMove,SelectRectangle,SelectFreehand,SelectPolygon,0,
     PasteSelection,ToolCrop,Resize,Canvas,0,RotateRight,FlipH,FlipV,0,Brightness,ColorAdjust,Levels,0,
     SelectAll,InvertSelection,ClearSelection,DeleteSelection};
@@ -436,7 +442,7 @@ IconToolbar::~IconToolbar() {
 static void draw_toolbar_host(HWND hwnd, HDC dc) {
     RECT area{};
     GetClientRect(hwnd, &area);
-    FillRect(dc, &area, GetSysColorBrush(COLOR_BTNFACE));
+    FillRect(dc, &area, ui_brush(ui_palette().surface));
     if (GetWindowLongPtrW(hwnd, GWLP_USERDATA)) {
         area.bottom = 2;
         DrawEdge(dc, &area, EDGE_ETCHED, BF_TOP);
@@ -485,10 +491,10 @@ void IconToolbar::create(HWND parent, bool playback,bool editing_tools) {
                                CCS_NOPARENTALIGN,
                            0, 0, 0, 0, parent, nullptr, GetModuleHandleW(nullptr), nullptr);
     SendMessageW(hwnd, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0);
-    SendMessageW(hwnd, TB_SETUNICODEFORMAT, TRUE, 0);
+    SendMessageW(hwnd, TB_SETUNICODEFORMAT, TRUE, 0);apply_ui_theme(bar_window());
 }
 void IconToolbar::rebuild() {
-    measured_width=-1;texts.clear();
+    measured_width=-1;texts.clear();palette_generation=ui_theme_generation();
     struct Saved {
         BYTE state{};
         std::wstring text;
@@ -508,7 +514,7 @@ void IconToolbar::rebuild() {
     while (SendMessageW(hwnd, TB_BUTTONCOUNT, 0, 0) > 0)
         SendMessageW(hwnd, TB_DELETEBUTTON, 0, 0);
     built_large = large;built_floating=floating_mode;
-    const int icon = MulDiv(large ? 24 : 16, dpi, 96), button = MulDiv(large ? 32 : 24, dpi, 96);
+    const int icon = MulDiv(ui_icon_size(large), dpi, 96), button = MulDiv(ui_button_size(large), dpi, 96);
     HIMAGELIST next = ImageList_Create(icon, icon, ILC_COLOR32, 24, 0);
     SendMessageW(hwnd, TB_SETIMAGELIST, 0, reinterpret_cast<LPARAM>(next));
     if (images)
@@ -554,12 +560,12 @@ void IconToolbar::rebuild() {
 int IconToolbar::layout_tools(UINT new_dpi,int top,int height,bool visible){
     if(!hwnd)return 0;
     if(!visible){ShowWindow(host,SW_HIDE);return 0;}
-    if(dpi!=int(new_dpi)||large!=built_large){dpi=int(new_dpi);rebuild();}
+    if(dpi!=int(new_dpi)||large!=built_large||palette_generation!=ui_theme_generation()){dpi=int(new_dpi);rebuild();}
     RECT bounds{};SendMessageW(hwnd,TB_SETROWS,MAKEWPARAM(SendMessageW(hwnd,TB_BUTTONCOUNT,0,0),TRUE),reinterpret_cast<LPARAM>(&bounds));
     // A repeated TB_SETROWS can leave the output RECT untouched.
     for(int item_index=0;item_index<SendMessageW(hwnd,TB_BUTTONCOUNT,0,0);++item_index){RECT item{};if(SendMessageW(hwnd,TB_GETITEMRECT,item_index,reinterpret_cast<LPARAM>(&item)))bounds.bottom=std::max(bounds.bottom,item.bottom);}
     tool_content=std::max(1L,bounds.bottom);tool_height=std::max(1,height);
-    const int button=MulDiv(large?32:24,dpi,96);
+    const int button=MulDiv(ui_button_size(large),dpi,96);
     tool_width=button+4+(tool_content>tool_height?GetSystemMetricsForDpi(SM_CXVSCROLL,new_dpi):0);
     tool_scroll=std::clamp(tool_scroll,0,std::max(0,tool_content-tool_height));
     SCROLLINFO info{sizeof(info),SIF_RANGE|SIF_PAGE|SIF_POS,0,tool_content-1,UINT(tool_height),tool_scroll};SetScrollInfo(host,SB_VERT,&info,TRUE);
@@ -567,7 +573,7 @@ int IconToolbar::layout_tools(UINT new_dpi,int top,int height,bool visible){
     ShowWindow(host,SW_SHOWNA);ShowWindow(hwnd,SW_SHOWNA);return tool_width;
 }
 void IconToolbar::scroll_tools(UINT action,int delta){
-    const int step=MulDiv(large?32:24,dpi,96);int next=tool_scroll;
+    const int step=MulDiv(ui_button_size(large),dpi,96);int next=tool_scroll;
     switch(action){case SB_TOP:next=0;break;case SB_BOTTOM:next=tool_content;break;case SB_LINEUP:next-=step;break;case SB_LINEDOWN:next+=step;break;case SB_PAGEUP:next-=tool_height;break;case SB_PAGEDOWN:next+=tool_height;break;
     case SB_THUMBTRACK:case SB_THUMBPOSITION:{SCROLLINFO info{sizeof(info),SIF_TRACKPOS};GetScrollInfo(host,SB_VERT,&info);next=info.nTrackPos;break;}
     case 100:next-=delta/WHEEL_DELTA*step*3;break;default:return;}
@@ -576,14 +582,15 @@ void IconToolbar::scroll_tools(UINT action,int delta){
 int IconToolbar::measure_height(int width, UINT new_dpi) {
     if (!hwnd)
         return 0;
-    if (dpi != static_cast<int>(new_dpi) || large != built_large || floating_mode!=built_floating) {
+    if (dpi != static_cast<int>(new_dpi) || large != built_large || floating_mode!=built_floating || palette_generation!=ui_theme_generation()) {
         dpi = new_dpi;
         rebuild();
     }
     const int divider = !player && line ? std::max(2, MulDiv(2, dpi, 96)) : 0;
-    int height = MulDiv(large ? 34 : 26, dpi, 96);
+    int height = MulDiv(ui_button_size(large)+2, dpi, 96);
     if (!player) {
         if(measured_width==width)return measured_height+divider;
+        arrange_overflow(width);
         const int count = static_cast<int>(SendMessageW(hwnd, TB_BUTTONCOUNT, 0, 0));
         for (int rows = 1; rows <= count; ++rows) {
             RECT rc{};
@@ -627,6 +634,31 @@ int IconToolbar::layout(int width, UINT new_dpi, bool visible, int x, int y) {
     bar_height = height + divider;
     return visible ? bar_height : 0;
 }
+void IconToolbar::arrange_overflow(int width){
+    if(player||tools)return;overflow_commands.clear();
+    struct Item {TBBUTTON button{};int width{};bool hidden{};};std::vector<Item> items;
+    const int count=int(SendMessageW(hwnd,TB_BUTTONCOUNT,0,0)),normal=LOWORD(SendMessageW(hwnd,TB_GETBUTTONSIZE,0,0));
+    for(int i=0;i<count;++i){Item item;SendMessageW(hwnd,TB_GETBUTTON,i,reinterpret_cast<LPARAM>(&item.button));TBBUTTONINFOW info{sizeof(info)};info.dwMask=TBIF_SIZE|TBIF_BYINDEX;SendMessageW(hwnd,TB_GETBUTTONINFOW,i,reinterpret_cast<LPARAM>(&info));item.width=(item.button.fsStyle&BTNS_SEP)?MulDiv(7,dpi,96):std::max(normal,int(info.cx));item.hidden=item.button.idCommand==MoreCommands;items.push_back(item);}
+    const auto extent=[&]{bool previous{};int separator=-1,total{};
+        for(int i=0;i<count;++i){auto &item=items[i];if(item.button.fsStyle&BTNS_SEP){item.hidden=true;if(separator<0)separator=i;continue;}if(item.hidden)continue;
+            if(previous&&separator>=0){items[separator].hidden=false;total+=items[separator].width;}separator=-1;previous=true;total+=item.width;}
+        return total;};
+    if(overflow&&extent()>width){for(auto &item:items)if(item.button.idCommand==MoreCommands)item.hidden=false;
+        for(UINT id:{Help,ChildFolder,ParentFolder,Slideshow,Info,ArmDrag,FileDelete,Save,Fullscreen,ZoomOut,ZoomIn,Undo,Actual,Preferences,FitImage,Paste,Copy,Previous,Next,ToggleEditor}){
+            if(extent()<=width)break;for(auto &item:items)if(item.button.idCommand==id){item.hidden=true;overflow_commands.push_back(id);break;}}
+    }
+    extent();
+    // A resize changes only the buttons crossing the overflow threshold. No
+    // repeated native row layout is needed while choosing which commands fit.
+    for(int i=0;i<count;++i){auto &item=items[i];if(bool(item.button.fsState&TBSTATE_HIDDEN)==item.hidden)continue;
+        TBBUTTONINFOW info{sizeof(info)};info.dwMask=TBIF_STATE|TBIF_BYINDEX;info.fsState=BYTE(item.hidden?item.button.fsState|TBSTATE_HIDDEN:item.button.fsState&~TBSTATE_HIDDEN);SendMessageW(hwnd,TB_SETBUTTONINFOW,i,reinterpret_cast<LPARAM>(&info));}
+}
+void IconToolbar::show_more(HWND owner) const{
+    if(overflow_commands.empty())return;auto menu=CreatePopupMenu();
+    for(auto id:overflow_commands){const auto state=SendMessageW(hwnd,TB_GETSTATE,id,0);const auto p=texts.find(id);const auto text=p==texts.end()?command_name(id):p->second.c_str();AppendMenuW(menu,MF_STRING|((state&TBSTATE_ENABLED)?0:MF_GRAYED)|((state&TBSTATE_CHECKED)?MF_CHECKED:0),id,text);}
+    RECT button{};const auto index=SendMessageW(hwnd,TB_COMMANDTOINDEX,MoreCommands,0);SendMessageW(hwnd,TB_GETITEMRECT,index,reinterpret_cast<LPARAM>(&button));MapWindowPoints(hwnd,nullptr,reinterpret_cast<POINT *>(&button),2);
+    const auto id=TrackPopupMenu(menu,TPM_RETURNCMD|TPM_RIGHTBUTTON,button.left,button.bottom,0,owner,nullptr);DestroyMenu(menu);if(id)SendMessageW(owner,WM_COMMAND,id,0);
+}
 void IconToolbar::enable(UINT command, bool enabled) {
     const auto state=SendMessageW(hwnd,TB_GETSTATE,command,0);if(state<0||bool(state&TBSTATE_ENABLED)==enabled)return;
     SendMessageW(hwnd, TB_ENABLEBUTTON, command, MAKELPARAM(enabled, 0));
@@ -660,7 +692,7 @@ int IconToolbar::ideal_width() const {
     const auto items = player ? std::span<const UINT>(player_buttons) : std::span<const UINT>(buttons);
     int width = 0;
     for (UINT item : items)
-        width += item ? button : MulDiv(7, dpi, 96);
+        if(item!=MoreCommands)width += item ? button : MulDiv(7, dpi, 96);
     return width + MulDiv(4, dpi, 96);
 }
 static LRESULT CALLBACK player_bar_proc(HWND hwnd, UINT message, WPARAM w, LPARAM l) {
@@ -671,14 +703,14 @@ static LRESULT CALLBACK player_bar_proc(HWND hwnd, UINT message, WPARAM w, LPARA
         if (header->code == NM_CUSTOMDRAW) {
             auto draw = reinterpret_cast<NMTBCUSTOMDRAW *>(l);
             if (draw->nmcd.dwDrawStage == CDDS_PREPAINT) {
-                FillRect(draw->nmcd.hdc, &draw->nmcd.rc, GetSysColorBrush(COLOR_BTNFACE));
+                FillRect(draw->nmcd.hdc, &draw->nmcd.rc, ui_brush(ui_palette().surface));
                 return CDRF_DODEFAULT;
             }
         }
     }
     if (message == WM_CTLCOLORSTATIC) {
         SetBkColor(reinterpret_cast<HDC>(w), GetSysColor(COLOR_BTNFACE));
-        return reinterpret_cast<LRESULT>(GetSysColorBrush(COLOR_BTNFACE));
+        return reinterpret_cast<LRESULT>(ui_brush(ui_palette().surface));
     }
     return DefWindowProcW(hwnd, message, w, l);
 }
@@ -686,7 +718,7 @@ void AnimationBar::create(HWND parent) {
     WNDCLASSW cls{};
     cls.lpfnWndProc = player_bar_proc;
     cls.hInstance = GetModuleHandleW(nullptr);
-    cls.hbrBackground = GetSysColorBrush(COLOR_BTNFACE);
+    cls.hbrBackground = ui_brush(ui_palette().surface);
     cls.hCursor = LoadCursorW(nullptr, IDC_ARROW);
     cls.lpszClassName = L"GVN.AnimationBar";
     RegisterClassW(&cls);
@@ -705,8 +737,7 @@ int AnimationBar::measure_height(int width, UINT dpi) {
     const int icons = toolbar.ideal_width(), info = MulDiv(80, dpi, 96);
     const bool narrow = width < icons + info + MulDiv(120, dpi, 96);
     const bool third_row = narrow && width < icons + info + MulDiv(4, dpi, 96);
-    return MulDiv(narrow ? (toolbar.large_buttons() ? 66 : 58) : (toolbar.large_buttons() ? 40 : 32), dpi,
-                  96) +
+    return MulDiv(ui_button_size(toolbar.large_buttons())+(narrow?34:8),dpi,96) +
            (third_row ? MulDiv(28, dpi, 96) : 0);
 }
 int AnimationBar::layout(int width, int client_height, int status_height, UINT dpi, bool visible) {
@@ -715,7 +746,6 @@ int AnimationBar::layout(int width, int client_height, int status_height, UINT d
     if (!visible)
         return 0;
     toolbar.layout(width, dpi, true);
-    const bool large = toolbar.large_buttons();
     const int icons = toolbar.ideal_width(), info = px(80);
     const bool narrow = width < icons + info + px(120);
     const bool third_row = narrow && width < icons + info + px(4);
@@ -723,13 +753,12 @@ int AnimationBar::layout(int width, int client_height, int status_height, UINT d
     MoveWindow(hwnd, 0, std::max(0, client_height - status_height - height), width, height, TRUE);
     toolbar.layout(icons, dpi, true, px(2), px(narrow ? 29 : 3));
     const int seek_x = narrow ? px(4) : icons + px(6);
-    MoveWindow(slider, seek_x, px(3), std::max(px(20), width - seek_x - (narrow ? px(4) : info + px(4))),
+    const int controls_height=toolbar.height();
+    MoveWindow(slider, seek_x, narrow?px(3):px(3)+(controls_height-px(26))/2, std::max(px(20), width - seek_x - (narrow ? px(4) : info + px(4))),
                px(26), TRUE);
     MoveWindow(counter, third_row ? std::max(0, width - info) : std::max(icons, width - info),
                third_row ? height - px(28) : px(narrow ? 29 : 3), info,
-               px(third_row ? 26
-                  : large   ? 34
-                            : 26),
+               third_row?px(26):controls_height,
                TRUE);
     return height;
 }
@@ -796,7 +825,7 @@ static INT_PTR CALLBACK prompt_proc(HWND dialog, UINT msg, WPARAM w, LPARAM l) {
         SendMessageW(edit, EM_SETLIMITTEXT, 32760, 0);
         control(L"BUTTON", L"OK", WS_TABSTOP | BS_DEFPUSHBUTTON, 264, 108, 80, 28, IDOK);
         control(L"BUTTON", L"キャンセル", WS_TABSTOP, 354, 108, 80, 28, IDCANCEL);
-        SetFocus(edit);
+        apply_ui_theme(dialog);SetFocus(edit);
         SendMessageW(edit, EM_SETSEL, 0, -1);
         return FALSE;
     }

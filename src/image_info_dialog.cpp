@@ -1,3 +1,4 @@
+#include "gvn/ui_theme.h"
 #include "gvn/image_info_dialog.h"
 #include <commctrl.h>
 #include <mutex>
@@ -84,7 +85,7 @@ struct ImageInfoDialog::Impl {
     }
     static INT_PTR CALLBACK procedure(HWND h,UINT m,WPARAM w,LPARAM l) {
         auto self=reinterpret_cast<Impl*>(GetWindowLongPtrW(h,DWLP_USER));if(m==WM_INITDIALOG){self=reinterpret_cast<Impl*>(l);self->hwnd=h;SetWindowLongPtrW(h,DWLP_USER,l);}if(!self)return FALSE;
-        try{return self->message(m,w,l);}catch(...){SetWindowTextW(self->control(id::Error),L"情報画面の処理に失敗しました。");return TRUE;}
+        try{const auto result=self->message(m,w,l);if(m==WM_INITDIALOG||m==WM_DPICHANGED)apply_ui_theme(h);return result;}catch(...){SetWindowTextW(self->control(id::Error),L"情報画面の処理に失敗しました。");return TRUE;}
     }
 };
 ImageInfoDialog::ImageInfoDialog(ImageInfoData data,bool automatic,Counter counter):impl(std::make_unique<Impl>()){if(data.fields.size()>50)throw std::invalid_argument("Too many information fields");impl->data=std::move(data);impl->automatic=automatic;impl->counter=std::move(counter);}

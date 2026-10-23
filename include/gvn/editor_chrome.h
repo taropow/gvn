@@ -7,14 +7,16 @@ namespace gvn {
 namespace editor_id {
 enum : int { Color=7000, Width, Opacity, Font, TextSize, Text, X, Y, W, H, Angle, Scale, Anchor,
     Apply, Cancel, Name, Format, Drag, Hint, Error, TextUpdate,
-    Outline, OutlineColor, OutlineWidth, Shadow, ShadowColor, ShadowOffset, ShadowBlur, ShadowOpacity, Last };
+    Outline, OutlineColor, OutlineWidth, Shadow, ShadowColor, ShadowOffset, ShadowBlur, ShadowOpacity, Details, Last };
 }
 enum class EditorPanel { None, Pen, Text, Crop, Transform };
 class EditorChrome {
     HWND owner{};
     HFONT font{};UINT dpi{};
     UINT anchor_dpi{},format_dpi{};
+    uint64_t palette_generation{};
     HICON drag_icon{};
+    bool details_open{};
     bool filling{},drag_pending{},drag_hot{};POINT drag_start{};
     std::map<int,HWND> controls;
     std::map<int,HWND> labels;
@@ -32,7 +34,8 @@ class EditorChrome {
   public:
     HWND top{},bottom{};
     ~EditorChrome();
-    static int top_height(int width,UINT dpi,EditorPanel,bool applying);
+    static int top_height(int width,UINT dpi,EditorPanel,bool applying,bool details=true);
+    int measure_top(int width,UINT scale_dpi,EditorPanel mode,bool applying) const{return top_height(width,scale_dpi,mode,applying,details_open);}
     static int status_height(UINT dpi,bool image){return MulDiv(image?30:22,dpi,96);}
     int layout_top(HWND,int width,int y,UINT,bool visible,EditorPanel,bool applying);
     void layout_status(HWND owner,HWND status,const RECT &,UINT,bool visible,bool enabled);

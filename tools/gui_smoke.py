@@ -12,7 +12,7 @@ with tempfile.TemporaryDirectory(prefix='GVN-gui-test-') as temporary:
         assert not data['error'],(name,data)
         assert data['rendered'],(name,data)
         assert (data['width'],data['height'],data['frames'])==expected,(name,data)
-        assert data['toolbar_buttons']==26,(name,data)
+        assert data['toolbar_buttons']==27,(name,data)
         print('PASS native window/render',name)
     report=Path(temporary)/'invalid.json'
     result=subprocess.run([str(exe),'--smoke',str(fixtures/'missing.png'),str(report)],timeout=25)

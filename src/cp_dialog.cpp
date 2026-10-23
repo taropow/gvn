@@ -1,3 +1,4 @@
+#include "gvn/ui_theme.h"
 #include "gvn/cp_dialog.h"
 #include "gvn/masks.h"
 #include <algorithm>
@@ -124,7 +125,7 @@ struct CpDialog::Impl {
     }
     static INT_PTR CALLBACK procedure(HWND h,UINT m,WPARAM w,LPARAM l) {
         auto self=reinterpret_cast<Impl*>(GetWindowLongPtrW(h,DWLP_USER));if(m==WM_INITDIALOG){self=reinterpret_cast<Impl*>(l);self->hwnd=h;SetWindowLongPtrW(h,DWLP_USER,l);}if(!self)return FALSE;
-        try{return self->message(m,w,l);}catch(const std::exception &e){self->fail(e.what());return TRUE;}catch(...){self->fail("Cannot open CP dialog");return TRUE;}
+        try{const auto result=self->message(m,w,l);if(m==WM_INITDIALOG||m==WM_DPICHANGED)apply_ui_theme(h);return result;}catch(const std::exception &e){self->fail(e.what());return TRUE;}catch(...){self->fail("Cannot open CP dialog");return TRUE;}
     }
 };
 CpDialog::CpDialog(CpChoice initial,Process process,Preview preview,Current current):impl(std::make_unique<Impl>()) {

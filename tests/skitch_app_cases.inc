@@ -73,8 +73,8 @@
             const int width=MulDiv(logical,dpi,96);app.editor_chrome.layout_status(app.hwnd,app.status,{0,0,width,MulDiv(26,dpi,96)},dpi,true,true);
             CHECK(GetParent(app.editor_chrome.bottom)==app.status);
             RECT previous{},panel{};GetClientRect(app.editor_chrome.bottom,&panel);
-            for(int id:{editor_id::Name,editor_id::Format,editor_id::Drag}){RECT r{};GetWindowRect(app.editor_chrome.control(id),&r);MapWindowPoints(nullptr,app.editor_chrome.bottom,reinterpret_cast<POINT *>(&r),2);
-                CHECK(r.left>=previous.right&&r.top>=0&&r.right<=width&&r.bottom<=panel.bottom);CHECK(std::abs((r.top+r.bottom)-(previous.top+previous.bottom))<=MulDiv(4,dpi,96)||id==editor_id::Name);previous=r;}}
+            for(int id:{editor_id::Drag,editor_id::Name,editor_id::Format}){RECT r{};GetWindowRect(app.editor_chrome.control(id),&r);MapWindowPoints(nullptr,app.editor_chrome.bottom,reinterpret_cast<POINT *>(&r),2);
+                CHECK(r.left>=previous.right&&r.top>=0&&r.right<=width&&r.bottom<=panel.bottom);CHECK(std::abs((r.top+r.bottom)-(previous.top+previous.bottom))<=MulDiv(4,dpi,96)||id==editor_id::Drag);previous=r;}}
         app.layout();
         std::vector<std::filesystem::path> exported;
         app.dialogs.file_drag=[&](const auto &path){CHECK(GetCapture()!=drag&&!app.player.playing&&std::filesystem::is_regular_file(path));

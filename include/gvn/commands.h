@@ -9,6 +9,7 @@ struct CommandInfo {
 const std::vector<CommandInfo> &command_catalog();
 const wchar_t *command_name(unsigned id);
 enum Command {
+    MoreCommands = 6800,
     Open = 100,
     Reload,
     Exit,

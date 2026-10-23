@@ -65,6 +65,7 @@
         if(id==Apply){if(cropping)commit_crop();else if(floating){if(floating->text_annotation)refresh_text();else apply_editor_bounds();commit_floating();}SetFocus(hwnd);return;}
         if(id==Cancel){command(CancelSelection);SetFocus(hwnd);return;}
         if(id==Drag){export_drag();return;}
+        if(id==Details){editor_chrome.notification(id,code);layout();update();return;}
         if(editor_chrome.notification(id,code)){refresh_text();return;}
         if(id==TextUpdate){try{refresh_text();editor_chrome.error(L"");}catch(const std::exception &e){editor_chrome.error(widen(e.what()));}return;}
         if((cropping||(floating&&!floating->text_annotation))&&id>=X&&id<=Scale&&code==EN_KILLFOCUS){

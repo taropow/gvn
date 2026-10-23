@@ -1,3 +1,4 @@
+#include "gvn/ui_theme.h"
 #include "gvn/file_transfer_dialog.h"
 #include "gvn/ui.h"
 #include <commctrl.h>
@@ -589,7 +590,7 @@ struct FileTransferDialog::Impl {
         if (!self)
             return FALSE;
         try {
-            return self->message(m, w, l);
+            const auto result=self->message(m, w, l);if(m==WM_INITDIALOG||m==WM_DPICHANGED)apply_ui_theme(h);return result;
         } catch (const std::exception &) {
             self->notify(L"ファイル操作画面の処理に失敗しました。");
             self->finish();

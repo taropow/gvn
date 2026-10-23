@@ -1,3 +1,4 @@
+#include "gvn/ui_theme.h"
 #include "gvn/resize_dialog.h"
 #include "gvn/display_quality.h"
 #include "gvn/core.h"
@@ -107,6 +108,25 @@ struct ResizeDialog::Impl {
         for(const auto key:{id::Red,id::Green,id::Blue,id::Alpha,id::Color})EnableWindow(control(key),!canvas->transparent);
         for(int n=0;n<9;++n)SendMessageW(control(id::Anchor+n),BM_SETCHECK,n==canvas->anchor?BST_CHECKED:BST_UNCHECKED,0);
     }
+    // Native radios retain accessible names and check states; paint only the square.
+    static LRESULT CALLBACK anchor_cell(HWND cell,UINT m,WPARAM w,LPARAM l,UINT_PTR,DWORD_PTR) {
+        if(m==WM_PAINT||m==WM_PRINTCLIENT){
+            PAINTSTRUCT paint{};const auto dc=m==WM_PAINT?BeginPaint(cell,&paint):reinterpret_cast<HDC>(w);
+            RECT area{};GetClientRect(cell,&area);const auto &colors=ui_palette();
+            FillRect(dc,&area,ui_brush(SendMessageW(cell,BM_GETCHECK,0,0)==BST_CHECKED?colors.accent:colors.panel));
+            FrameRect(dc,&area,ui_brush(colors.muted));
+            if(GetFocus()==cell){InflateRect(&area,-2,-2);DrawFocusRect(dc,&area);}
+            if(m==WM_PAINT)EndPaint(cell,&paint);return 0;
+        }
+        if(m==WM_KEYDOWN&&(w==VK_LEFT||w==VK_RIGHT||w==VK_UP||w==VK_DOWN)){
+            const int n=GetDlgCtrlID(cell)-id::Anchor,x=n%3,y=n/3;
+            const int next=(w==VK_LEFT?(x+2)%3:w==VK_RIGHT?(x+1)%3:x)+3*(w==VK_UP?(y+2)%3:w==VK_DOWN?(y+1)%3:y);
+            const auto target=GetDlgItem(GetParent(cell),id::Anchor+next);SetFocus(target);SendMessageW(target,BM_CLICK,0,0);return 0;
+        }
+        const auto result=DefSubclassProc(cell,m,w,l);
+        if(m==BM_SETCHECK||m==WM_SETFOCUS||m==WM_KILLFOCUS)InvalidateRect(cell,nullptr,FALSE);
+        return result;
+    }
     void canvas_values() {
         syncing=true;
         for(int n=0;n<3;++n)SetWindowTextW(control(id::Red+n),std::to_wstring((canvas->color>>(16-8*n))&255).c_str());
@@ -199,7 +219,7 @@ struct ResizeDialog::Impl {
         if(canvas) {
             place(id::CanvasUnit,304,218,132,180);
             place(240,20,309,150,22);place(241,184,309,250,22);
-            for(int n=0;n<9;++n)place(id::Anchor+n,20+(n%3)*46,336+(n/3)*34,44,32);
+            for(int n=0;n<9;++n)place(id::Anchor+n,20+(n%3)*22,336+(n/3)*22,20,20);
             place(id::Transparent,184,336,250,24);
             for(int n=0;n<4;++n){place(242+n,184+n*66,368,60,20);place(id::Red+n,184+n*66,391,60,26);}
             place(id::Color,184,427,250,28);
@@ -254,9 +274,9 @@ struct ResizeDialog::Impl {
             if(canvas) {
                 combo(id::CanvasUnit,{L"px",L"%",L"inch",L"cm",L"mm"},canvas->unit);
                 make(240,L"STATIC",L"基準点",0);make(241,L"STATIC",L"余白の色と透明度（0～255）",0);
-                const wchar_t *anchors[]{L"↖",L"↑",L"↗",L"←",L"●",L"→",L"↙",L"↓",L"↘"};
-                for(int n=0;n<9;++n)make(id::Anchor+n,L"BUTTON",anchors[n],WS_TABSTOP|BS_AUTORADIOBUTTON|BS_PUSHLIKE);
-                make(id::Transparent,L"BUTTON",L"透明の余白(&T)",WS_TABSTOP|BS_AUTOCHECKBOX);
+                const wchar_t *anchors[]{L"左上",L"上中央",L"右上",L"左中央",L"中央",L"右中央",L"左下",L"下中央",L"右下"};
+                for(int n=0;n<9;++n)make(id::Anchor+n,L"BUTTON",anchors[n],WS_TABSTOP|BS_AUTORADIOBUTTON|BS_PUSHLIKE|(n==0?WS_GROUP:0));
+                make(id::Transparent,L"BUTTON",L"透明の余白(&T)",WS_TABSTOP|WS_GROUP|BS_AUTOCHECKBOX);
                 const wchar_t *channels[]{L"赤 R",L"緑 G",L"青 B",L"Alpha"};
                 for(int n=0;n<4;++n){make(242+n,L"STATIC",channels[n],0);make(id::Red+n,L"EDIT",L"",WS_TABSTOP|ES_AUTOHSCROLL|ES_NUMBER,WS_EX_CLIENTEDGE);}
                 make(id::Color,L"BUTTON",L"色を選択…(&C)",WS_TABSTOP|BS_PUSHBUTTON);
@@ -368,8 +388,8 @@ struct ResizeDialog::Impl {
         if(m==WM_DRAWITEM && reinterpret_cast<DRAWITEMSTRUCT*>(l)->CtlType==ODT_COMBOBOX) {
             const auto &draw=*reinterpret_cast<DRAWITEMSTRUCT*>(l);if(draw.itemID==static_cast<UINT>(-1))return TRUE;
             const auto saved=SaveDC(draw.hDC);const bool selected=(draw.itemState&ODS_SELECTED)!=0;
-            FillRect(draw.hDC,&draw.rcItem,GetSysColorBrush(selected?COLOR_HIGHLIGHT:COLOR_WINDOW));
-            SetTextColor(draw.hDC,GetSysColor((draw.itemState&ODS_DISABLED)?COLOR_GRAYTEXT:selected?COLOR_HIGHLIGHTTEXT:COLOR_WINDOWTEXT));
+            FillRect(draw.hDC,&draw.rcItem,ui_brush(selected?ui_palette().selected:ui_palette().input));
+            SetTextColor(draw.hDC,(draw.itemState&ODS_DISABLED)?ui_palette().muted:ui_palette().text);
             SetBkMode(draw.hDC,TRANSPARENT);SelectObject(draw.hDC,font?font:GetStockObject(DEFAULT_GUI_FONT));
             const auto length=SendMessageW(draw.hwndItem,CB_GETLBTEXTLEN,draw.itemID,0);
             if(length>=0) {
@@ -385,7 +405,7 @@ struct ResizeDialog::Impl {
         auto self=reinterpret_cast<Impl*>(GetWindowLongPtrW(h,DWLP_USER));
         if(m==WM_INITDIALOG){self=reinterpret_cast<Impl*>(l);self->hwnd=h;SetWindowLongPtrW(h,DWLP_USER,l);}
         if(!self)return FALSE;
-        try{return self->message(m,w,l);}catch(...){self->fail();return TRUE;}
+        try{const auto result=self->message(m,w,l);if(m==WM_INITDIALOG||m==WM_DPICHANGED){apply_ui_theme(h);if(self->canvas)for(int n=0;n<9;++n){const auto cell=self->control(id::Anchor+n);RemoveWindowSubclass(cell,anchor_cell,78);SetWindowSubclass(cell,anchor_cell,78,0);}}return result;}catch(...){self->fail();return TRUE;}
     }
 };
 ResizeDialog::ResizeDialog(uint32_t w,uint32_t h,ResizeChoice choice,Validator validate):impl(std::make_unique<Impl>()) {

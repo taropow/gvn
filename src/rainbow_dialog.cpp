@@ -1,3 +1,4 @@
+#include "gvn/ui_theme.h"
 #include "gvn/rainbow_dialog.h"
 #include <algorithm>
 #include <array>
@@ -143,7 +144,7 @@ struct RainbowDialog::Impl {
         auto self=reinterpret_cast<Impl*>(GetWindowLongPtrW(h,DWLP_USER));
         if(m==WM_INITDIALOG){self=reinterpret_cast<Impl*>(l);self->hwnd=h;SetWindowLongPtrW(h,DWLP_USER,l);}
         if(!self)return FALSE;
-        try{return self->message(m,w,l);}
+        try{const auto result=self->message(m,w,l);if(m==WM_INITDIALOG||m==WM_DPICHANGED)apply_ui_theme(h);return result;}
         catch(const std::exception &e){self->fail(e.what());return TRUE;}
         catch(...){self->fail("Cannot open Rainbow dialog");return TRUE;}
     }

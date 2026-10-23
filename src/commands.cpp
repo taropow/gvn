@@ -259,6 +259,7 @@ const std::vector<CommandInfo> &command_catalog() {
     return commands;
 }
 const wchar_t *command_name(unsigned id) {
+    if(id==MoreCommands)return L"その他の操作";
     const auto &commands = command_catalog();
     const auto it =
         std::find_if(commands.begin(), commands.end(), [=](const auto &entry) { return entry.id == id; });

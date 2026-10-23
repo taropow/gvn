@@ -24,8 +24,10 @@ enum class PreferencePage {
     Count
 };
 namespace preference_id {
+constexpr int Groups=103,Search=104,SearchResults=105,ResetField=106,Related=107;
 constexpr int Tabs = 100, ApplyButton = 101, Reset = 102, PageBase = 1000, ScrollBase = 1500;
 enum : int {
+    UiTheme=650,UiDensity,ToolbarOverflow,
     Undo = 200,
     History,
     PasteNew,
@@ -222,6 +224,8 @@ class PreferencesDialog {
     HWND window() const;
     HWND control(int id) const;
     void select_page(PreferencePage page);
+    int selected_page() const;
+    int page_tab_index(PreferencePage) const;
     // OS file-picker boundary; native-control tests can supply a selected owned executable.
     void set_executable_picker(std::function<std::filesystem::path(HWND)> picker);
     const std::vector<std::pair<const char *, ULONGLONG>> &initialization_timings() const;

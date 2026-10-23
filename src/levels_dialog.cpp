@@ -1,3 +1,4 @@
+#include "gvn/ui_theme.h"
 #include "gvn/levels_dialog.h"
 #include <commctrl.h>
 #include <cmath>
@@ -101,7 +102,7 @@ struct LevelsDialog::Impl {
         if(m==WM_DPICHANGED){dpi=HIWORD(w);const auto rect=reinterpret_cast<RECT*>(l);SetWindowPos(hwnd,nullptr,rect->left,rect->top,rect->right-rect->left,rect->bottom-rect->top,SWP_NOZORDER|SWP_NOACTIVATE);set_font();arrange();return TRUE;}
         if(m==WM_CLOSE){finish(false);return TRUE;}if(m==WM_DESTROY){KillTimer(hwnd,1);KillTimer(hwnd,2);withdraw();candidate.reset();initialized=false;return TRUE;}return FALSE;
     }
-    static INT_PTR CALLBACK procedure(HWND h,UINT m,WPARAM w,LPARAM l){auto self=reinterpret_cast<Impl*>(GetWindowLongPtrW(h,DWLP_USER));if(m==WM_INITDIALOG){self=reinterpret_cast<Impl*>(l);self->hwnd=h;SetWindowLongPtrW(h,DWLP_USER,l);}if(!self)return FALSE;try{return self->message(m,w,l);}catch(...){self->error(L"レベル調整を実行できません。");if(!self->initialized)PostMessageW(h,WM_CLOSE,0,0);return TRUE;}}
+    static INT_PTR CALLBACK procedure(HWND h,UINT m,WPARAM w,LPARAM l){auto self=reinterpret_cast<Impl*>(GetWindowLongPtrW(h,DWLP_USER));if(m==WM_INITDIALOG){self=reinterpret_cast<Impl*>(l);self->hwnd=h;SetWindowLongPtrW(h,DWLP_USER,l);}if(!self)return FALSE;try{const auto result=self->message(m,w,l);if(m==WM_INITDIALOG||m==WM_DPICHANGED)apply_ui_theme(h);return result;}catch(...){self->error(L"レベル調整を実行できません。");if(!self->initialized)PostMessageW(h,WM_CLOSE,0,0);return TRUE;}}
 };
 LevelsDialog::LevelsDialog(LevelsChoice choice,LevelsHistogram histogram,Process process,Preview preview,Current current):impl(std::make_unique<Impl>()){
     if(!valid_levels(choice.adjustment)||!process)throw std::invalid_argument("Invalid levels dialog source");impl->draft=choice;impl->histogram=std::move(histogram);impl->process=std::move(process);impl->notify=std::move(preview);impl->current=std::move(current);

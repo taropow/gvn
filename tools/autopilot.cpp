@@ -319,7 +319,7 @@ void capture(HWND hwnd, const std::filesystem::path &path) {
                     std::to_string(a.y) + "," + std::to_string(b.x) + "," + std::to_string(b.y));
         }
         if (_wcsicmp(cls, TOOLBARCLASSNAMEW) == 0 && fully_visible(control)) {
-            const auto face = GetSysColor(COLOR_BTNFACE);
+
             const int inset = MulDiv(3, GetDpiForWindow(control), 96);
             const auto count = SendMessageW(control, TB_BUTTONCOUNT, 0, 0);
             for (int index = 0; index < count; ++index) {
@@ -331,18 +331,10 @@ void capture(HWND hwnd, const std::filesystem::path &path) {
                 SendMessageW(control, TB_GETITEMRECT, index, reinterpret_cast<LPARAM>(&bounds));
                 MapWindowPoints(control, nullptr, reinterpret_cast<POINT *>(&bounds), 2);
                 OffsetRect(&bounds, -rc.left, -rc.top);
-                size_t background{}, ink{};
-                for (int y = std::max(0L, bounds.top + inset);
-                     y < std::min(static_cast<LONG>(image.height), bounds.bottom - inset); ++y)
-                    for (int x = std::max(0L, bounds.left + inset);
-                         x < std::min(static_cast<LONG>(image.width), bounds.right - inset); ++x) {
-                        const auto p = image.frames[0].pixels[static_cast<size_t>(y) * image.width + x];
-                        const auto distance = std::abs(p.r - GetRValue(face)) +
-                                              std::abs(p.g - GetGValue(face)) +
-                                              std::abs(p.b - GetBValue(face));
-                        background += distance < 75;
-                        ink += distance >= 75;
-                    }
+                std::map<uint32_t,size_t> colors;
+                for(int y=std::max(0L,bounds.top+inset);y<std::min(LONG(image.height),bounds.bottom-inset);++y)for(int x=std::max(0L,bounds.left+inset);x<std::min(LONG(image.width),bounds.right-inset);++x){const auto p=image.frames[0].pixels[size_t(y)*image.width+x];++colors[(uint32_t(p.r)<<16)|(uint32_t(p.g)<<8)|p.b];}
+                require(!colors.empty(),"Captured toolbar button rectangle is empty");const auto face=std::max_element(colors.begin(),colors.end(),[](const auto &a,const auto &b){return a.second<b.second;})->first;
+                size_t background{},ink{};for(const auto &[color,count]:colors){const auto distance=std::abs(int((color>>16)&255)-int((face>>16)&255))+std::abs(int((color>>8)&255)-int((face>>8)&255))+std::abs(int(color&255)-int(face&255));if(distance<75)background+=count;else ink+=count;}
                 if (background < 8 || ink < 2)
                     throw std::runtime_error("Native toolbar icon/background missing from capture: command=" +
                                              std::to_string(button.idCommand));
@@ -555,7 +547,7 @@ const std::map<std::string, int> preference_ids{
     P(FullUp),
     P(HideTaskbar),
     P(HideWait),
-    P(Tabs),
+    P(Tabs),P(Groups),P(Search),P(SearchResults),P(ResetField),P(Related),P(UiTheme),P(UiDensity),P(ToolbarOverflow),
     P(WindowCenter),
     P(WindowToolbarMin),
     P(StartupPosition),
@@ -1426,7 +1418,11 @@ struct Autopilot {
     }
     void toolbar(UINT id, bool player = true) {
         const auto target = player ? app.playback.toolbar.hwnd : app.toolbar.hwnd;
-        RECT r{};
+        RECT r{};const auto state=SendMessageW(target,TB_GETSTATE,id,0);
+        if(!player&&state>=0&&(state&TBSTATE_HIDDEN)){
+            require(std::find(app.toolbar.hidden_commands().begin(),app.toolbar.hidden_commands().end(),id)!=app.toolbar.hidden_commands().end(),"Hidden command is not present in the overflow menu");
+            require((state&TBSTATE_ENABLED)!=0,"Overflow command disabled");++popup_count;SendMessageW(app.hwnd,WM_COMMAND,id,0);return;
+        }
         require(SendMessageW(target, TB_GETRECT, id, reinterpret_cast<LPARAM>(&r)) != FALSE,
                 "Toolbar button missing");
         require(SendMessageW(target, TB_ISBUTTONENABLED, id, 0) != FALSE, "Toolbar button disabled");
@@ -1738,12 +1734,12 @@ struct Autopilot {
         }
         if (name == "settings.scroll") {
             const auto page =
-                preferences->control(preference_id::ScrollBase + TabCtrl_GetCurSel(control("Tabs")));
+                preferences->control(preference_id::ScrollBase + preferences->selected_page());
             return GetScrollPos(page, SB_CTL);
         }
         if (name == "settings.scrollbar") {
             const auto page =
-                preferences->control(preference_id::ScrollBase + TabCtrl_GetCurSel(control("Tabs")));
+                preferences->control(preference_id::ScrollBase + preferences->selected_page());
             return fully_visible(page);
         }
         if (name.starts_with("text_limit."))
@@ -1908,7 +1904,7 @@ struct Autopilot {
         if (name == "settings_open")
             return preferences && IsWindow(preferences->window());
         if (name == "tabs")
-            return preferences ? TabCtrl_GetItemCount(preferences->control(preference_id::Tabs)) : 0;
+            return preferences ? int(PreferencePage::Count) : 0;
         if (name == "key_functions")
             return ListView_GetItemCount(control("KeyList"));
         if (name == "key_slots")
@@ -2206,7 +2202,7 @@ struct Autopilot {
             return;
         }
         if(s[0]=="editor_set"||s[0]=="editor_click"||s[0]=="editor_expect") {
-            const std::map<std::string,int> ids{{"Outline",editor_id::Outline},{"OutlineWidth",editor_id::OutlineWidth},{"Shadow",editor_id::Shadow},{"ShadowOffset",editor_id::ShadowOffset},{"ShadowBlur",editor_id::ShadowBlur},{"ShadowOpacity",editor_id::ShadowOpacity},{"Width",editor_id::Width},{"Opacity",editor_id::Opacity},{"Font",editor_id::Font},{"TextSize",editor_id::TextSize},{"Text",editor_id::Text},
+            const std::map<std::string,int> ids{{"Outline",editor_id::Outline},{"OutlineWidth",editor_id::OutlineWidth},{"Shadow",editor_id::Shadow},{"ShadowOffset",editor_id::ShadowOffset},{"ShadowBlur",editor_id::ShadowBlur},{"ShadowOpacity",editor_id::ShadowOpacity},{"Details",editor_id::Details},{"Width",editor_id::Width},{"Opacity",editor_id::Opacity},{"Font",editor_id::Font},{"TextSize",editor_id::TextSize},{"Text",editor_id::Text},
                 {"X",editor_id::X},{"Y",editor_id::Y},{"W",editor_id::W},{"H",editor_id::H},{"Angle",editor_id::Angle},{"Scale",editor_id::Scale},{"Anchor",editor_id::Anchor},
                 {"Apply",editor_id::Apply},{"Cancel",editor_id::Cancel},{"Name",editor_id::Name},{"Format",editor_id::Format}};
             const auto id=ids.at(s.at(1));const auto h=app.editor_chrome.control(id);own(h);
@@ -3076,7 +3072,7 @@ struct Autopilot {
         } else if (op == "scroll_page") {
             require(s.at(1) == "top" || s.at(1) == "bottom", "Unknown scroll destination");
             const auto scrollbar =
-                preferences->control(preference_id::ScrollBase + TabCtrl_GetCurSel(control("Tabs")));
+                preferences->control(preference_id::ScrollBase + preferences->selected_page());
             own(scrollbar);
             require(fully_visible(scrollbar), "Settings scrollbar is not visible");
             SetFocus(scrollbar);
@@ -3291,11 +3287,14 @@ struct Autopilot {
         else if (op == "tab") {
             auto tab = preferences ? preferences->control(preference_id::Tabs) : nullptr;
             own(tab);
+            preferences->select_page(static_cast<PreferencePage>(page_ids.at(s.at(1))));
             RECT r{};
-            require(TabCtrl_GetItemRect(tab, page_ids.at(s.at(1)), &r) != FALSE, "Tab missing");
+            require(TabCtrl_GetItemRect(tab, preferences->page_tab_index(static_cast<PreferencePage>(page_ids.at(s.at(1)))), &r) != FALSE, "Tab missing");
             native_click(tab, (r.left + r.right) / 2, (r.top + r.bottom) / 2);
-            require(TabCtrl_GetCurSel(tab) == page_ids.at(s.at(1)),
+            require(preferences->selected_page() == page_ids.at(s.at(1)),
                     "Native tab click did not select requested page");
+        } else if(op=="search_result"){
+            require(preferences!=nullptr,"Settings dialog required");auto list=preferences->control(preference_id::SearchResults);own(list);const int row=std::stoi(s.at(1));require(row>=0&&row<SendMessageW(list,LB_GETCOUNT,0,0),"Search row missing");SendMessageW(list,LB_SETCURSEL,row,0);SetFocus(list);SendMessageW(list,WM_KEYDOWN,VK_RETURN,0);require(IsChild(preferences->window(),GetFocus()),"Search did not focus an owned setting");
         } else if (op == "expect_checked") {
             const auto widget = control(s.at(1));
             require(s.at(2) == "true" || s.at(2) == "false", "Invalid expected checkbox state");

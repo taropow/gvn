@@ -1,5 +1,6 @@
 #pragma once
 #include "commands.h"
+#include "ui_theme.h"
 #include "core.h"
 #include "printing.h"
 #include <windows.h>
@@ -22,6 +23,10 @@ class IconToolbar {
     int bar_height{};
     int measured_width{-1},measured_height{},measured_extent{};
     std::map<UINT,std::wstring> texts;
+    uint64_t palette_generation{};
+    bool overflow{true};
+    std::vector<UINT> overflow_commands;
+    void arrange_overflow(int);
     int play_bitmap{-1}, pause_bitmap{-1};
     void rebuild();
 
@@ -31,6 +36,9 @@ class IconToolbar {
     void create(HWND parent, bool playback = false,bool editing_tools=false);
     int layout_tools(UINT dpi,int top,int height,bool visible);
     void scroll_tools(UINT action,int delta=0);
+    void use_overflow(bool value){if(overflow!=value){overflow=value;measured_width=-1;}}
+    const std::vector<UINT> &hidden_commands() const{return overflow_commands;}
+    void show_more(HWND owner) const;
     void floating(bool value){floating_mode=value;}
     void configure(bool center, bool top_line, bool large_buttons) {
         centered = center;

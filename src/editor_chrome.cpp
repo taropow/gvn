@@ -1,5 +1,6 @@
 #include "gvn/editor_chrome.h"
 #include "gvn/ui.h"
+#include "gvn/ui_theme.h"
 #include <commdlg.h>
 #include <windowsx.h>
 #include <sstream>
@@ -8,12 +9,12 @@
 namespace gvn {
 namespace {
 using namespace editor_id;
-struct AnnotationLayout {POINT base{},outline{},shadow{};int text_y{},height{};};
-AnnotationLayout annotation_layout(int width,EditorPanel mode){
+struct AnnotationLayout {POINT base{},outline{},shadow{},details{};int text_y{},height{};};
+AnnotationLayout annotation_layout(int width,EditorPanel mode,bool details){
     const bool text=mode==EditorPanel::Text;int x=8,y=6,limit=width-8;
     if(text){if(width<680)y+=34;else limit-=204;}
     const auto group=[&](int w){if(x>8&&x+w>limit){x=8;y+=32;limit=width-8;}const POINT at{x,y};x+=w+12;return at;};
-    AnnotationLayout out;out.base=group(text?300:230);out.outline=group(150);out.shadow=group(300);
+    AnnotationLayout out;out.base=group(text?300:230);out.outline=group(details?150:44);out.shadow=group(details?300:44);out.details=group(80);
     out.text_y=y+32;out.height=text?out.text_y+40:y+32;return out;
 }
 std::wstring numeric(double value){std::wostringstream out;out<<std::fixed<<std::setprecision(2)<<value;
@@ -34,12 +35,12 @@ void EditorChrome::create(HWND parent,bool editing){
     owner=parent;
     if(top&&bottom&&(!editing||control(Width)))return;
     WNDCLASSW cls{};cls.lpfnWndProc=procedure;cls.hInstance=GetModuleHandleW(nullptr);cls.hCursor=LoadCursorW(nullptr,IDC_ARROW);
-    cls.hbrBackground=GetSysColorBrush(COLOR_BTNFACE);cls.lpszClassName=L"GVN.EditorChrome";RegisterClassW(&cls);
+    cls.hbrBackground=ui_brush(ui_palette().surface);cls.lpszClassName=L"GVN.EditorChrome";RegisterClassW(&cls);
     if(!top)top=CreateWindowExW(0,cls.lpszClassName,L"編集オプション",WS_CHILD|WS_CLIPCHILDREN,0,0,1,1,parent,nullptr,cls.hInstance,this);
     if(!bottom)bottom=CreateWindowExW(0,cls.lpszClassName,L"ファイルをドラッグ",WS_CHILD|WS_CLIPCHILDREN,0,0,1,1,parent,nullptr,cls.hInstance,this);
     auto add=[&](int id,const wchar_t *kind,const wchar_t *value,DWORD style,HWND host){
         auto child=CreateWindowExW(0,kind,value,WS_CHILD|WS_TABSTOP|style|(wcscmp(kind,L"EDIT")==0?WS_BORDER:0),0,0,1,1,host,reinterpret_cast<HMENU>(INT_PTR(id)),cls.hInstance,nullptr);
-        controls[id]=child;if(font)SendMessageW(child,WM_SETFONT,reinterpret_cast<WPARAM>(font),FALSE);return child;};
+        controls[id]=child;apply_ui_theme(child,false);if(font)SendMessageW(child,WM_SETFONT,reinterpret_cast<WPARAM>(font),FALSE);return child;};
     if(!control(Name)){
         add(Name,L"EDIT",export_default.empty()?L"画像":export_default.c_str(),ES_AUTOHSCROLL,bottom);SendMessageW(control(Name),EM_SETLIMITTEXT,120,0);
         add(Format,L"COMBOBOX",L"",CBS_DROPDOWNLIST|CBS_OWNERDRAWFIXED|CBS_HASSTRINGS|WS_VSCROLL,bottom);
@@ -48,6 +49,7 @@ void EditorChrome::create(HWND parent,bool editing){
         auto drag=add(Drag,L"BUTTON",L"ドラッグ",BS_OWNERDRAW,bottom);
         SetWindowSubclass(drag,drag_procedure,1,reinterpret_cast<DWORD_PTR>(this));
     }
+    apply_ui_theme(top,false);apply_ui_theme(bottom,false);
     if(!editing||control(Width))return;
     auto field=[&](int id,const wchar_t *label,const wchar_t *value){labels[id]=CreateWindowW(L"STATIC",label,WS_CHILD|SS_CENTERIMAGE,0,0,1,1,top,nullptr,cls.hInstance,nullptr);
         if(font)SendMessageW(labels[id],WM_SETFONT,reinterpret_cast<WPARAM>(font),FALSE);
@@ -57,7 +59,8 @@ void EditorChrome::create(HWND parent,bool editing){
     for(auto value:{L"Yu Gothic UI",L"Meiryo",L"Arial",L"MS UI Gothic"})SendMessageW(control(Font),CB_ADDSTRING,0,reinterpret_cast<LPARAM>(value));
     SetWindowTextW(control(Font),L"Yu Gothic UI");field(TextSize,L"サイズ",L"32");
     add(Text,L"EDIT",L"文字",ES_MULTILINE|ES_AUTOVSCROLL|ES_WANTRETURN|WS_VSCROLL,top);SendMessageW(control(Text),EM_SETLIMITTEXT,4096,0);
-    add(Outline,L"BUTTON",L"フチ",BS_AUTOCHECKBOX,top);add(OutlineColor,L"BUTTON",L"色",BS_OWNERDRAW,top);field(OutlineWidth,L"幅 px",L"2");
+    add(Details,L"BUTTON",L"詳細 ▾",BS_AUTOCHECKBOX|BS_PUSHLIKE,top);
+    add(Outline,L"BUTTON",L"フチ",BS_AUTOCHECKBOX,top);add(OutlineColor,L"BUTTON",L"色",BS_OWNERDRAW,top);field(OutlineWidth,L"幅",L"2");
     add(Shadow,L"BUTTON",L"影",BS_AUTOCHECKBOX,top);add(ShadowColor,L"BUTTON",L"色",BS_OWNERDRAW,top);
     field(ShadowOffset,L"距離",L"3");field(ShadowBlur,L"ぼかし",L"3");field(ShadowOpacity,L"濃さ %",L"50");
     for(auto [id,label]:{std::pair{X,L"X"},{Y,L"Y"},{W,L"幅"},{H,L"高さ"},{Angle,L"角度 °"},{Scale,L"出力 %"}})field(id,label,id==Scale?L"100":L"0");
@@ -80,8 +83,8 @@ LRESULT CALLBACK EditorChrome::procedure(HWND window,UINT message,WPARAM w,LPARA
     if(self&&message==WM_DRAWITEM&&reinterpret_cast<DRAWITEMSTRUCT *>(l)->CtlType==ODT_COMBOBOX){
         const auto item=reinterpret_cast<DRAWITEMSTRUCT *>(l);auto area=item->rcItem;
         const bool highlight=(item->itemState&ODS_SELECTED)&&!(item->itemState&ODS_COMBOBOXEDIT);
-        FillRect(item->hDC,&area,GetSysColorBrush(highlight?COLOR_HIGHLIGHT:COLOR_WINDOW));
-        SetBkMode(item->hDC,TRANSPARENT);SetTextColor(item->hDC,GetSysColor((item->itemState&ODS_DISABLED)?COLOR_GRAYTEXT:highlight?COLOR_HIGHLIGHTTEXT:COLOR_WINDOWTEXT));
+        FillRect(item->hDC,&area,ui_brush(highlight?ui_palette().selected:ui_palette().input));
+        SetBkMode(item->hDC,TRANSPARENT);SetTextColor(item->hDC,(item->itemState&ODS_DISABLED)?ui_palette().muted:ui_palette().text);
         auto selected=item->itemID==UINT(-1)?SendMessageW(item->hwndItem,CB_GETCURSEL,0,0):item->itemID;
         if(selected>=0){const auto count=SendMessageW(item->hwndItem,CB_GETLBTEXTLEN,selected,0);std::wstring text(size_t(std::max<LRESULT>(0,count))+1,L'\0');
             SendMessageW(item->hwndItem,CB_GETLBTEXT,selected,reinterpret_cast<LPARAM>(text.data()));area.left+=3;
@@ -90,8 +93,8 @@ LRESULT CALLBACK EditorChrome::procedure(HWND window,UINT message,WPARAM w,LPARA
     }
     if(self&&message==WM_DRAWITEM&&(reinterpret_cast<DRAWITEMSTRUCT *>(l)->CtlID==Color||reinterpret_cast<DRAWITEMSTRUCT *>(l)->CtlID==OutlineColor||reinterpret_cast<DRAWITEMSTRUCT *>(l)->CtlID==ShadowColor)){
         const auto item=reinterpret_cast<DRAWITEMSTRUCT *>(l);auto area=item->rcItem;
-        FillRect(item->hDC,&area,GetSysColorBrush((item->itemState&ODS_SELECTED)?COLOR_3DLIGHT:COLOR_WINDOW));
-        FrameRect(item->hDC,&area,GetSysColorBrush(COLOR_3DSHADOW));
+        FillRect(item->hDC,&area,ui_brush((item->itemState&ODS_SELECTED)?ui_palette().selected:ui_palette().input));
+        FrameRect(item->hDC,&area,ui_brush(ui_palette().border));
         const auto c=item->CtlID==OutlineColor?self->outline_color:item->CtlID==ShadowColor?self->shadow_color:self->color;
         const auto fill=CreateSolidBrush((item->itemState&ODS_DISABLED)?GetSysColor(COLOR_GRAYTEXT):RGB(c.r,c.g,c.b));const auto old=SelectObject(item->hDC,fill);
         const int diameter=std::min(MulDiv(16,GetDpiForWindow(window),96),int(area.bottom-4));
@@ -100,12 +103,12 @@ LRESULT CALLBACK EditorChrome::procedure(HWND window,UINT message,WPARAM w,LPARA
     }
     if(self&&message==WM_DRAWITEM&&reinterpret_cast<DRAWITEMSTRUCT *>(l)->CtlID==Drag){
         const auto item=reinterpret_cast<DRAWITEMSTRUCT *>(l);auto area=item->rcItem;
-        FillRect(item->hDC,&area,GetSysColorBrush(self->drag_hot&&!(item->itemState&ODS_DISABLED)?COLOR_3DLIGHT:COLOR_BTNFACE));
+        FillRect(item->hDC,&area,ui_brush(self->drag_hot&&!(item->itemState&ODS_DISABLED)?ui_palette().selected:ui_palette().surface));
         const auto dpi=GetDpiForWindow(window);const int icon=MulDiv(18,dpi,96);
         if(!self->drag_icon)self->drag_icon=command_icon(ArmDrag,icon);
         const auto focus=area;const bool compact=area.right-area.left<MulDiv(90,dpi,96);
         DrawIconEx(item->hDC,compact?(area.right-icon)/2:area.left+MulDiv(12,dpi,96),(area.bottom-icon)/2,self->drag_icon,icon,icon,0,nullptr,DI_NORMAL);
-        area.left+=MulDiv(36,dpi,96);SetBkMode(item->hDC,TRANSPARENT);SetTextColor(item->hDC,GetSysColor((item->itemState&ODS_DISABLED)?COLOR_GRAYTEXT:COLOR_BTNTEXT));
+        area.left+=MulDiv(36,dpi,96);SetBkMode(item->hDC,TRANSPARENT);SetTextColor(item->hDC,(item->itemState&ODS_DISABLED)?ui_palette().muted:ui_palette().text);
         const auto old=SelectObject(item->hDC,self->font);if(!compact)DrawTextW(item->hDC,L"ドラッグ",-1,&area,DT_LEFT|DT_VCENTER|DT_SINGLELINE);SelectObject(item->hDC,old);
         if(item->itemState&ODS_FOCUS){area=focus;InflateRect(&area,-3,-3);DrawFocusRect(item->hDC,&area);}return TRUE;
     }
@@ -124,34 +127,35 @@ LRESULT CALLBACK EditorChrome::drag_procedure(HWND child,UINT message,WPARAM w,L
     if(message==WM_SETCURSOR&&IsWindowEnabled(child)){SetCursor(LoadCursorW(nullptr,IDC_HAND));return TRUE;}
     return DefSubclassProc(child,message,w,l);
 }
-int EditorChrome::top_height(int width,UINT dpi,EditorPanel mode,bool applying){
-    const int logical=MulDiv(width,96,dpi);
-    if(mode==EditorPanel::Pen||mode==EditorPanel::Text)return MulDiv(annotation_layout(logical,mode).height,dpi,96);
+int EditorChrome::top_height(int width,UINT dpi,EditorPanel mode,bool applying,bool details){
+    const int logical=MulDiv(width,96,dpi);if(mode==EditorPanel::None)return 0;
+    if(mode==EditorPanel::Pen||mode==EditorPanel::Text)return MulDiv(annotation_layout(logical,mode,details).height,dpi,96);
     const bool narrow=logical<640,geometry=mode==EditorPanel::Crop||mode==EditorPanel::Transform;
     const int offset=applying&&narrow?34:0;return MulDiv(geometry?(narrow?126+offset:84):38,dpi,96);
 }
 int EditorChrome::layout_top(HWND parent,int width,int y,UINT new_dpi,bool visible,EditorPanel mode,bool applying){
-    if(!visible){if(top)ShowWindow(top,SW_HIDE);return 0;}create(parent);panel=mode;
+    if(!visible||mode==EditorPanel::None){if(top)ShowWindow(top,SW_HIDE);return 0;}create(parent);panel=mode;
     if(dpi!=new_dpi){if(font)DeleteObject(font);dpi=new_dpi;font=CreateFontW(-MulDiv(12,dpi,96),0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,0,0,DEFAULT_QUALITY,DEFAULT_PITCH,L"Yu Gothic UI");
         for(auto [id,c]:controls)SendMessageW(c,WM_SETFONT,reinterpret_cast<WPARAM>(font),TRUE);for(auto [id,c]:labels)SendMessageW(c,WM_SETFONT,reinterpret_cast<WPARAM>(font),TRUE);}
     const auto px=[&](int n){return MulDiv(n,dpi,96);};const int logical=MulDiv(width,96,dpi);
     if(anchor_dpi!=new_dpi){SendMessageW(control(Anchor),CB_SETITEMHEIGHT,WPARAM(-1),px(20));SendMessageW(control(Anchor),CB_SETITEMHEIGHT,0,px(20));anchor_dpi=new_dpi;}
     const bool narrow=logical<640;
     const int offset=applying&&narrow?34:0;
-    const int height=top_height(width,dpi,mode,applying);
+    const int height=measure_top(width,dpi,mode,applying);
     position(top,0,y,width,height);std::vector<HWND> shown;shown.reserve(controls.size()+labels.size());
     auto place=[&](int id,int x,int row,int w,int h=26){auto c=control(id);shown.push_back(c);position(c,px(x),px(row),px(w),px(h));};
     auto field=[&](int id,int x,int row,int w){shown.push_back(labels[id]);position(labels[id],px(x),px(row),px(56),px(26));place(id,x+56,row,w);};
     const int buttons=204;
     if(applying){place(Cancel,std::max(4,logical-buttons),6,112);place(Apply,std::max(120,logical-84),6,78);}
     if(mode==EditorPanel::Pen||mode==EditorPanel::Text){
-        const auto grid=annotation_layout(logical,mode);
+        const auto grid=annotation_layout(logical,mode,details_open);
         const auto compact=[&](int id,int x,int y,int label_width,int edit_width){shown.push_back(labels[id]);position(labels[id],px(x),px(y),px(label_width),px(26));place(id,x+label_width,y,edit_width);};
         const auto [x,by]=grid.base;
         if(mode==EditorPanel::Text){place(Font,x,by,176,180);compact(TextSize,x+184,by,36,44);place(Color,x+272,by,28);place(Text,8,grid.text_y,std::max(80,std::min(960,logical-16)),34);}
         else {place(Color,x,by,28);compact(Width,x+40,by,28,44);compact(Opacity,x+124,by,48,44);}
-        const auto [ox,oy]=grid.outline;place(Outline,ox,oy,44);place(OutlineColor,ox+48,oy,28);compact(OutlineWidth,ox+84,oy,26,40);
-        const auto [sx,sy]=grid.shadow;place(Shadow,sx,sy,44);place(ShadowColor,sx+48,sy,28);compact(ShadowOffset,sx+84,sy,26,36);compact(ShadowBlur,sx+152,sy,36,36);compact(ShadowOpacity,sx+230,sy,34,36);
+        const auto [ox,oy]=grid.outline;place(Outline,ox,oy,44);if(details_open){place(OutlineColor,ox+48,oy,28);compact(OutlineWidth,ox+84,oy,26,40);}
+        const auto [sx,sy]=grid.shadow;place(Shadow,sx,sy,44);if(details_open){place(ShadowColor,sx+48,sy,28);compact(ShadowOffset,sx+84,sy,26,36);compact(ShadowBlur,sx+152,sy,36,36);compact(ShadowOpacity,sx+230,sy,34,36);}
+        place(Details,grid.details.x,grid.details.y,80);
         sync_effect_controls();
     }else if(mode==EditorPanel::Crop||mode==EditorPanel::Transform){
         field(X,8,6+offset,60);field(Y,136,6+offset,60);field(W,8,43+offset,60);field(H,136,43+offset,60);
@@ -164,6 +168,7 @@ int EditorChrome::layout_top(HWND parent,int width,int y,UINT new_dpi,bool visib
 }
 void EditorChrome::layout_status(HWND parent,HWND status,const RECT &bounds,UINT new_dpi,bool visible,bool enabled){
     if(!visible){if(bottom)ShowWindow(bottom,SW_HIDE);return;}create(parent,false);
+    if(palette_generation!=ui_theme_generation()){palette_generation=ui_theme_generation();if(drag_icon){DestroyIcon(drag_icon);drag_icon=nullptr;}InvalidateRect(bottom,nullptr,TRUE);}
     if(GetParent(bottom)!=status){SetParent(bottom,status);placements.erase(bottom);}
     if(dpi!=new_dpi||!font){if(font)DeleteObject(font);if(drag_icon){DestroyIcon(drag_icon);drag_icon=nullptr;}dpi=new_dpi;font=CreateFontW(-MulDiv(12,dpi,96),0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,0,0,DEFAULT_QUALITY,DEFAULT_PITCH,L"Yu Gothic UI");
         for(auto [id,c]:controls)SendMessageW(c,WM_SETFONT,reinterpret_cast<WPARAM>(font),TRUE);for(auto [id,c]:labels)SendMessageW(c,WM_SETFONT,reinterpret_cast<WPARAM>(font),TRUE);}
@@ -172,7 +177,7 @@ void EditorChrome::layout_status(HWND parent,HWND status,const RECT &bounds,UINT
     if(format_dpi!=new_dpi){SendMessageW(control(Format),CB_SETITEMHEIGHT,WPARAM(-1),px(18));SendMessageW(control(Format),CB_SETITEMHEIGHT,0,px(18));format_dpi=new_dpi;}
     position(bottom,bounds.left,bounds.top,width,height);
     const int y=std::max(0,(height-px(24))/2);
-    position(control(Name),0,y,name_width,px(24));position(control(Format),name_width+gap,y,format_width,px(180));position(control(Drag),name_width+format_width+2*gap,y,drag_width,px(24));
+    position(control(Drag),0,y,drag_width,px(24));position(control(Name),drag_width+gap,y,name_width,px(24));position(control(Format),drag_width+name_width+2*gap,y,format_width,px(180));
     for(int id:{Name,Format,Drag})if(bool(IsWindowEnabled(control(id)))!=enabled)EnableWindow(control(id),enabled);
 }
 void EditorChrome::sync_effect_controls(){
@@ -184,6 +189,7 @@ void EditorChrome::sync_effect_controls(){
     }
 }
 bool EditorChrome::notification(int id,int code){
+    if(id==Details&&code==BN_CLICKED){details_open=SendMessageW(control(Details),BM_GETCHECK,0,0)==BST_CHECKED;return true;}
     if((id==Color||id==OutlineColor||id==ShadowColor)&&code==BN_CLICKED){auto &c=id==OutlineColor?outline_color:id==ShadowColor?shadow_color:color;
         static COLORREF custom[16]{};CHOOSECOLORW choice{sizeof(choice)};choice.hwndOwner=owner;choice.rgbResult=RGB(c.r,c.g,c.b);choice.lpCustColors=custom;choice.Flags=CC_FULLOPEN|CC_RGBINIT;
         if(ChooseColorW(&choice)){c={GetRValue(choice.rgbResult),GetGValue(choice.rgbResult),GetBValue(choice.rgbResult),255};InvalidateRect(control(id),nullptr,TRUE);}return true;}

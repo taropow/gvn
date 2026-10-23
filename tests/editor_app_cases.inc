@@ -186,10 +186,10 @@
         for(int width:{1300,480,520,1300}){
             SetWindowPos(app.hwnd,nullptr,0,0,width,850,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE);app.layout();app.update();
             LONG bottom{};for(int n=0;n<SendMessageW(app.toolbar.hwnd,TB_BUTTONCOUNT,0,0);++n){TBBUTTON button{};RECT rect{};
-                SendMessageW(app.toolbar.hwnd,TB_GETBUTTON,n,reinterpret_cast<LPARAM>(&button));if(!(button.fsStyle&BTNS_SEP)){
+                SendMessageW(app.toolbar.hwnd,TB_GETBUTTON,n,reinterpret_cast<LPARAM>(&button));if(!(button.fsStyle&BTNS_SEP)&&!(button.fsState&TBSTATE_HIDDEN)){
                     CHECK(SendMessageW(app.toolbar.hwnd,TB_GETITEMRECT,n,reinterpret_cast<LPARAM>(&rect)));bottom=std::max(bottom,rect.bottom);}}
             CHECK(app.toolbar.height()>=bottom&&app.toolbar.height()-bottom<=MulDiv(6,GetDpiForWindow(app.hwnd),96));
-            if(width==1300)CHECK(app.toolbar.height()<=MulDiv(28,GetDpiForWindow(app.hwnd),96));
+            if(width==1300)CHECK(app.toolbar.height()<=MulDiv(ui_button_size(app.toolbar.large_buttons())+2,GetDpiForWindow(app.hwnd),96));
         }
         CHECK(SUCCEEDED(app.render_scene())&&app.renderer.sample_current(original.get(),0,app.view));
         app.message(WM_ENTERSIZEMOVE,0,0);

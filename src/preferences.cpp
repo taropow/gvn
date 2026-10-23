@@ -1,7 +1,9 @@
 #include "gvn/preferences.h"
+#include "gvn/ui_theme.h"
 #include "gvn/ui.h"
 #include "gvn/display_quality.h"
 #include <commctrl.h>
+#include <windowsx.h>
 #include <commdlg.h>
 #include <shellapi.h>
 #include <cmath>
@@ -326,6 +328,9 @@ std::vector<Field> fields() {
     interval.high = 3600000;
     out.push_back(interval);
     check(Page::Slideshow, cid::SlideRandom, L"スライド中はランダムな並び順にする", &Settings::slide_random);
+    combo(Page::General,cid::UiTheme,L"外観のテーマ",&Settings::ui_theme,{L"OSに合わせる",L"ライト",L"ダーク"});
+    combo(Page::General,cid::UiDensity,L"操作部の密度",&Settings::ui_density,{L"コンパクト",L"ゆったり"});
+    check(Page::Bars,cid::ToolbarOverflow,L"狭いウィンドウでは操作を「…」にまとめる",&Settings::toolbar_overflow);
     return out;
 }
 constexpr const wchar_t *titles[]{L"全般",       L"背景", L"ウィンドウ", L"表示",         L"ズーム",
@@ -358,6 +363,7 @@ struct DialogTemplate {
 
 struct PreferencesDialog::Impl {
     Settings draft;
+#include "preferences_navigation.inc"
     Apply apply;
     Error error;
     HWND hwnd{}, tab{};
@@ -384,7 +390,7 @@ struct PreferencesDialog::Impl {
     std::array<LayoutStamp,static_cast<size_t>(Page::Count)> page_layouts;
     int reset_label_external{-1};
     Impl(const Settings &settings, Apply commit, Error alert)
-        : draft(settings), apply(std::move(commit)), error(std::move(alert)) {
+        : draft(settings), saved_mouse(settings.mouse), apply(std::move(commit)), error(std::move(alert)) {
         draft.set_external_applications(settings.external_applications());
     }
     int px(int v) const {
@@ -453,11 +459,11 @@ struct PreferencesDialog::Impl {
         if (_wcsicmp(cls, WC_COMBOBOXW) == 0)
             style |= CBS_OWNERDRAWFIXED | CBS_HASSTRINGS;
         auto measured=pref_now();
-        HWND c = CreateWindowExW(wcscmp(cls, L"EDIT") == 0 ? WS_EX_CLIENTEDGE : 0, cls, text,
-                                 WS_CHILD | (building&&parent!=hwnd?0:WS_VISIBLE) | style, 0, 0, px(320), px(_wcsicmp(cls, WC_COMBOBOXW)==0?220:26), parent,
+        HWND c = CreateWindowExW(0, cls, text,
+                                 WS_CHILD | (wcscmp(cls,L"EDIT")==0?WS_BORDER:0) | (building&&parent!=hwnd?0:WS_VISIBLE) | style, 0, 0, px(320), px(_wcsicmp(cls, WC_COMBOBOXW)==0?220:26), parent,
                                  reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)), GetModuleHandleW(nullptr),
                                  nullptr);
-        pref_elapsed("create",id,measured);measured=pref_now();
+        apply_ui_theme(c,false);pref_elapsed("create",id,measured);measured=pref_now();
         SendMessageW(c, WM_SETFONT, reinterpret_cast<WPARAM>(font), FALSE);
         pref_elapsed("font",id,measured);
         if (_wcsicmp(cls, WC_COMBOBOXW) == 0) {
@@ -522,9 +528,9 @@ struct PreferencesDialog::Impl {
     }
     void changed() {
         if (!building) {
-            dirty = true;
+            if(!dirty)SetWindowTextW(hwnd,L"GVN の設定（変更あり）");dirty = true;
             EnableWindow(find(cid::ApplyButton), TRUE);
-            dependencies();
+            dependencies();mark_fields();
         }
     }
     void scroll_page(HWND page, int code, int position = 0) {
@@ -573,8 +579,9 @@ struct PreferencesDialog::Impl {
                         scroll_y[index] + MulDiv(r.bottom - area.bottom + px(8), 96, dpi));
     }
     static LRESULT CALLBACK field_focus_proc(HWND h, UINT m, WPARAM w, LPARAM l, UINT_PTR, DWORD_PTR data) {
-        if (m == WM_SETFOCUS)
-            reinterpret_cast<Impl *>(data)->reveal_control(h);
+        const auto self=reinterpret_cast<Impl *>(data);
+        if(m==WM_SETFOCUS){self->reveal_control(h);self->focused_field=GetDlgCtrlID(h);if(self->focused_field>=5000)self->focused_field-=5000;const bool resettable=std::any_of(self->schema.begin(),self->schema.end(),[&](const auto &f){return f.id==self->focused_field;});EnableWindow(self->find(cid::ResetField),resettable);}
+        if(m==WM_CONTEXTMENU){auto menu=CreatePopupMenu();AppendMenuW(menu,MF_STRING,1,L"この項目を標準に戻す");AppendMenuW(menu,MF_STRING,2,L"関連する設定…");RECT rect{};GetWindowRect(h,&rect);const int x=GET_X_LPARAM(l)==-1?rect.left:GET_X_LPARAM(l),y=GET_Y_LPARAM(l)==-1?rect.bottom:GET_Y_LPARAM(l);const auto id=TrackPopupMenu(menu,TPM_RETURNCMD|TPM_RIGHTBUTTON,x,y,0,self->hwnd,nullptr);DestroyMenu(menu);if(id==1)self->reset_field(GetDlgCtrlID(h));if(id==2)self->related_settings(h);return 0;}
         return DefSubclassProc(h, m, w, l);
     }
     static LRESULT CALLBACK page_proc(HWND h, UINT m, WPARAM w, LPARAM l, UINT_PTR, DWORD_PTR data) {
@@ -670,16 +677,19 @@ struct PreferencesDialog::Impl {
                            0, CLEARTYPE_QUALITY, 0, L"Yu Gothic UI");
         checkpoint("font");
         SetWindowTextW(hwnd, L"GVN の設定");
-        tab = make(hwnd, WC_TABCONTROLW, L"", WS_TABSTOP | TCS_MULTILINE, cid::Tabs);
+        groups=make(hwnd,WC_TABCONTROLW,L"設定カテゴリ",WS_TABSTOP|TCS_BUTTONS|TCS_FLATBUTTONS|TCS_FIXEDWIDTH,cid::Groups);MoveWindow(groups,px(12),px(48),px(736),px(32),FALSE);
+        for(int i=0;i<7;++i){TCITEMW item{};item.mask=TCIF_TEXT;item.pszText=const_cast<wchar_t *>(group_titles[i]);TabCtrl_InsertItem(groups,i,&item);}
+        TabCtrl_SetItemSize(groups,px(84),px(30));
+        search=make(hwnd,L"EDIT",L"",WS_TABSTOP|ES_AUTOHSCROLL,cid::Search);SendMessageW(search,EM_SETCUEBANNER,TRUE,reinterpret_cast<LPARAM>(L"設定を検索（例：ホイール、透明、起動位置）"));
+        search_results=make(hwnd,L"LISTBOX",L"",WS_TABSTOP|WS_BORDER|WS_VSCROLL|LBS_NOTIFY|LBS_NOINTEGRALHEIGHT,cid::SearchResults);ShowWindow(search_results,SW_HIDE);
+        SetWindowSubclass(search,search_proc,91,reinterpret_cast<DWORD_PTR>(this));SetWindowSubclass(search_results,search_proc,91,reinterpret_cast<DWORD_PTR>(this));
+        make(hwnd,L"BUTTON",L"項目を標準に戻す",WS_TABSTOP,cid::ResetField);EnableWindow(find(cid::ResetField),FALSE);
+        make(hwnd,L"BUTTON",L"関連設定…",WS_TABSTOP,cid::Related);
+        tab = make(hwnd, WC_TABCONTROLW, L"", WS_TABSTOP, cid::Tabs);
         // Avoid repeatedly laying out a one-pixel-wide multiline tab while adding labels.
         MoveWindow(tab, px(12), px(12), px(736), px(450), FALSE);
         SendMessageW(tab, WM_SETREDRAW, FALSE, 0);
-        for (size_t i = 0; i < pages.size(); ++i) {
-            TCITEMW item{};
-            item.mask = TCIF_TEXT;
-            item.pszText = const_cast<wchar_t *>(titles[i]);
-            TabCtrl_InsertItem(tab, static_cast<int>(i), &item);
-        }
+        rebuild_tabs(selected);
         SendMessageW(tab, WM_SETREDRAW, TRUE, 0);
         checkpoint("tab_labels");
         make(hwnd, L"BUTTON", L"このページを標準に戻す", WS_TABSTOP, cid::Reset);
@@ -724,7 +734,7 @@ struct PreferencesDialog::Impl {
         pages[index] = CreateWindowExW(WS_EX_CONTROLPARENT, L"STATIC", L"", WS_CHILD | WS_CLIPCHILDREN, 0, 0,
                                        1, 1, hwnd, reinterpret_cast<HMENU>(cid::PageBase + index),
                                        GetModuleHandleW(nullptr), nullptr);
-        SetWindowSubclass(pages[index], page_proc, 1, reinterpret_cast<DWORD_PTR>(this));
+        SetWindowSubclass(pages[index], page_proc, 1, reinterpret_cast<DWORD_PTR>(this));apply_ui_theme(pages[index],false);
         controls[cid::PageBase + static_cast<int>(index)] = pages[index];
         page_scrollbars[index] = make(pages[index], L"SCROLLBAR", L"", SBS_VERT | WS_TABSTOP,
                                       cid::ScrollBase + static_cast<int>(index));
@@ -835,7 +845,7 @@ struct PreferencesDialog::Impl {
         }
         pref_elapsed("page-lists",int(index),measured);
         page_ready[index] = true;
-        building = previous;
+        building = previous;remember_fields();
     }
     void initialize_external() {
         const auto page = pages[static_cast<size_t>(Page::External)];
@@ -1315,15 +1325,16 @@ struct PreferencesDialog::Impl {
         next.set_end_action(next.end_action);
         try {
             if (apply)
-                apply(next);
+                apply(next);apply_ui_theme(hwnd);
         } catch (const std::exception &) {
             failure = L"設定を保存・適用できませんでした。保存先を確認してください。";
             notify_error();
             return false;
         }
-        draft = std::move(next);
+        draft = std::move(next);saved_mouse=draft.mouse;
         fill_fields();
-        dirty = false;
+        initial_values.clear();remember_fields();mark_fields();
+        dirty = false;SetWindowTextW(hwnd,L"GVN の設定");
         EnableWindow(find(cid::ApplyButton), FALSE);
         return true;
     }
@@ -1400,6 +1411,7 @@ struct PreferencesDialog::Impl {
         layout();
     }
     void select(int page) {
+        if(search_results)ShowWindow(search_results,SW_HIDE);
         if (page < 0 || page >= static_cast<int>(pages.size()))
             return;
         const auto previous = selected;
@@ -1407,7 +1419,7 @@ struct PreferencesDialog::Impl {
         selected = page;
         const int external=page==static_cast<int>(Page::External);
         if(reset_label_external!=external){SetWindowTextW(find(cid::Reset),external?L"この番号を初期状態に戻す":L"このタブを初期状態に戻す");reset_label_external=external;}
-        if(TabCtrl_GetCurSel(tab)!=page)TabCtrl_SetCurSel(tab,page);
+        rebuild_tabs(page);const int index=page_index(page);if(TabCtrl_GetCurSel(tab)!=index)TabCtrl_SetCurSel(tab,index);
         if (previous != page)
             ShowWindow(pages[previous], SW_HIDE);
         layout();
@@ -1435,13 +1447,16 @@ struct PreferencesDialog::Impl {
         auto &stamp=page_layouts[selected];
         if(stamp.valid&&stamp.width==rc.right&&stamp.height==rc.bottom&&stamp.dpi==int(dpi)&&stamp.scroll==scroll_y[selected]&&stamp.comic_mode==mode)return;
         stamp={int(rc.right),int(rc.bottom),int(dpi),scroll_y[selected],mode,true};
-        MoveWindow(tab, px(12), px(12), std::max(px(100), static_cast<int>(rc.right) - px(24)),
-                   std::max(px(100), static_cast<int>(rc.bottom) - px(68)), TRUE);
+        MoveWindow(search,px(12),px(12),std::max(px(200),int(rc.right)-px(250)),px(28),TRUE);
+        MoveWindow(find(cid::ResetField),int(rc.right)-px(230),px(12),px(130),px(28),TRUE);MoveWindow(find(cid::Related),int(rc.right)-px(94),px(12),px(82),px(28),TRUE);
+        MoveWindow(groups,px(12),px(48),std::max(px(100),int(rc.right)-px(24)),px(32),TRUE);
+        MoveWindow(tab, px(12), px(88), std::max(px(100), static_cast<int>(rc.right) - px(24)),
+                   std::max(px(100), static_cast<int>(rc.bottom) - px(144)), TRUE);
         RECT area{};
         GetClientRect(tab, &area);
         TabCtrl_AdjustRect(tab, FALSE, &area);
         for (auto page : {pages[selected]})
-            MoveWindow(page, area.left + px(12), area.top + px(12), area.right - area.left,
+            MoveWindow(page, area.left + px(12), area.top + px(88), area.right - area.left,
                        area.bottom - area.top, TRUE);
         RECT page_rc{};
         GetClientRect(pages[selected], &page_rc);
@@ -1620,15 +1635,13 @@ struct PreferencesDialog::Impl {
             const bool highlighted = (d->itemState & ODS_SELECTED) != 0;
             const auto saved = SaveDC(d->hDC);
             SelectObject(d->hDC, font);
-            FillRect(d->hDC, &d->rcItem, GetSysColorBrush(highlighted ? COLOR_HIGHLIGHT : COLOR_WINDOW));
+            FillRect(d->hDC, &d->rcItem, ui_brush(highlighted?ui_palette().selected:ui_palette().input));
             if (d->itemID != static_cast<UINT>(-1)) {
                 const auto length = SendMessageW(d->hwndItem, CB_GETLBTEXTLEN, d->itemID, 0);
                 if (length >= 0) {
                     std::wstring text(static_cast<size_t>(length) + 1, L'\0');
                     SendMessageW(d->hwndItem, CB_GETLBTEXT, d->itemID, reinterpret_cast<LPARAM>(text.data()));
-                    SetTextColor(d->hDC, GetSysColor((d->itemState & ODS_DISABLED) ? COLOR_GRAYTEXT
-                                                     : highlighted                 ? COLOR_HIGHLIGHTTEXT
-                                                                                   : COLOR_WINDOWTEXT));
+                    SetTextColor(d->hDC, (d->itemState&ODS_DISABLED)?ui_palette().muted:ui_palette().text);
                     SetBkMode(d->hDC, TRANSPARENT);
                     auto rect = d->rcItem;
                     rect.left += px(3);
@@ -1642,7 +1655,7 @@ struct PreferencesDialog::Impl {
             return TRUE;
         }
         if (m == WM_INITDIALOG) {
-            initialize();
+            initialize();apply_ui_theme(hwnd);
             return selected == static_cast<int>(Page::FileOperations) ? FALSE : TRUE;
         }
         if (m == WM_SIZE) {
@@ -1660,8 +1673,9 @@ struct PreferencesDialog::Impl {
         }
         if (m == WM_NOTIFY) {
             auto header = reinterpret_cast<NMHDR *>(l);
+            if(header->idFrom==cid::Groups&&header->code==TCN_SELCHANGE){const int group=TabCtrl_GetCurSel(groups);for(int p=0;p<int(Page::Count);++p)if(group_for(p)==group){select(p);break;}return TRUE;}
             if (header->idFrom == cid::Tabs && header->code == TCN_SELCHANGE) {
-                select(TabCtrl_GetCurSel(tab));
+                const int row=TabCtrl_GetCurSel(tab);if(row>=0&&size_t(row)<tab_pages.size())select(tab_pages[row]);
                 return TRUE;
             }
             if (!building && header->code == LVN_ITEMCHANGING) {
@@ -1695,6 +1709,11 @@ struct PreferencesDialog::Impl {
         }
         if (m == WM_COMMAND) {
             const int id = LOWORD(w), code = HIWORD(w);
+            if(id==cid::Search&&code==EN_CHANGE){search_changed();return TRUE;}
+            if(id==cid::SearchResults){if(code==LBN_DBLCLK)open_search_result();return TRUE;}
+            if(id==cid::ResetField){reset_field(focused_field);return TRUE;}
+            if(id==cid::Related){related_settings(find(cid::Related));return TRUE;}
+            if(id==IDOK&&(GetFocus()==search||GetFocus()==search_results)&&!get_text(search).empty()){open_search_result();return TRUE;}
             if (!building && id == cid::ExternalList && code == CBN_SELCHANGE) {
                 const int row = static_cast<int>(SendMessageW(find(id), CB_GETCURSEL, 0, 0));
                 if (row >= 0 && row < 9) { store_external(); load_row(id, row); }
@@ -1960,3 +1979,6 @@ bool show_preferences(HWND owner, const Settings &s, const PreferencesDialog::Ap
     return dialog.show(owner);
 }
 } // namespace gvn
+
+namespace gvn {int PreferencesDialog::selected_page() const{return impl->selected;}
+int PreferencesDialog::page_tab_index(PreferencePage page) const{return impl->page_index(int(page));}}

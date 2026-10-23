@@ -1,3 +1,4 @@
+#include "gvn/ui_theme.h"
 #include "gvn/jump_dialog.h"
 #include "gvn/loader.h"
 #include "gvn/renderer.h"
@@ -462,7 +463,7 @@ struct JumpDialog::Impl {
         if (!self)
             return FALSE;
         try {
-            return self->message(m, w, l);
+            const auto result=self->message(m, w, l);if(m==WM_INITDIALOG||m==WM_DPICHANGED)apply_ui_theme(h);return result;
         } catch (const std::exception &) {
             self->finish();
             return TRUE;

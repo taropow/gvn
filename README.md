@@ -1,3 +1,7 @@
+GVN 0.67.0: 共通テーマ（OS追従／ライト／ダーク）、整理した設定カテゴリと検索、編集オプションの詳細開閉、狭い窓の「その他」を追加。基準点は青い9マスにし、ステータスバーは「ドラッグ・ファイル名・形式」の順にしました。
+
+[操作と設計](docs/gvn-editor-mode.md)、[確認記録](docs/verification/0.67.0-modern-ui-related.json)。普段使い用は `G:\gvn\app\gvd.exe`。旧ウィンドウを閉じずに更新でき、次の起動から新しい版を使います。従来の作業をmainへ取り込み、今回の変更はcodex/modern-uiで管理しています。
+
 GVN 0.66.0: 保存名・形式・フラットなドラッグをステータスバーへ統合。文字・ペンの設定欄を整理し、ペンのドラッグ中の位置ずれを修正しました。
 
 [編集仕様](docs/gvn-editor-mode.md)、[確認記録](docs/verification/0.66.0-status-editor-related.json)。普段使い用は引き続き `G:\gvn\app\gvd.exe`。起動中は終了後に安全に差し替えます。

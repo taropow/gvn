@@ -2,6 +2,7 @@
 #include "gvn/codecs.h"
 #include "gvn/resize_dialog.h"
 #include "gvn/settings.h"
+#include "gvn/ui_theme.h"
 #include "test.h"
 using namespace gvn;
 namespace id=resize_control;
@@ -33,7 +34,16 @@ TEST(canvas_controls_anchor_aspect_rgba_validation_transparency_and_cancel_witho
     size_t allocations{};EditMemory memory{1024,false,[&](size_t){++allocations;}};
     auto dialog=ResizeDialog::for_canvas(3,2,{},[&](uint32_t w,uint32_t h){memory.pixels(w,h);});CHECK(dialog->create(owner));
     CHECK(dialog->valid()&&dialog->canvas_options().anchor==4&&!dialog->canvas_options().keep_aspect);
-    for(int n=0;n<9;++n){SendMessageW(dialog->control(id::Anchor+n),BM_CLICK,0,0);CHECK(dialog->canvas_options().anchor==n);}
+    for(int n=0;n<9;++n){const auto cell=dialog->control(id::Anchor+n);SendMessageW(cell,BM_CLICK,0,0);CHECK(dialog->canvas_options().anchor==n);
+        RECT box{};GetClientRect(cell,&box);CHECK(box.right==box.bottom&&box.right==MulDiv(20,GetDpiForWindow(cell),96));
+        const auto dc=CreateCompatibleDC(nullptr),screen=GetDC(cell);const auto bitmap=CreateCompatibleBitmap(screen,box.right,box.bottom);ReleaseDC(cell,screen);const auto old=SelectObject(dc,bitmap);
+        SetFocus(dialog->control(id::Width));SendMessageW(cell,WM_PRINTCLIENT,reinterpret_cast<WPARAM>(dc),PRF_CLIENT);
+        CHECK(GetPixel(dc,box.right/2,box.bottom/2)==ui_palette().accent);CHECK(GetPixel(dc,3,3)==ui_palette().accent);
+        SelectObject(dc,old);DeleteObject(bitmap);DeleteDC(dc);
+        for(int j=0;j<9;++j)CHECK(SendMessageW(dialog->control(id::Anchor+j),BM_GETCHECK,0,0)==(n==j?BST_CHECKED:BST_UNCHECKED));}
+    SendMessageW(dialog->control(id::Anchor),BM_CLICK,0,0);SendMessageW(dialog->control(id::Anchor),WM_KEYDOWN,VK_RIGHT,0);CHECK(dialog->canvas_options().anchor==1);
+    SendMessageW(dialog->control(id::Anchor+1),WM_KEYDOWN,VK_DOWN,0);CHECK(dialog->canvas_options().anchor==4);
+    SendMessageW(dialog->control(id::Anchor+8),BM_CLICK,0,0);
     CHECK(!IsWindowEnabled(dialog->control(id::Red)));SendMessageW(dialog->control(id::Transparent),BM_CLICK,0,0);
     CHECK(IsWindowEnabled(dialog->control(id::Red))&&IsWindowEnabled(dialog->control(id::Color)));
     SetWindowTextW(dialog->control(id::Red),L"256");CHECK(!dialog->valid()&&!IsWindowEnabled(dialog->control(IDOK)));

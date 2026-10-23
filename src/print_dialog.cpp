@@ -1,3 +1,4 @@
+#include "gvn/ui_theme.h"
 #include "gvn/printing.h"
 #include <commctrl.h>
 #include <cmath>
@@ -195,7 +196,7 @@ struct PrintDialog::Impl {
     }
     static INT_PTR CALLBACK proc(HWND h,UINT msg,WPARAM w,LPARAM l) {
         auto *self=reinterpret_cast<Impl*>(GetWindowLongPtrW(h,DWLP_USER));
-        if(msg==WM_INITDIALOG){self=reinterpret_cast<Impl*>(l);self->hwnd=h;SetWindowLongPtrW(h,DWLP_USER,LONG_PTR(self));self->syncing=true;self->initialize();return TRUE;}
+        if(msg==WM_INITDIALOG){self=reinterpret_cast<Impl*>(l);self->hwnd=h;SetWindowLongPtrW(h,DWLP_USER,LONG_PTR(self));self->syncing=true;self->initialize();apply_ui_theme(h);return TRUE;}
         if(!self)return FALSE;
         try {
             if(msg==WM_MEASUREITEM&&reinterpret_cast<MEASUREITEMSTRUCT*>(l)->CtlType==ODT_COMBOBOX){reinterpret_cast<MEASUREITEMSTRUCT*>(l)->itemHeight=MulDiv(20,self->dpi,96);return TRUE;}

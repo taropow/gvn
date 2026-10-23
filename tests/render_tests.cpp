@@ -1,4 +1,5 @@
 #include "gvn/renderer.h"
+#include "gvn/viewport_transform.h"
 #include "gvn/codecs.h"
 #include "test.h"
 #include "test_desktop.h"
@@ -925,4 +926,15 @@ TEST(pen_preview_matches_committed_position_with_sidebar_zoom_outline_and_shadow
         CHECK(std::abs(preview.left-final.left)<=2&&std::abs(preview.right-final.right)<=2&&std::abs(preview.top-final.top)<=2&&std::abs(preview.bottom-final.bottom)<=2);
         CHECK(source.frames[0].pixels==original);
     }
+}
+
+TEST(shared_viewport_transform_roundtrips_sidebar_pan_fit_and_actual_pixel_origins){
+    for(double scale:{.125,.75,1.,1.5,4.})for(bool centered:{true,false})for(int sidebar:{0,28,52}){
+        View view;view.resize(777,533);view.set_image(320,200);view.centered=centered;view.scale=scale;view.pan_x=13.75;view.pan_y=-7.25;
+        ViewportTransform transform(view,sidebar,84);
+        for(FloatPoint p:std::vector<FloatPoint>{{0,0},{30.25,40.75},{319,199}}){const auto q=transform.to_image(transform.to_client(p));CHECK(std::abs(p.x-q.x)<1e-9&&std::abs(p.y-q.y)<1e-9);}
+        if(scale==1){const auto origin=transform.to_client({0,0});CHECK(origin.x==sidebar+std::floor(view.left())&&origin.y==84+std::floor(view.top()));}
+    }
+    CHECK(EditorSession::resolve(true,true,true,true,true,true).activity==EditorActivity::Crop);
+    CHECK(EditorSession::resolve(true,false,false,true,true,false).pending());
 }

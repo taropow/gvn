@@ -2006,7 +2006,7 @@ struct AppAudit {
         open(fixture(L"alpha.png"));command(Info);CHECK(notices.back().find(L"未指定のため72 DPI")!=std::wstring::npos);
     }
     void native_controls_and_menu() {
-        CHECK(SendMessageW(app.toolbar.hwnd, TB_BUTTONCOUNT, 0, 0) == 26);
+        CHECK(SendMessageW(app.toolbar.hwnd, TB_BUTTONCOUNT, 0, 0) == 27);
         CHECK(!SendMessageW(app.toolbar.hwnd, TB_ISBUTTONENABLED, Save, 0));
         CHECK(!GetMenu(app.hwnd));
         paths.push_back(fixture(L"alpha.png"));
@@ -6946,6 +6946,7 @@ void background_changes_preserve_image_animation_copy_save_and_ole() {
 #include "selection_app_cases.inc"
 #include "editor_app_cases.inc"
 #include "skitch_app_cases.inc"
+#include "modern_app_cases.inc"
 };
 } // namespace gvn
 
@@ -7309,3 +7310,7 @@ APP_TEST(skitch_crop_handles_numeric_bounds_buttons_cancel_apply_undo)
 APP_TEST(skitch_bottom_export_moves_status_icon_names_formats_and_ole_payload)
 APP_TEST(compact_editor_options_and_embedded_status_export)
 APP_TEST(timestamp_export_name_on_open_new_and_every_successful_paste_keeps_manual_edits)
+
+APP_TEST(modern_preferences_search_reset_categories_and_theme_apply)
+APP_TEST(modern_theme_overflow_density_and_stable_native_resources)
+APP_TEST(modern_details_state_and_command_shortcuts_preserve_edits)

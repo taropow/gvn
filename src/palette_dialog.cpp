@@ -1,3 +1,4 @@
+#include "gvn/ui_theme.h"
 #include "gvn/palette_dialog.h"
 #include <commctrl.h>
 #include <commdlg.h>
@@ -220,7 +221,7 @@ struct PaletteDialog::Impl {
     static INT_PTR CALLBACK procedure(HWND h,UINT m,WPARAM w,LPARAM l) {
         auto self=reinterpret_cast<Impl*>(GetWindowLongPtrW(h,DWLP_USER));
         if(m==WM_INITDIALOG){self=reinterpret_cast<Impl*>(l);self->hwnd=h;SetWindowLongPtrW(h,DWLP_USER,l);}
-        if(!self)return FALSE;try{return self->message(m,w,l);}catch(...){self->fail(L"パレット編集を実行できません。");return TRUE;}
+        if(!self)return FALSE;try{const auto result=self->message(m,w,l);if(m==WM_INITDIALOG||m==WM_DPICHANGED)apply_ui_theme(h);return result;}catch(...){self->fail(L"パレット編集を実行できません。");return TRUE;}
     }
 };
 PaletteDialog::PaletteDialog(std::vector<Pixel> palette,bool preview,Process process,Preview notify,Commit commit,Current current,Picker picker):impl(std::make_unique<Impl>()) {

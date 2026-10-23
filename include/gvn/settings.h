@@ -23,6 +23,8 @@ bool assignable_key(const std::wstring &text);
 std::wstring format_key(UINT key, UINT modifiers);
 struct Settings {
     static constexpr Rect initial_window_rect{0, 0, 480, 360};
+    int ui_theme{},ui_density{};
+    bool toolbar_overflow{true};
     bool allow_multiple{true}, activate_reused{true}, activate_dropped{true};
     bool reopen_last{};
     bool disable_ime{true};

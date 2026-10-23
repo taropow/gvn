@@ -1,0 +1,50 @@
+# All events are sent to owned native controls on a private desktop.
+resize	1100	780
+open	${fixtures}/display-alpha.png
+wait
+remember	original
+settings
+tab	General
+set	UiTheme	1
+set	UiDensity	0
+click	ApplyButton
+snapshot	modern-settings-light.png
+set	Search	wheel zoom
+snapshot	modern-settings-search.png
+search_result	0
+set	Wheel	0
+click	ResetField
+tab	General
+set	UiTheme	2
+click	ApplyButton
+snapshot	modern-settings-dark.png
+click	OK
+snapshot	modern-viewer-dark.png
+command	ToolText
+editor_set	Text	軽く、すぐ使える画像ビューア
+editor_layout
+snapshot	modern-text-compact.png
+editor_click	Details
+editor_click	Outline
+editor_click	Shadow
+editor_set	ShadowBlur	3
+editor_layout
+paint_pixels	60	80	60	80
+snapshot	modern-text-details.png
+editor_click	Cancel
+expect_same	original	true
+command	ToggleEditor
+resize	360	640
+snapshot	modern-viewer-narrow.png
+open	${fixtures}/disposal.gif
+wait
+player	StopAnimation
+expect	player.bottom	true
+snapshot	modern-player-dark.png
+expect	error_count	0
+settings
+tab	General
+set	UiDensity	1
+click	OK
+expect	player.bottom	true
+snapshot	modern-player-comfortable.png

@@ -1705,3 +1705,10 @@ TEST(redo_default_migration_preserves_existing_custom_shortcuts){
     Settings custom;custom.load(path);CHECK(custom.command_for('Z',3)==Next&&custom.command_for('O',4)==Open&&custom.keys_for(Redo).empty());
     custom.set_keys(Next,{});custom.set_keys(Redo,{});custom.save(path);Settings disabled;disabled.load(path);CHECK(disabled.keys_for(Redo).empty());std::filesystem::remove(path);
 }
+
+TEST(modern_ui_preferences_persist_and_clamp_without_changing_bindings){
+    const auto path=std::filesystem::temp_directory_path()/L"gvn-modern-settings-test.ini";
+    Settings before;before.ui_theme=2;before.ui_density=1;before.toolbar_overflow=false;const auto keys=before.keys_for(Copy);before.save(path);
+    WritePrivateProfileSectionW(L"Viewer",L"allow_multiple=1\0\0",path.c_str());
+    Settings after;after.load(path);CHECK(after.ui_theme==2&&after.ui_density==1&&!after.toolbar_overflow&&after.keys_for(Copy)==keys);WritePrivateProfileStringW(L"Interface",L"ui_theme",L"99",path.c_str());after.load(path);CHECK(after.ui_theme==2);std::filesystem::remove(path);
+}

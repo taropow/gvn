@@ -1,6 +1,7 @@
 param(
     [Parameter(Mandatory=$true)][string]$SourceDirectory,
-    [string]$InstallDirectory = ''
+    [string]$InstallDirectory = '',
+    [switch]$PreserveRunning
 )
 $ErrorActionPreference = 'Stop'
 $taskRoot = Split-Path -Parent $PSScriptRoot
@@ -11,6 +12,10 @@ if ($install -ieq $source -or $install.StartsWith($source+'\',[StringComparison]
     $source.StartsWith($install+'\',[StringComparison]::OrdinalIgnoreCase)) {
     throw 'The daily installation and distribution must be separate directories'
 }
+$lockDigest = [Convert]::ToBase64String([Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($install.ToLowerInvariant()))).Replace('/','_').Replace('+','-')
+$updateMutex = New-Object Threading.Mutex($false,('Local\GVN.InstallUpdate.'+$lockDigest))
+if (-not $updateMutex.WaitOne(10000)) { $updateMutex.Dispose(); throw 'Another GVN installation update is still active' }
+try {
 $sourceExe = Join-Path $source 'GVN.exe'
 $sourceChecksum = Join-Path $source 'SHA256.txt'
 $sourceLicenses = Join-Path $source 'licenses'
@@ -36,7 +41,7 @@ $sameExe = (Test-Path -LiteralPath $targetExe -PathType Leaf) -and
     (Get-FileHash -LiteralPath $targetExe -Algorithm SHA256).Hash.ToLowerInvariant() -eq $expectedHash
 if (-not $sameExe) {
     $running = @(Get-Process -Name gvd -ErrorAction SilentlyContinue | Where-Object { $_.Path -ieq $targetExe })
-    if ($running.Count -gt 0) {
+    if ($running.Count -gt 0 -and -not $PreserveRunning) {
         [ordered]@{status='Deferred';reason='Daily viewer is running; close it and run the update again';path=$targetExe;running_pids=@($running.Id);requested_version=$version.FileVersion} | ConvertTo-Json -Compress
         return
     }
@@ -72,9 +77,21 @@ try {
         if (Test-Path -LiteralPath $targetExe -PathType Leaf) {
             $backup = Join-Path $install '.previous'
             New-Item -ItemType Directory -Path $backup -Force | Out-Null
-            # ReplaceFile is atomic on this volume and preserves the old EXE as a backup.
-            # If the file is locked, leave the old EXE in place and report the error.
-            [IO.File]::Replace((Join-Path $stage 'gvd.exe'),$targetExe,(Join-Path $backup 'gvd.exe'))
+            if ($PreserveRunning -and $running.Count -gt 0) {
+                # Windows keeps the mapped executable alive after a rename. Preserve all
+                # windows, edits and clipboard state; subsequent launches use the new file.
+                $runningBackup = Join-Path $backup ('gvd-running-'+[guid]::NewGuid().ToString('N')+'.exe')
+                $priorHash = (Get-FileHash -LiteralPath $targetExe).Hash
+                [IO.File]::Move($targetExe,$runningBackup)
+                try { [IO.File]::Move((Join-Path $stage 'gvd.exe'),$targetExe) }
+                catch {
+                    if (-not (Test-Path -LiteralPath $targetExe)) { [IO.File]::Move($runningBackup,$targetExe) }
+                    throw
+                }
+                if ((Get-FileHash -LiteralPath $runningBackup).Hash -ne $priorHash) { throw 'Running executable backup checksum mismatch' }
+            } else {
+                [IO.File]::Replace((Join-Path $stage 'gvd.exe'),$targetExe,(Join-Path $backup 'gvd.exe'))
+            }
         } else {
             [IO.File]::Move((Join-Path $stage 'gvd.exe'),$targetExe)
         }
@@ -105,6 +122,7 @@ gvd.exeを起動してください。ショートカットや関連付けには�
 '@ | Set-Content -LiteralPath (Join-Path $install 'はじめに.txt') -Encoding utf8
     $receipt = [ordered]@{status=$(if($sameExe){'AlreadyCurrent'}else{'Updated'});path=$targetExe;version=$version.FileVersion;sha256=$expectedHash;source=$source;updated_at_utc=[DateTime]::UtcNow.ToString('o');settings_path='%LOCALAPPDATA%\GVN\settings.ini'}
     if ($pinRefresh) { $receipt['icon_refresh'] = $pinRefresh }
+    if ($runningBackup) { $receipt['running_backup'] = $runningBackup; $receipt['preserved_running_pids'] = @($running.Id) }
     $receipt | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $install 'installed.json') -Encoding utf8
     $receipt | ConvertTo-Json -Compress
 } finally {
@@ -115,3 +133,5 @@ gvd.exeを起動してください。ショートカットや関連付けには�
         Remove-Item -LiteralPath $resolvedStage -Recurse -Force
     }
 }
+
+} finally { $updateMutex.ReleaseMutex(); $updateMutex.Dispose() }

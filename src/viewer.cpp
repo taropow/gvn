@@ -29,6 +29,9 @@
 #include "gvn/brightness_dialog.h"
 #include "gvn/levels_dialog.h"
 #include "gvn/floating_selection.h"
+#include "gvn/viewport_transform.h"
+#include "gvn/ui_theme.h"
+#include "gvn/command_presentation.h"
 #include "gvn/editor_chrome.h"
 #include <windowsx.h>
 #include <commdlg.h>
@@ -123,6 +126,7 @@ class App {
     CanvasScrollbars canvas_bars;
     int canvas_width{}, canvas_height{}, canvas_top{-1}, canvas_left{-1},canvas_thickness{};
     int status_min_height{};
+    bool status_parts_image{};std::array<int,5> status_edges{};
     bool canvas_tracking{};
     uint64_t overlay_scroll_until{};
     AnimationBar playback;
@@ -488,425 +492,7 @@ class App {
         return k.QuadPart + u.QuadPart;
     }
 
-    bool checked(UINT id) const {
-        if(id==ToggleEditor)return editor_mode;
-        if(id==ToolPan)return space_pan||(editor_mode&&selection_tool==SelectionTool::Pan);
-        if(id==ToolPen)return editor_mode&&selection_tool==SelectionTool::Pen;
-        if(id==ToolText)return editor_mode&&selection_tool==SelectionTool::Text;
-        if(id==ToolCrop)return cropping.has_value();
-        if(id>=SelectRectangle&&id<=SelectMove)return selection_active()&&int(selection_tool)==int(id-SelectRectangle);
-        if(id>=GridFree&&id<=Grid32){const int units[]{1,2,4,8,16,32};return !settings.selection_custom&&settings.grid==units[id-GridFree];}
-        if(id==Grid)return settings.selection_custom||(settings.grid!=1&&settings.grid!=2&&settings.grid!=4&&settings.grid!=8&&settings.grid!=16&&settings.grid!=32);
-        switch (id) {
-        case ToggleHover:
-            return settings.mouse.action(MouseGesture::Hover, 0, 0) == MouseHover;
-        case Fullscreen:
-            return full;
-        case Topmost:
-            return topmost;
-        case ToggleCaption:
-            return settings.caption;
-        case ToggleOuterFrame:
-            return settings.outer_frame;
-        case ToggleInnerFrame:
-            return settings.inner_frame;
-        case ToggleToolbar:
-            return full ? settings.full_toolbar : settings.toolbar;
-        case ToggleStatus:
-            return full ? settings.full_status : settings.status;
-        case ToggleMenu:
-            return full ? settings.full_menu : settings.menu;
-        case ToggleScrollbars:
-            return full ? settings.full_scrollbars : settings.scrollbars;
-        case Checker:
-            return settings.checker;
-        case Nearest:
-            return (full?settings.full_down:settings.display_down)==DisplaySimple&&(full?settings.full_up:settings.display_up)==DisplaySimple;
-        case Loop:
-            return player.loop;
-        case Slideshow:
-            return slideshow;
-        case ListLoop:
-            return settings.list_loop;
-        case SortReverse:
-            return settings.reverse;
-        case NaturalSort:
-            return settings.natural;
-        case ShowHidden:
-            return settings.hidden;
-        case KeepZoom:
-            return settings.keep_zoom;
-        case Comic:
-            return comic;
-        case ComicRTL:
-            return settings.comic_rtl;
-        case ComicSingleWide:
-            return settings.comic_single_wide;
-        case ComicHeight:
-            return settings.comic_mode >= 1 && settings.comic_mode <= 3;
-        case SelectMode:
-            return editor_mode&&selection_tool==SelectionTool::Rectangle;
-        default:
-            if (id >= ViewRotateNone && id <= ViewRotateHalf)
-                return settings.view_rotation == static_cast<int>(id - ViewRotateNone);
-            if (id >= DisplayWindowImage && id <= DisplayUnchanged)
-                return (full ? settings.full_display_mode : settings.display_mode) ==
-                       static_cast<int>(id - DisplayWindowImage);
-            return id >= SortName && id <= SortRandom && settings.sort == static_cast<int>(id - SortName);
-        }
-    }
-    std::optional<std::wstring> file_clipboard_text(UINT id) const {
-        const auto source = source_file(!image->path.empty() ? image->path
-                                        : before_load ? before_load->requested : requested);
-        const auto previous = before_load && before_load->replaced ? &*before_load->replaced : nullptr;
-        const auto name = !source.empty() ? source.filename().wstring()
-                          : previous ? previous->name : current_name;
-        if (id == CopyFileName)
-            return name.empty() ? L"クリップボード画像" : name;
-        if (id == CopyPath)
-            return source.empty() ? (name.empty() ? L"クリップボード画像" : name) : source.wstring();
-        if (id == CopyShortPath) {
-            if (source.empty())
-                return std::nullopt;
-            const auto size = GetShortPathNameW(source.c_str(), nullptr, 0);
-            if (!size)
-                return std::nullopt;
-            std::wstring result(size, L'\0');
-            const auto length = GetShortPathNameW(source.c_str(), result.data(), size);
-            if (!length || length >= size)
-                return std::nullopt;
-            result.resize(length);
-            return result;
-        }
-        auto source_folder = source.empty() ? (previous ? previous->folder : folder) : source.parent_path();
-        if (source_folder.empty())
-            source_folder = previous ? previous->clipboard_folder : clipboard_folder;
-        if (source_folder.empty())
-            source_folder = std::filesystem::current_path();
-        return id == CopyFolderName ? source_folder.filename().wstring() : source_folder.wstring();
-    }
-    void add(HMENU menu, UINT id, const std::wstring &text) {
-        auto label = text.substr(0, text.find(L'\t'));
-        if (id == SkipBack || id == SkipNext)
-            label = std::to_wstring(settings.skip_count) + (id == SkipBack ? L"枚戻る" : L"枚進む");
-        const auto key = settings.first_key(id);
-        if (!key.empty())
-            label += L"\t" + key;
-        AppendMenuW(menu,
-                    MF_STRING | (checked(id) ? MF_CHECKED : 0) |
-                        ((id == ToggleOuterFrame && settings.caption) ||
-                         (id >= WallpaperCenter && id <= WallpaperHeight && !image) ||
-                         (id == PaletteEdit && (!image || image->frames.size()!=1 || !image->frames[0].indexed)) ||
-                         (id == ConvertColorDepth && !image) ||
-                         (id == ColorAdjust && !image) ||
-                         (id == WallpaperDelete && !has_wallpaper_files(config)) ? MF_GRAYED : 0),
-                    id, label.c_str());
-    }
-    static void separator(HMENU menu) {
-        AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
-    }
-    static void submenu(HMENU root, HMENU child, const wchar_t *label) {
-        AppendMenuW(root, MF_POPUP, reinterpret_cast<UINT_PTR>(child), label);
-    }
-    void update_wallpaper_menu(HMENU target) {
-        // Refresh only this popup's entries; other instances may have changed the files.
-        // Never rebuild a menu while Windows is tracking it, or query the desktop here.
-        for (int i = 0; i < GetMenuItemCount(target); ++i) {
-            const auto id = GetMenuItemID(target, i);
-            if (id >= WallpaperCenter && id <= WallpaperDelete) {
-                const bool enabled = id == WallpaperDelete ? has_wallpaper_files(config) : bool(image);
-                EnableMenuItem(target, static_cast<UINT>(i), MF_BYPOSITION | (enabled ? MF_ENABLED : MF_GRAYED));
-            }
-        }
-    }
-    HMENU menu(bool popup = false) {
-        HMENU root = popup ? CreatePopupMenu() : CreateMenu(), m = CreatePopupMenu();
-        add(m, Open, L"開く…\tCtrl+O");
-        add(m, Reload, L"再読み込み\tF5");
-        add(m, NewImage, L"新規画像…");
-        separator(m);
-        add(m, Save, L"保存\tCtrl+S");
-        add(m, SaveAs, L"名前を付けて保存…\tCtrl+Shift+S");
-        separator(m);
-        add(m, RenameFile, L"名前を変更…\tF2");
-        add(m, FileCopy, L"ファイルをコピー…");
-        add(m, FileMove, L"ファイルを移動…");
-        add(m, FileDelete, settings.recycle_deleted ? L"ごみ箱へ…\tDelete" : L"ファイルを削除…\tDelete");
-        add(m, CopyPath, L"パスをコピー");
-        HMENU destinations = CreatePopupMenu();
-        for (size_t i = 0; i < 10; ++i) {
-            const auto name = [&](bool move) {
-                const auto &path = (move ? settings.move_destinations : settings.copy_destinations)[i];
-                return path.empty() ? std::wstring(L"未登録") : path;
-            };
-            add(destinations, CopyDestBase + static_cast<UINT>(i),
-                L"コピー " + std::to_wstring(i + 1) + L": " + name(false));
-            add(destinations, MoveDestBase + static_cast<UINT>(i),
-                L"移動 " + std::to_wstring(i + 1) + L": " + name(true));
-        }
-        separator(destinations);
-        add(destinations, ConfigureDestinations, L"登録先を設定…");
-        submenu(m, destinations, L"登録先へ振り分け");
-        separator(m);
-        HMENU recent = CreatePopupMenu();
-        for (size_t i = 0; i < settings.history.size(); ++i)
-            add(recent, HistoryBase + static_cast<UINT>(i), settings.history[i]);
-        submenu(m, recent, L"最近開いたフォルダ");
-        HMENU external = CreatePopupMenu();
-        add(external, External, L"アプリを選んで開く…");
-        for (size_t i = 0; i < 9; ++i) {
-            const auto entry = settings.external_application(i);
-            if (!entry.name.empty()) {
-                std::wstring label = L"(&" + std::to_wstring(i + 1) + L") ";
-                for (const auto ch : entry.name) {
-                    if (ch == L'&') label += L'&';
-                    label += ch == L'\t' || ch == L'\r' || ch == L'\n' ? L' ' : ch;
-                }
-                add(external, ExternalBase + static_cast<UINT>(i), label);
-                if (entry.separator) separator(external);
-            }
-        }
-        add(external, ConfigureExternal, L"外部アプリを登録…");
-        submenu(m, external, L"他のアプリで開く");
-        HMENU new_windows = CreatePopupMenu();
-        add(new_windows, NewWindow, L"空のウィンドウ");
-        add(new_windows, NewWindowFile, L"現在のファイルを開く");
-        add(new_windows, NewWindowSend, L"画像をクリップボード経由で送る");
-        add(new_windows, NewWindowPaste, L"クリップボードの画像を貼り付け");
-        submenu(m, new_windows, L"もう1つ起動");
-        add(m, Print, L"印刷…\tCtrl+P");
-        HMENU wallpaper = CreatePopupMenu();
-        add(wallpaper, WallpaperCenter, L"中央に表示");
-        add(wallpaper, WallpaperTile, L"並べて表示");
-        add(wallpaper, WallpaperStretch, L"伸縮して表示");
-        add(wallpaper, WallpaperWidth, L"横幅に合わせる");
-        add(wallpaper, WallpaperHeight, L"縦幅に合わせる");
-        separator(wallpaper);
-        add(wallpaper, WallpaperDelete, L"壁紙ファイルを削除…");
-        submenu(m, wallpaper, L"壁紙にする");
-        separator(m);
-        add(m, Exit, L"終了");
-        submenu(root, m, L"ファイル");
-        m = CreatePopupMenu();
-        add(m, Undo, L"元に戻す\tCtrl+Z");
-        add(m, Redo, L"やり直し\tCtrl+Shift+Z");
-        separator(m);
-        add(m,ToggleEditor,L"画像編集モード");
-        HMENU selection_tools=CreatePopupMenu();
-        add(selection_tools,ToolPan,L"手のひら（表示を移動）");
-        add(selection_tools,SelectRectangle,L"矩形選択\tS");add(selection_tools,SelectFreehand,L"自由選択");
-        add(selection_tools,SelectPolygon,L"折れ線選択（ダブルクリック / Enterで完了）");
-        add(selection_tools,SelectMove,L"移動・変形");
-        submenu(m,selection_tools,L"選択ツール（Shift:追加 / Alt:除外 / Ctrl:交差）");
-        add(m, SelectNumbers, L"範囲を数値で指定…");
-        HMENU units=CreatePopupMenu();
-        const wchar_t *unit_labels[]{L"フリー",L"2 x 2",L"4 x 4",L"8 x 8",L"16 x 16",L"32 x 32"};
-        for(UINT n=0;n<6;++n)add(units,GridFree+n,unit_labels[n]);
-        separator(units);add(units,Grid,L"カスタム…");
-        int unit_position=7;const int common_units[]{1,2,4,8,16,32};
-        if(!settings.selection_custom)for(int n=0;n<6;++n)if(settings.grid==common_units[n])unit_position=n;
-        CheckMenuRadioItem(units,0,7,unit_position,MF_BYPOSITION);submenu(m,units,L"矩形選択の単位");
-        add(m, SelectAll, L"すべて選択\tCtrl+A");
-        add(m, ClearSelection, L"選択を解除\tEsc");
-        add(m, InvertSelection,L"選択範囲を反転\tCtrl+Shift+I");
-        add(m, DeleteSelection,L"選択範囲を削除\tDelete（選択中）");
-        separator(m);
-        add(m, Copy, L"コピー（アルファ維持）\tCtrl+C");
-        add(m, Cut, L"切り取り\tCtrl+X");
-        add(m, Paste, L"貼り付け\tCtrl+V");
-        add(m, PasteSelection,L"選択範囲でペースト");
-        if(floating){add(m,CommitSelection,L"貼り付けを確定\tEnter");add(m,CancelSelection,L"貼り付けを中止\tEsc");add(m,TransformSelection,L"位置・サイズ・角度…");}
-        add(m, NewPaste, L"新規画像として貼り付け");
-        add(m, CloseImage, L"画像を閉じる\tCtrl+W");
-        add(m, Crop, L"選択範囲を切り出す\tCtrl+Y");
-        separator(m);
-        add(m, ArmDrag, L"次の左ドラッグでファイルを渡す\tF6 / Ctrl+Shift+D");
-        HMENU file_names = CreatePopupMenu();
-        add(file_names, CopyFileName, L"現在のファイル名");
-        add(file_names, CopyPath, L"現在のファイルのフルパス");
-        add(file_names, CopyFolderName, L"現在のフォルダ名");
-        add(file_names, CopyFolderPath, L"現在のフォルダのパス");
-        add(file_names, CopyShortPath, L"現在のファイルのショートパス");
-        submenu(m, file_names, L"ファイル名をクリップボードへ");
-        submenu(root, m, L"編集");
-        m = CreatePopupMenu();
-        add(m,ToolPen,L"ペン");add(m,ToolText,L"文字入れ");add(m,ToolCrop,L"トリミング…");
-        add(m, RotateRight, L"右90度回転\tR");
-        add(m, RotateLeft, L"左90度回転\tShift+R");
-        add(m, Rotate180, L"180度回転");
-        add(m, RotateAngle, L"角度を指定して回転…");
-        add(m, FlipH, L"左右反転");
-        add(m, FlipV, L"上下反転");
-        separator(m);
-        add(m, Resize, L"リサイズ…");
-        add(m, Canvas, L"キャンバスサイズ…");
-        separator(m);
-        add(m, AutoContrast, L"自動コントラスト");
-        add(m, AutoLevels, L"自動レベル調整");
-        add(m, Levels, L"レベル調整…");
-        for (auto [id, label] :
-             std::initializer_list<std::pair<UINT, const wchar_t *>>{{Brightness, L"明るさ…"},
-                                                                     {Contrast, L"コントラスト…"},
-                                                                     {Gamma, L"ガンマ…"},
-                                                                     {ColorAdjust, L"色合い調整…"},
-                                                                     {Hue, L"色相…"},
-                                                                     {Saturation, L"彩度…"},
-                                                                     {Negative, L"ネガポジ反転"},
-                                                                     {Gray, L"グレースケール"},
-                                                                     {Sepia, L"セピア"},
-                                                                     {Threshold, L"2値化…"},
-                                                                     {Posterize, L"階調削減（ポスタライズ）…"},
-                                                                     {ConvertColorDepth, L"減色/増色…"},
-                                                                     {PaletteEdit, L"パレット編集…"},
-                                                                     {ReplaceColor, L"色を置き換える…"},
-                                                                     {Edge, L"輪郭抽出"},
-                                                                     {Emboss, L"エンボス"},
-                                                                     {Mosaic, L"モザイク…"},
-                                                                     {Noise, L"ノイズ…"}})
-            add(m, id, label);
-        HMENU filters=CreatePopupMenu();
-        for(auto [id,label]:std::initializer_list<std::pair<UINT,const wchar_t *>>{{Sharpen,L"シャープ"},{SharpenStrong,L"シャープ <強>"},{SharpenEdges,L"シャープ <輪郭だけ>"},{Unsharp,L"アンシャープマスク…"},{Blur,L"ぼかし"},{BlurStrong,L"ぼかし <強>"},{BlurSoft,L"ぼかし <ソフト>"},{Gaussian,L"ガウスぼかし…"}})add(filters,id,label);
-        submenu(m,filters,L"シャープ / ぼかし");
-        HMENU swaps = CreatePopupMenu();
-        add(swaps, SwapRG, L"R ↔ G");
-        add(swaps, SwapRB, L"R ↔ B");
-        add(swaps, SwapGB, L"G ↔ B");
-        add(swaps, SwapForward, L"R → G → B → R");
-        add(swaps, SwapBackward, L"R ← G ← B ← R");
-        submenu(m, swaps, L"色の入れ替え");
-        HMENU masks = CreatePopupMenu();
-        add(masks, GlassV, L"縦ガラス");
-        add(masks, GlassH, L"横ガラス");
-        add(masks, MaskNegative, L"ネガポジ反転");
-        add(masks, Xor80, L"XOR 0x80");
-        add(masks, MaskSwap, L"RGB入れ替え");
-        add(masks, Q0Mask, L"Q0マスク");
-        add(masks, WinMask, L"Winマスク");
-        add(masks, FLMask, L"FLマスク");
-        add(masks, CPMask, L"CPマスク…");
-        add(masks, MekoForward, L"Mekoマスク 正順");
-        add(masks, MekoReverse, L"Mekoマスク 逆順");
-        add(masks, RainbowMask, L"虹色マスク…");
-        AppendMenuW(masks, MF_SEPARATOR, 0, nullptr);
-        add(masks, ConfigureMask, L"マスクオプション…");
-        submenu(m, masks, L"マスク");
-        submenu(root, m, L"画像");
-        m = CreatePopupMenu();
-        add(m, Previous, L"前の画像\t←");
-        add(m, Next, L"次の画像\t→");
-        add(m, First, L"先頭\tHome");
-        add(m, Last, L"末尾\tEnd");
-        add(m, SkipBack, L"10枚戻る\tPageUp");
-        add(m, SkipNext, L"10枚進む\tPageDown");
-        add(m, Jump, L"番号へジャンプ…\tJ");
-        separator(m);
-        add(m, ParentFolder, L"親フォルダ\tBackspace");
-        add(m, ChildFolder, L"子フォルダ…");
-        add(m, PreviousFolder, L"前のフォルダ\tCtrl+PageUp");
-        add(m, NextFolder, L"次のフォルダ\tCtrl+PageDown");
-        add(m, PreviousAdjacentFolder, L"前隣のフォルダ");
-        add(m, NextAdjacentFolder, L"次隣のフォルダ");
-        add(m, RefreshList, L"リストを更新");
-        separator(m);
-        HMENU sorting = CreatePopupMenu();
-        for (UINT i = SortName; i <= SortRandom; ++i)
-            add(sorting, i,
-                std::array<const wchar_t *, 5>{L"ファイル名", L"更新日時", L"サイズ", L"拡張子",
-                                               L"ランダム"}[i - SortName]);
-        separator(sorting);
-        add(sorting, SortReverse, L"逆順");
-        add(sorting, NaturalSort, L"数字を自然順に並べる");
-        add(sorting, ShowHidden, L"隠しファイルも含める");
-        submenu(m, sorting, L"並び順");
-        add(m, ListLoop, L"末尾から先頭に戻る");
-        add(m, Slideshow, L"スライドショー\tF8");
-        add(m, SlideInterval, L"スライド間隔…");
-        submenu(root, m, L"リスト");
-        m = CreatePopupMenu();
-        add(m, Fullscreen, L"全画面\tF11");
-        add(m, Actual, L"原寸\t1");
-        add(m, FitImage, L"画面に収める\t0");
-        add(m, FitWidth, L"幅に合わせる");
-        add(m, FitHeight, L"高さに合わせる");
-        add(m, FitCover, L"画面を埋める");
-        add(m, ZoomIn, L"拡大\t+");
-        add(m, ZoomOut, L"縮小\t-");
-        add(m, ZoomNumber, L"倍率を指定…");
-        add(m, KeepZoom, L"画像切り替え時に倍率を維持");
-        separator(m);
-        add(m, Comic, L"漫画の見開き表示");
-        add(m, ComicRTL, L"右から左に読む");
-        add(m, ComicSingleWide, L"横長の画像は単独で表示");
-        add(m, ComicHeight, L"見開きの高さを合わせる");
-        add(m, ComicOffset, L"見開きの組を1枚ずらす");
-        add(m, ComicOffsetBack, L"見開きの組を1枚戻す");
-        separator(m);
-        add(m, Checker, L"透明部分を市松模様で表示");
-        add(m, Background, L"背景色…");
-        add(m, Nearest, L"無補正表示");
-        add(m, ToggleHover, L"ホバースクロール");
-        add(m, Topmost, L"常に手前");
-        add(m, ToggleToolbar, L"ツールバー");
-        add(m, ToggleStatus, L"ステータスバー");
-        add(m, ToggleMenu, L"メニューバー\tF10");
-        add(m, ToggleScrollbars, L"スクロールバー");
-        auto window_menu = CreatePopupMenu();
-        for (UINT id : {WindowRestore, WindowMinimize, WindowMaximize, ToggleCaption, ToggleOuterFrame,
-                        ToggleInnerFrame})
-            add(window_menu, id, command_name(id));
-        submenu(m, window_menu, L"ウィンドウ");
-        auto display_menu = CreatePopupMenu();
-        for (UINT id = DisplayWindowImage; id <= DisplayUnchanged; ++id)
-            add(display_menu, id, command_name(id));
-        submenu(m, display_menu, L"表示オプション");
-        auto rotation_menu = CreatePopupMenu();
-        const wchar_t *rotation_labels[]{
-            L"回転しない",       L"左へ90度",         L"右へ90度",         L"縦長だけ左へ90度",
-            L"縦長だけ右へ90度", L"横長だけ左へ90度", L"横長だけ右へ90度", L"180度"};
-        for (UINT id = ViewRotateNone; id <= ViewRotateHalf; ++id)
-            add(rotation_menu, id, rotation_labels[id - ViewRotateNone]);
-        CheckMenuRadioItem(rotation_menu, ViewRotateNone, ViewRotateHalf,
-                           ViewRotateNone + settings.view_rotation, MF_BYCOMMAND);
-        submenu(m, rotation_menu, L"表示用回転");
-        submenu(root, m, L"表示");
-        m = CreatePopupMenu();
-        add(m, Play, L"再生 / 一時停止\tSpace");
-        add(m, StopAnimation, L"停止して先頭へ");
-        add(m, FramePrevious, L"前のフレーム\t[");
-        add(m, FrameNext, L"次のフレーム\t]");
-        add(m, FirstFrame, L"先頭フレーム");
-        add(m, LastFrame, L"末尾フレーム");
-        add(m, Loop, L"アニメーションをループ");
-        submenu(root, m, L"アニメーション");
-        m = CreatePopupMenu();
-        add(m, Preferences, L"設定…");
-        add(m, Info, L"画像情報\tI");
-        add(m, Association, L"既定のアプリを設定…");
-        add(m, Help, L"操作説明\tF1");
-        add(m, About, L"バージョン情報…");
-        submenu(root, m, L"その他");
-        return root;
-    }
-    void refresh_menu() {
-        auto next = menu();
-        SetMenu(hwnd, (full ? settings.full_menu : settings.menu) ? next : nullptr);
-        if (main_menu)
-            DestroyMenu(main_menu);
-        main_menu = next;
-        for (auto bar : {toolbar.hwnd, playback.toolbar.hwnd,editor_tools.hwnd})
-            for (int i = 0; i < SendMessageW(bar, TB_BUTTONCOUNT, 0, 0); ++i) {
-                TBBUTTON button{};
-                SendMessageW(bar, TB_GETBUTTON, i, reinterpret_cast<LPARAM>(&button));
-                if (button.idCommand && button.idCommand != Play && button.idCommand != Loop) {
-                    auto label = std::wstring(command_name(button.idCommand));
-                    const auto key = settings.first_key(button.idCommand);
-                    if (!key.empty())
-                        label += L" (" + key + L")";
-                    (bar == toolbar.hwnd ? toolbar : bar==editor_tools.hwnd?editor_tools:playback.toolbar).text(button.idCommand, label.c_str());
-                }
-            }
-        DrawMenuBar(hwnd);
-    }
+#include "viewer_commands.inc"
     void apply_window_style() {
         DWORD style = full ? old_style : static_cast<DWORD>(GetWindowLongPtrW(hwnd, GWL_STYLE));
         style &= ~WS_OVERLAPPEDWINDOW;
@@ -1098,10 +684,9 @@ class App {
                 // from the previous window can hide part of a small image or leave
                 // extra empty space when the toolbar changes its number of rows.
                 toolbar.configure(settings.toolbar_center,settings.toolbar_line,settings.toolbar_large);
-                const auto panel=cropping?EditorPanel::Crop:floating?(floating->text_annotation?EditorPanel::Text:EditorPanel::Transform):
-                    selection_tool==SelectionTool::Pen?EditorPanel::Pen:selection_tool==SelectionTool::Text?EditorPanel::Text:EditorPanel::None;
+                const auto panel=editor_panel();
                 const int upper=(toolbar_shown?toolbar.measure_height(client_width,dpi):0)+
-                    ((editor_mode||floating||cropping)?EditorChrome::top_height(client_width,dpi,panel,floating||cropping):0);
+                    ((editor_mode||floating||cropping)?editor_chrome.measure_top(client_width,dpi,panel,floating||cropping):0);
                 const int lower=(status_shown?measure_status_height(dpi,true):0)+
                     (image->animated()?playback.measure_height(client_width,dpi):0);
                 const int horizontal=settings.scrollbars&&image_w>client_width?
@@ -1158,7 +743,7 @@ class App {
                                           hwnd, nullptr, nullptr, nullptr);
         canvas_corner =
             CreateWindowExW(0, L"STATIC", L"", WS_CHILD, 0, 0, 0, 0, hwnd, nullptr, nullptr, nullptr);
-        watch_bar_controls(hwnd);
+        watch_bar_controls(hwnd);apply_ui_theme(hwnd);
         loader = std::make_unique<Loader>(
             [this](Loaded value) {
                 auto result = std::make_unique<Loaded>(std::move(value));
@@ -1268,6 +853,7 @@ class App {
         if (outer_width == current_outer.right - current_outer.left)
             extra_y = std::max(
                 extra_y, static_cast<int>(current_outer.bottom - current_outer.top - current_client.bottom));
+        toolbar.use_overflow(settings.toolbar_overflow);
         toolbar.configure(settings.toolbar_center, settings.toolbar_line, settings.toolbar_large);
         playback.toolbar.configure(false, false, settings.toolbar_large);
         const bool animated = image && image->animated();
@@ -1314,6 +900,7 @@ class App {
             if (!view.manual)
                 view.apply_fit(view.fit, view.shrink_only);
         }
+        toolbar.use_overflow(settings.toolbar_overflow);
         toolbar.configure(settings.toolbar_center, settings.toolbar_line, settings.toolbar_large);
         playback.toolbar.configure(false, false, settings.toolbar_large);
         toolbar_shown = bar_visible(true);
@@ -1325,8 +912,7 @@ class App {
         const bool animated = image && image->animated();
         play_height = playback.layout(rc.right, rc.bottom, status_height, dpi, animated);
         bottom = status_height + play_height;
-        const auto panel=cropping?EditorPanel::Crop:floating?(floating->text_annotation?EditorPanel::Text:EditorPanel::Transform):
-            selection_tool==SelectionTool::Pen?EditorPanel::Pen:selection_tool==SelectionTool::Text?EditorPanel::Text:EditorPanel::None;
+        const auto panel=editor_panel();
         top+=editor_chrome.layout_top(hwnd,rc.right,top,dpi,editor_mode||floating||cropping,panel,floating||cropping);
         editor_tools.configure(false,false,settings.toolbar_large);
         left=editor_tools.layout_tools(dpi,top,std::max(1L,rc.bottom-top-bottom),editor_mode);
@@ -1342,7 +928,7 @@ class App {
     }
     void layout_status_parts() {
         const auto dpi=GetDpiForWindow(status);const auto px=[&](int n){return MulDiv(n,dpi,96);};
-        if(!image){const int edge=-1;SendMessageW(status,SB_SETPARTS,1,reinterpret_cast<LPARAM>(&edge));editor_chrome.layout_status(hwnd,status,{},dpi,false,false);return;}
+        if(!image){const int edge=-1;if(status_parts_image)SendMessageW(status,SB_SETPARTS,1,reinterpret_cast<LPARAM>(&edge));status_parts_image=false;editor_chrome.layout_status(hwnd,status,{},dpi,false,false);return;}
         RECT area{};GetClientRect(status,&area);const int right=std::max(1L,area.right-px(20));
         const int export_width=std::min(right,std::clamp(int(right*.42),px(260),px(420))),information=std::max(0,right-export_width-px(6));
         int edges[5]{};
@@ -1350,7 +936,9 @@ class App {
         else if(information>=px(280)){edges[0]=edges[1]=px(145);edges[2]=edges[3]=px(200);}
         else if(information>=px(145)){edges[0]=edges[1]=information-px(45);edges[2]=edges[3]=information;}
         else {edges[0]=edges[1]=edges[2]=edges[3]=information;}
-        edges[4]=information;SendMessageW(status,SB_SETPARTS,5,reinterpret_cast<LPARAM>(edges));
+        edges[4]=information;const std::array<int,5> next_edges{edges[0],edges[1],edges[2],edges[3],edges[4]};
+        if(!status_parts_image||status_edges!=next_edges){SendMessageW(status,SB_SETPARTS,5,reinterpret_cast<LPARAM>(edges));status_edges=next_edges;status_parts_image=true;
+            for(int part=0;part<5;++part)SendMessageW(status,SB_SETTIPTEXTW,part,reinterpret_cast<LPARAM>(part==2?L"クリックで表示倍率を指定":L"クリックで画像の詳しい情報を表示"));}
         const RECT panel{right-export_width,px(2),right,area.bottom-px(2)};
         editor_chrome.layout_status(hwnd,status,panel,dpi,status_shown,image&&!loading&&!floating&&!cropping);
     }
@@ -1505,20 +1093,16 @@ class App {
             KillTimer(hwnd, 1);
             animation_timer = false;
         }
-        for (UINT id : {Save, Copy, ArmDrag, Info, ZoomIn, ZoomOut, FitImage, Actual, Fullscreen})
-            toolbar.enable(id, image != nullptr);
-        toolbar.enable(Undo, undo_image != nullptr);
-        toolbar.enable(Redo,!redo_history.empty());
-        toolbar.enable(FileDelete, original_file());
-        toolbar.text(FileDelete, settings.recycle_deleted ? L"ごみ箱へ" : L"ファイルを削除");
-        toolbar.enable(Previous, !files.empty());
-        toolbar.enable(Next, !files.empty());
+        const auto commands=command_context();
+        for(UINT id:{Save,Copy,ArmDrag,Info,ZoomIn,ZoomOut,FitImage,Actual,Fullscreen,Undo,Redo,FileDelete,Previous,Next})toolbar.enable(id,common_command_enabled(id,commands));
+        toolbar.text(FileDelete,command_caption(settings,FileDelete,settings.recycle_deleted?L"ごみ箱へ":L"ファイルを削除").c_str());
+
         const bool reversed = comic && settings.comic_rtl && settings.comic_toolbar_reverse;
-        toolbar.text(Previous, reversed ? L"次の画像" : L"前の画像");
-        toolbar.text(Next, reversed ? L"前の画像" : L"次の画像");
+        toolbar.text(Previous,command_caption(settings,Previous,reversed?L"次の画像":L"前の画像").c_str());
+        toolbar.text(Next,command_caption(settings,Next,reversed?L"前の画像":L"次の画像").c_str());
         toolbar.check(Slideshow, slideshow);
         toolbar.check(ToggleEditor,editor_mode);
-        toolbar.text(ToggleEditor,editor_mode?L"画像編集モードを終了":L"画像編集モードに切り替え");
+        toolbar.text(ToggleEditor,command_caption(settings,ToggleEditor,editor_mode?L"画像編集モードを終了":L"画像編集モードに切り替え").c_str());
         if(editor_mode){
             for(UINT id:{SelectRectangle,SelectFreehand,SelectPolygon,SelectMove,ToolPan,ToolPen,ToolText,ToolCrop})editor_tools.check(id,checked(id));
             for(UINT id:{SelectRectangle,SelectFreehand,SelectPolygon,SelectAll,InvertSelection,ToolCrop,ToolPen,ToolText,Resize,Canvas,RotateRight,FlipH,FlipV,Brightness,ColorAdjust,Levels})editor_tools.enable(id,image&&!floating&&!loading);
@@ -1527,13 +1111,9 @@ class App {
         }
         if(cropping)editor_chrome.bounds(cropping->box,cropping->scale);
         else if(floating&&!floating->text_annotation)editor_chrome.bounds(floating->box);
+        if(image&&!floating)status_text(4,editor_session().hint());
         if(floating){
-            for(UINT id:{Save,Copy,ArmDrag,FileDelete,Previous,Next,Undo,Redo})toolbar.enable(id,false);
-            std::wostringstream hint;hint<<L"仮置き：ドラッグで移動／ハンドルで拡縮／枠外で回転  Enter:確定  Esc:中止  ";
-            hint<<std::fixed<<std::setprecision(1)<<L"X:"<<floating->box.cx-floating->box.width/2<<L" Y:"<<floating->box.cy-floating->box.height/2<<L"  "<<floating->box.width<<L"×"<<floating->box.height<<L"  "<<floating->box.angle<<L"°";
-            if(!floating->original_position)hint<<L"（元位置情報なし）";
-            if(floating->invalid_metadata)hint<<L"（位置データ不正のため標準画像を使用）";
-            status_text(image?4:0,hint.str());
+            status_text(image?4:0,editor_session().hint());
         }
         InvalidateRect(hwnd, nullptr, FALSE);
     }
@@ -2040,123 +1620,7 @@ class App {
         return dc?renderer.print(hwnd,dc,presented_image(),frame,view,top,floating?nullptr:&selection)
                  :renderer.draw(hwnd,presented_image(),frame,view,top,bottom,floating?nullptr:&selection);
     }
-    void begin_floating() {
-        if(cropping)cancel_crop();
-        if(loading)throw std::runtime_error("Wait for the current image to finish loading");
-        auto content=paste_selection_clipboard(hwnd);
-        auto source=std::make_shared<Image>(still_frame(content.image,0,false));
-        if(floating)cancel_floating();
-        auto canvas=image?std::make_shared<Image>(still_frame(*image,player.frame,false)):
-            std::make_shared<Image>(new_image(content.origin?content.origin->canvas_width:source->width,
-                                              content.origin?content.origin->canvas_height:source->height,edit_memory()));
-        FloatingPaste next{image,canvas,source,{},player,view,content.origin,slideshow,content.invalid_metadata};
-        next.previous_selection=selection;
-        next.box={double(content.origin?content.origin->x:0)+source->width/2.,double(content.origin?content.origin->y:0)+source->height/2.,double(source->width),double(source->height),0};
-        floating=std::move(next);cancel_pointer();selection={};renderer.selection_path.clear();player.playing=false;reset_animation_clock();KillTimer(hwnd,2);
-        drag_armed=false;toolbar.floating(true);
-        if(!image){view.set_image(canvas->width,canvas->height,false);view.apply_fit(Fit::Contain);}
-        refresh_menu();layout();update();
-    }
-    void cancel_floating() {
-        if(!floating)return;
-        auto old=std::move(*floating);floating.reset();floating_drag.reset();renderer.set_floating({});
-        toolbar.floating(false);cancel_pointer();
-        if(image==old.origin){player=std::move(old.previous_player);selection=old.previous_selection;reset_animation_clock();if(!image)view=old.previous_view;}
-        if(old.slideshow&&slideshow)SetTimer(hwnd,2,settings.interval,nullptr);
-        refresh_menu();layout();update();
-    }
-    void commit_floating() {
-        if(!floating)return;
-        if(image!=floating->origin){cancel_floating();return;}
-        if(image&&!begin_edit())return;
-        auto result=paste_floating(*floating->canvas,*floating->source,floating->box,edit_memory());
-        if(image){result.metadata=current_metadata();if(image->animated()||image->format==L"見開き")result.path.clear();}
-        // Finish every allocation before discarding the uncommitted placement.
-        auto prepared=std::make_shared<Image>(std::move(result));const bool synthetic=!floating->origin;
-        cancel_floating();
-        if(synthetic)replace_clipboard_document(std::move(*prepared));else replace(std::move(prepared));
-    }
-    FloatPoint floating_point(POINT p) const {
-        const bool actual=std::abs(view.scale-1)<1e-9;
-        return {(p.x-(actual?std::floor(view.left()):view.left()))/view.scale,
-                (p.y-top-(actual?std::floor(view.top()):view.top()))/view.scale};
-    }
-    void floating_numbers() {
-        if(!floating)return;const auto source=floating->source;const auto box=floating->box;
-        std::wostringstream initial;initial<<box.cx-box.width/2<<L' '<<box.cy-box.height/2<<L' '<<box.width<<L' '<<box.height<<L' '<<box.angle;
-        const auto text=dialogs.text(hwnd,L"貼り付けの位置・サイズ・角度",L"X Y 幅 高さ 角度（px / 度、半角空白区切り）",initial.str());
-        if(!text||!floating||floating->source!=source)return;
-        double x{},y{},width{},height{},angle{};std::wistringstream in(*text);
-        if(!(in>>x>>y>>width>>height>>angle)||!(in>>std::ws).eof())throw std::invalid_argument("Enter X Y width height angle");
-        FloatingBox next{x+width/2,y+height/2,width,height,angle};
-        if(!next.valid())throw std::invalid_argument("Invalid floating selection bounds");floating->box=next;update();
-    }
-    void move_selection() {
-        if(!image||selection.empty()||loading)return;
-        auto frame=still_frame(*image,player.frame,false);
-        auto source=std::make_shared<Image>(selection_image(frame,selection,edit_memory()));
-        auto canvas=std::make_shared<Image>(erase_selection(frame,selection,{},edit_memory()));
-        FloatingPaste next{image,canvas,source,{},player,view,SelectionOrigin{selection.x,selection.y,image->width,image->height},slideshow,false};
-        next.previous_selection=selection;
-        next.box={selection.x+source->width/2.,selection.y+source->height/2.,double(source->width),double(source->height),0};
-        floating=std::move(next);cancel_pointer();selection={};renderer.selection_path.clear();
-        player.playing=false;reset_animation_clock();KillTimer(hwnd,2);drag_armed=false;toolbar.floating(true);
-        refresh_menu();layout();update();
-    }
-    static SelectionCombine selection_modifier(WPARAM flags) {
-        if(GetKeyState(VK_MENU)&0x8000)return SelectionCombine::Subtract;
-        if(flags&MK_CONTROL)return SelectionCombine::Intersect;
-        if(flags&MK_SHIFT)return SelectionCombine::Add;
-        return SelectionCombine::Replace;
-    }
-    void finish_selection_path() {
-        if(!image)return;
-        auto next=SelectionRegion::polygon(selection_points,image->width,image->height);
-        next=selection_before_drag.combined(next,selection_combine,image->width,image->height);
-        selecting=polygon_drawing=false;selection_points.clear();renderer.selection_path.clear();
-        selection=std::move(next);if(GetCapture()==hwnd)ReleaseCapture();update();
-    }
-    void cancel_selection_path() {
-        if(selecting||polygon_drawing)selection=selection_before_drag;
-        selecting=polygon_drawing=false;selection_points.clear();renderer.selection_path.clear();
-    }
-    void set_edit_mode(bool enabled) {
-        if(editor_mode==enabled)return;
-        cancel_pointer();if(floating)cancel_floating();if(cropping)cancel_crop();
-        if(!enabled){previous_editor_tool=selection_tool;selection_tool=SelectionTool::Browse;}
-        else selection_tool=previous_editor_tool;
-        editor_mode=enabled;drag_armed=false;refresh_menu();layout();update();
-    }
-    void choose_tool(SelectionTool tool) {
-        cancel_pointer();if(floating)cancel_floating();if(cropping)cancel_crop();
-        set_edit_mode(true);selection_tool=previous_editor_tool=tool;
-        if(tool==SelectionTool::Move)move_selection();
-        refresh_menu();layout();update();
-    }
-    POINT canvas_point(POINT p) const {p.x-=left;return p;}
-    POINT client_point(POINT p) const {p.x+=left;return p;}
-    void start_selection(unsigned button,POINT point,WPARAM flags,bool double_click) {
-        const auto tool=selection_active()&&!(selection_tool==SelectionTool::Move&&selection_modifier(flags)!=SelectionCombine::Replace)?selection_tool:SelectionTool::Rectangle;
-        auto &press=mouse_presses[button];press.consumed=true;
-        const auto p=image_point(point);const FloatPoint next{double(p.x),double(p.y)};
-        if(tool==SelectionTool::Move){
-            if(selection.contains(p.x,p.y)){move_selection();if(floating){const auto at=floating_point(point);floating_drag_button=button;floating_drag=FloatingDrag{floating->box,at,floating_hit(floating->box,at,7./view.scale)};SetCapture(hwnd);}}
-            return;
-        }
-        if(tool==SelectionTool::Polygon){
-            if(!polygon_drawing){selection_before_drag=selection;selection_combine=selection_modifier(flags);selection_points.clear();polygon_drawing=true;}
-            if(selection_points.empty()||selection_points.back().x!=next.x||selection_points.back().y!=next.y)selection_points.push_back(next);
-            if(selection_points.size()>65536)throw std::runtime_error("Too many selection points");
-            if(double_click){finish_selection_path();return;}
-            renderer.selection_path=selection_points;renderer.selection_path.push_back(next);update();return;
-        }
-        selection_before_drag=selection;selection_combine=selection_modifier(flags);selection_drag_tool=tool;
-        active_drag_button=button+1;active_drag_action=MouseSelect;selecting=true;selection_start=p;
-        selection_drag_units=settings.selection_units();selection_points.clear();
-        if(tool==SelectionTool::Freehand){selection_points.push_back(next);renderer.selection_path=selection_points;}
-        else selection={};
-        SetCapture(hwnd);update();
-    }
+#include "viewer_selection.inc"
     void rainbow_edit() {
         if(!begin_edit())return;
         const auto source=image;const auto frame=player.frame;const auto rect=selection;
@@ -2750,6 +2214,7 @@ class App {
             PostMessageW(hwnd, WM_CLOSE, 0, 0);
     }
     void render_settings() {
+        set_ui_theme(settings.ui_theme,settings.ui_density);if(hwnd)apply_ui_theme(hwnd);
         const bool background_changed = renderer.checker_light != settings.checker_light ||
                                         renderer.checker_dark != settings.checker_dark ||
                                         renderer.checker_size != settings.checker_size ||
@@ -2946,6 +2411,7 @@ class App {
     }
 #include "viewer_editor.inc"
     void command(UINT id) {
+        if(!common_command_enabled(id,command_context()))return;
         if(id==ToolPen||id==ToolText){choose_tool(id==ToolPen?SelectionTool::Pen:SelectionTool::Text);return;}
         if(id==ToolCrop){begin_crop();return;}
         if(cropping){if(id==CommitSelection){commit_crop();return;}if(id==CancelSelection||id==Undo||id==ClearSelection){cancel_crop();return;}
@@ -4713,6 +4179,7 @@ class App {
                 update();
             return 0;
         case WM_DPICHANGED: {
+            apply_ui_theme(hwnd);
             const auto *rc = reinterpret_cast<RECT *>(l);
             SetWindowPos(hwnd, nullptr, rc->left, rc->top, rc->right - rc->left, rc->bottom - rc->top,
                          SWP_NOZORDER);
@@ -4768,8 +4235,11 @@ class App {
         case WM_INITMENUPOPUP:
             update_wallpaper_menu(reinterpret_cast<HMENU>(w));
             return 0;
+        case WM_SETTINGCHANGE:
+        case WM_THEMECHANGED:set_ui_theme(settings.ui_theme,settings.ui_density);apply_ui_theme(hwnd);layout();return 0;
         case WM_COMMAND: {
             UINT id = LOWORD(w);
+            if(id==MoreCommands){toolbar.show_more(hwnd);return 0;}
             if(id>=editor_id::Color&&id<editor_id::Last){editor_notification(id,HIWORD(w));return 0;}
             if (reinterpret_cast<HWND>(l) == toolbar.hwnd && comic && settings.comic_rtl &&
                 settings.comic_toolbar_reverse && (id == Previous || id == Next))
@@ -4783,6 +4253,7 @@ class App {
             return 0;
         case WM_NOTIFY: {
             auto *header = reinterpret_cast<NMHDR *>(l);
+            if(header->hwndFrom==status&&header->code==NM_CLICK&&image){const auto click=reinterpret_cast<NMMOUSE *>(l);if(click->dwItemSpec<5)command(click->dwItemSpec==2?ZoomNumber:Info);return TRUE;}
             if (header->hwndFrom == toolbar.hwnd && header->code == NM_CUSTOMDRAW) {
                 auto *draw = reinterpret_cast<NMTBCUSTOMDRAW *>(l);
                 if (draw->nmcd.dwDrawStage == CDDS_PREPAINT) {

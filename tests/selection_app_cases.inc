@@ -18,13 +18,13 @@
         const auto sequence=GetClipboardSequenceNumber();command(PasteSelection);
         CHECK(app.floating&&app.image==original&&app.undo_image==previous_undo&&!app.modified);
         CHECK(app.floating->box.cx==46&&app.floating->box.cy==37&&app.floating->original_position->x==30);
-        CHECK(GetClipboardSequenceNumber()==sequence&&SendMessageW(app.toolbar.hwnd,TB_BUTTONCOUNT,0,0)==30);
+        CHECK(GetClipboardSequenceNumber()==sequence&&SendMessageW(app.toolbar.hwnd,TB_COMMANDTOINDEX,TransformSelection,0)>=0&&app.editor_chrome.control(editor_id::Apply)&&app.editor_chrome.control(editor_id::Cancel));
         selection_mouse(WM_LBUTTONDOWN,46,37,MK_LBUTTON);selection_mouse(WM_MOUSEMOVE,61,47,MK_LBUTTON);selection_mouse(WM_LBUTTONUP,61,47);
         CHECK(app.floating->box.cx==61&&app.floating->box.cy==47&&app.image==original);
         texts.push_back(L"10 12 48 36 30");command(TransformSelection);
         CHECK(app.floating->box.width==48&&app.floating->box.angle==30);
         command(CancelSelection);CHECK(!app.floating&&app.image==original&&app.selection.x==5&&app.selection.w==20&&app.undo_image==previous_undo);
-        CHECK(SendMessageW(app.toolbar.hwnd,TB_BUTTONCOUNT,0,0)==26);
+        CHECK(SendMessageW(app.toolbar.hwnd,TB_COMMANDTOINDEX,TransformSelection,0)<0);
         command(PasteSelection);texts.push_back(L"10 12 48 36 30");command(TransformSelection);
         const auto expected=paste_floating(*original,source,app.floating->box);
         app.message(WM_KEYDOWN,VK_RETURN,0);CHECK(!app.floating&&app.modified&&app.image->frames[0].pixels==expected.frames[0].pixels);

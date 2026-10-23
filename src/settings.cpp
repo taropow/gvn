@@ -246,14 +246,17 @@ void Settings::load(const std::filesystem::path &path) {
     auto read = [&](const wchar_t *section, const std::wstring &key, const std::wstring &initial) {
         return profile.read(section, key, initial);
     };
-    auto integer = [&](const wchar_t *name, int initial, int low, int high) {
+    auto integer = [&](const wchar_t *name, int initial, int low, int high,const wchar_t *section=L"Viewer") {
         try {
-            return std::clamp(std::stoi(read(L"Viewer", name, std::to_wstring(initial))), low, high);
+            return std::clamp(std::stoi(read(section, name, std::to_wstring(initial))), low, high);
         } catch (...) {
             return initial;
         }
     };
 #define GVN_BOOL(name) name = integer(GVN_WIDEN(#name), name ? 1 : 0, 0, 1) != 0
+    ui_theme=integer(L"ui_theme",ui_theme,0,2,L"Interface");
+    ui_density=integer(L"ui_density",ui_density,0,1,L"Interface");
+    toolbar_overflow=integer(L"toolbar_overflow",toolbar_overflow,0,1,L"Interface")!=0;
     GVN_BOOL(allow_multiple);
     GVN_BOOL(activate_reused);
     GVN_BOOL(activate_dropped);
@@ -757,6 +760,9 @@ void Settings::save(const std::filesystem::path &path) const {
     };
     auto integer = [&](const wchar_t *key, int value) { write(L"Viewer", key, std::to_wstring(value)); };
 #define GVN_SAVE(name) integer(GVN_WIDEN(#name), name)
+    write(L"Interface",L"ui_theme",std::to_wstring(ui_theme));
+    write(L"Interface",L"ui_density",std::to_wstring(ui_density));
+    write(L"Interface",L"toolbar_overflow",std::to_wstring(toolbar_overflow));
     GVN_SAVE(allow_multiple);
     GVN_SAVE(activate_reused);
     GVN_SAVE(activate_dropped);

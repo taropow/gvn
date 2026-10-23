@@ -6,6 +6,7 @@ command	ToolPen
 command	Actual
 editor_set	Width	12
 editor_set	Opacity	70
+editor_click	Details
 editor_click	Outline
 editor_click	Shadow
 editor_layout
