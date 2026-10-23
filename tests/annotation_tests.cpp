@@ -49,6 +49,29 @@ TEST(invalid_annotation_input_is_rejected){
     const auto image=new_image(10,10);const FloatPoint p[]{{2,2}};THROWS(draw_pen(image,{},{}));THROWS(draw_pen(image,p,{0,{}}));
     THROWS(make_text_stamp(L"",L"Arial",20,{}));THROWS(make_text_stamp(L"   \n",L"Arial",20,{}));THROWS(crop_oriented(image,{5,5,0,5,0}));THROWS(crop_oriented(image,{5,5,5,5,0},0));
 }
+TEST(annotation_outline_shadow_layers_keep_alpha_edges_and_source){
+    auto source=new_image(1,1);source.frames[0].pixels[0]={240,20,80,255};const auto original=source.frames[0].pixels;
+    AnnotationEffects e;e.outline=true;e.shadow=true;e.shadow_blur=0;e.shadow_offset=5;e.outline_width=2;
+    const auto out=decorate_annotation(source,e);const int pad=annotation_padding(e);const auto at=[&](int x,int y){return out.frames[0].pixels[size_t(y+pad)*out.width+x+pad];};
+    CHECK(at(0,0)==original[0]);CHECK(at(2,0)==e.outline_color);CHECK(at(5,5)==e.shadow_color);CHECK(out.frames[0].pixels[0].a==0);
+    CHECK(source.frames[0].pixels==original);e.shadow_offset=-5;e.shadow_blur=3;
+    const auto blurred=decorate_annotation(source,e);size_t shadow{},partial{};for(auto c:blurred.frames[0].pixels){shadow+=c.a&&c.r==0;partial+=c.a>0&&c.a<128;}CHECK(shadow>20&&partial>20);
+    EditMemory fail;fail.before_allocate=[](size_t){throw std::bad_alloc();};THROWS(decorate_annotation(source,e,fail));CHECK(source.frames[0].pixels==original);
+    e.outline_width=17;THROWS(decorate_annotation(source,e));e.outline_width=2;e.shadow_blur=33;THROWS(decorate_annotation(source,e));
+}
+TEST(pen_and_text_effects_clip_selection_without_flattening_alpha){
+    auto source=new_image(80,60);source.frames[0].pixels[7*80+20]={11,22,33,0};AnnotationEffects e;e.outline=true;e.shadow=true;
+    const FloatPoint line[]{{10,25},{60,25}};const SelectionRegion selection{5,5,55,45};
+    const auto out=draw_pen(source,line,{4,{240,20,80,255},e},selection);size_t white{},shadow{};
+    for(int y=0;y<60;++y)for(int x=0;x<80;++x){auto c=out.frames[0].pixels[size_t(y)*80+x];if(!selection.contains(x,y))CHECK(c.a==0);
+        white+=c==e.outline_color;shadow+=c.r==0&&c.a>0&&c.a<255;}
+    CHECK(white>20&&shadow>20&&out.frames[0].pixels[25*80+20]==Pixel({240,20,80,255}));
+    CHECK(out.frames[0].pixels[7*80+20]==source.frames[0].pixels[7*80+20]);
+    const auto plain=make_text_stamp(L"日本語",L"Yu Gothic UI",24,{240,20,80,255});
+    const auto decorated=make_text_stamp(L"日本語",L"Yu Gothic UI",24,{240,20,80,255},{},e);
+    CHECK(decorated.width>plain.width&&decorated.height>plain.height);white=shadow=0;
+    for(auto c:decorated.frames[0].pixels){white+=c==e.outline_color;shadow+=c.r==0&&c.a>0&&c.a<255;}CHECK(white>20&&shadow>20);
+}
 int main(){
     auto station=CreateWindowStationW(nullptr,0,WINSTA_ALL_ACCESS,nullptr);
     if(!station||!gvn_test::noninteractive(station)||!SetProcessWindowStation(station))return 2;

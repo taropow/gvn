@@ -1695,3 +1695,13 @@ TEST(space_hand_and_left_wheel_defaults_migrate_once_and_keep_customization) {
     older_custom.set_keys(Next,{});older_custom.save(path);WritePrivateProfileStringW(L"KeyBindings",L"DefaultsVersion",nullptr,path.c_str());Settings disabled;disabled.load(path);CHECK(disabled.command_for(VK_SPACE,0)==0);
     std::filesystem::remove(path);
 }
+TEST(redo_default_migration_preserves_existing_custom_shortcuts){
+    const auto path=std::filesystem::temp_directory_path()/(L"GVN-redo-"+std::to_wstring(GetCurrentProcessId())+L".ini");
+    Settings value;CHECK(value.command_for('Z',3)==Redo&&value.command_for('Y',1)==Crop);
+    value.save(path);WritePrivateProfileStringW(L"KeyBindings",std::to_wstring(Redo).c_str(),nullptr,path.c_str());
+    Settings migrated;migrated.load(path);CHECK(migrated.command_for('Z',3)==Redo);
+    value.set_keys(Redo,{});value.set_keys(Next,{L"Ctrl+Shift+Z"});value.set_keys(Open,{L"Alt+O"});value.save(path);
+    WritePrivateProfileStringW(L"KeyBindings",std::to_wstring(Redo).c_str(),nullptr,path.c_str());
+    Settings custom;custom.load(path);CHECK(custom.command_for('Z',3)==Next&&custom.command_for('O',4)==Open&&custom.keys_for(Redo).empty());
+    custom.set_keys(Next,{});custom.set_keys(Redo,{});custom.save(path);Settings disabled;disabled.load(path);CHECK(disabled.keys_for(Redo).empty());std::filesystem::remove(path);
+}

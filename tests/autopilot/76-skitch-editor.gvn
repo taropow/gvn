@@ -6,6 +6,8 @@ command	ToolPen
 command	Actual
 editor_set	Width	12
 editor_set	Opacity	70
+editor_click	Outline
+editor_click	Shadow
 editor_layout
 paint_pixels	80	90	260	210
 expect	modified	true
@@ -18,6 +20,10 @@ paint_pixels	100	120	100	120
 expect	floating.active	true
 editor_layout
 snapshot	skitch-text-placement.png
+resize	520	780
+editor_layout
+snapshot	skitch-text-effects-narrow.png
+resize	960	780
 editor_click	Apply
 expect	floating.active	false
 command	ToolCrop

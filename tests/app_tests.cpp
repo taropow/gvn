@@ -1847,7 +1847,7 @@ struct AppAudit {
         command(Info);CHECK(notices.back().find(L"144.000 × 288.000 DPI")!=std::wstring::npos);
         Settings saved;saved.load(app.config);CHECK(!saved.resize_resample&&saved.resize_print_unit==4&&saved.resize_density_unit==1);
         command(Undo);CHECK(app.image==original&&!app.modified&&app.current_metadata()==metadata);
-        command(Undo);CHECK(app.current_metadata().dpi_x==144&&app.modified);
+        command(Redo);CHECK(app.current_metadata().dpi_x==144&&app.modified);
         resizes.push_back(std::nullopt);command(Resize);CHECK(app.current_metadata().dpi_x==144);
         auto invalid=choice;invalid.dpi_x=0;resizes.push_back(invalid);THROWS(command(Resize));
         CHECK(app.image==original&&app.current_metadata().dpi_x==144&&app.undo_metadata==std::nullopt);
@@ -1860,7 +1860,7 @@ struct AppAudit {
         CHECK(app.image==animation&&app.image->animated()&&app.player.frame==1&&app.player.playing&&app.selection.w==1);
         CHECK(app.current_metadata().dpi_y==288&&animation->metadata==animation_metadata&&answers.empty());
         command(Undo);CHECK(app.image==animation&&app.current_metadata()==animation_metadata&&app.player.frame==1&&app.player.playing);
-        command(Undo);CHECK(app.current_metadata().dpi_x==144);
+        command(Redo);CHECK(app.current_metadata().dpi_x==144);
         open(fixture(L"alpha.png"));CHECK(!app.image_metadata&&app.current_metadata()==app.image->metadata);
         app.settings.undo_enabled=false;choice.width=3;choice.height=2;resizes.push_back(choice);command(Resize);
         CHECK(!app.undo_image&&!app.undo_metadata&&app.current_metadata().dpi_x==144&&resizes.empty());
@@ -1878,7 +1878,7 @@ struct AppAudit {
         CHECK(app.image==original&&app.modified&&load_image(png).frames[0].pixels==rgba&&!original->metadata.dpi_defined);
         const auto bmp=temporary/L"resolution/out.bmp";app.settings.save_as_retarget=true;paths.push_back(bmp);answers.push_back(IDOK);CHECK(app.save(true));inspect(load_image(bmp));
         CHECK(!app.modified&&same_path(app.image->path,bmp)&&app.current_metadata().dpi_x==100.5&&read_file(source)==disk);
-        command(Undo);CHECK(app.current_metadata().dpi_x==72&&app.modified);command(Undo);CHECK(app.current_metadata().dpi_x==100.5&&!app.modified);
+        command(Undo);CHECK(app.current_metadata().dpi_x==72&&app.modified);command(Redo);CHECK(app.current_metadata().dpi_x==100.5&&!app.modified);
         open(fixture(L"disposal.gif"));const auto animation=app.image;app.player.frame=1;app.player.playing=false;choice.width=animation->width;choice.height=animation->height;
         resizes.push_back(choice);command(Resize);const auto frame=temporary/L"resolution/frame.png";paths.push_back(frame);CHECK(app.save(true));
         const auto saved=load_image(frame);inspect(saved);CHECK(saved.frames[0].pixels==animation->frames[1].pixels&&app.image==animation&&app.image->animated()&&app.player.frame==1);
@@ -1942,7 +1942,7 @@ struct AppAudit {
         const auto inspect=[&]{const auto bytes=std::filesystem::file_size(target);CHECK(notices.back().find(L"ファイル形式: BMP")!=std::wstring::npos&&notices.back().find(std::to_wstring(bytes)+L" bytes")!=std::wstring::npos);};inspect();
         CHECK(app.image->path==target&&app.current_metadata().dpi_x==144&&original->metadata.source_format==L"PNG");
         command(Undo);command(Info);inspect();CHECK(app.image->path==target&&app.current_metadata().dpi_x==144);
-        command(Undo);command(Info);inspect();CHECK(paths.empty()&&answers.empty());
+        command(Redo);command(Info);inspect();CHECK(paths.empty()&&answers.empty());
     }
     void image_info_preserves_source_format_bytes_and_load_time_after_editing() {
         app.settings.confirm_unsaved=false;open(fixture(L"palette/png-4-alpha.png"));
@@ -1970,7 +1970,7 @@ struct AppAudit {
         CHECK(app.image==original&&app.current_metadata().original_color_type==ImageColorType::Palette);
         command(Negative);const auto edited=app.image;command(Info);CHECK(notices.back().find(L"4 BPP (パレット)")!=std::wstring::npos&&notices.back().find(L"RGBA 32 BPP")!=std::wstring::npos);
         command(Undo);CHECK(app.image==original&&app.current_metadata().dpi_x==144&&app.current_metadata().original_color_type==ImageColorType::Palette);
-        command(Undo);CHECK(app.image==edited&&app.current_metadata().original_color_type==ImageColorType::Palette);
+        command(Redo);CHECK(app.image==edited&&app.current_metadata().original_color_type==ImageColorType::Palette);
         open(fixture(L"loading/alpha-v4.bmp"));command(Info);CHECK(notices.back().find(L"32 BPP (ビットフィールド)")!=std::wstring::npos);
         open(fixture(L"metadata/gray16-100x50.tiff"));command(Info);CHECK(notices.back().find(L"16 BPP (グレースケール)")!=std::wstring::npos);
         open(fixture(L"info/cmyk.tiff"));command(Info);CHECK(notices.back().find(L"32 BPP (CMYK)")!=std::wstring::npos);
@@ -2024,7 +2024,7 @@ struct AppAudit {
         command(ToggleToolbar);
         CHECK(app.top == top);
         command(ToggleStatus);
-        CHECK(app.bottom == MulDiv(66,GetDpiForWindow(app.hwnd),96)); // Export panel remains when status is hidden.
+        CHECK(app.bottom == MulDiv(36,GetDpiForWindow(app.hwnd),96)); // Export panel remains when status is hidden.
         command(ToggleStatus);
         CHECK(app.bottom == bottom);
     }
@@ -2364,7 +2364,7 @@ struct AppAudit {
         CHECK(app.image->width == 3);
         CHECK(same_path(app.requested, original));
         CHECK(app.current_name == L"a.png" && app.files.size() == 1);
-        command(Undo);
+        command(Redo);
         CHECK(app.image->width == 120 && app.requested.empty());
     }
     void clipboard_selection_cut_paste_alpha() {
@@ -2413,7 +2413,7 @@ struct AppAudit {
         CHECK(load_image(file).frames[0].pixels == original);
         command(Undo);
         CHECK(app.image->frames[0].pixels == original && !app.modified);
-        command(Undo);
+        command(Redo);
         CHECK(app.image->frames[0].pixels[1] == Pixel{18, 52, 86, 255} && app.modified);
     }
     void cut_transparent_default_and_runtime_switch_do_not_reload_source() {
@@ -3047,7 +3047,7 @@ struct AppAudit {
         CHECK(paste_image(app.hwnd).frames[0].pixels == pixels);
         command(Undo);
         CHECK(app.image == undo && !app.modified && app.requested == source);
-        command(Undo);
+        command(Redo);
         CHECK(app.image == edited && app.modified && app.requested == source);
     }
     void save_as_copy_exports_current_animation_frame_without_rebinding_or_flattening() {
@@ -3492,7 +3492,7 @@ struct AppAudit {
             if (undo_enabled) {
                 command(Undo);
                 CHECK(app.image == previous && app.requested == source);
-                command(Undo);
+                command(Redo);
                 CHECK(app.image == document && app.requested.empty());
                 command(CopyFolderPath);
                 CHECK(file_name_clipboard_value() == source.parent_path().wstring());
@@ -6722,7 +6722,7 @@ void background_changes_preserve_image_animation_copy_save_and_ole() {
         Settings saved;saved.load(app.config);CHECK(!saved.palette_preview);
         command(ClearSelection);command(Copy);CHECK(paste_image(app.hwnd).frames[0].pixels==edited->frames[0].pixels);
         command(Undo);CHECK(app.image==original&&app.image->frames[0].indexed==indices&&!app.modified);
-        command(Undo);CHECK(app.image==edited&&app.modified);
+        command(Redo);CHECK(app.image==edited&&app.modified);
         const auto path=temporary/L"palette-edited.png";paths.push_back(path);command(SaveAs);const auto decoded=load_image(path);
         CHECK(decoded.frames[0].indexed);
         CHECK(decoded.frames[0].pixels==edited->frames[0].pixels&&decoded.frames[0].indexed->palette==edited->frames[0].indexed->palette);
@@ -7302,6 +7302,8 @@ APP_TEST(editor_short_window_tools_scroll_and_animation_layout)
 
 APP_TEST(three_quality_choices_drive_actual_zoom_editor_fullscreen_without_changing_rgba)
 APP_TEST(skitch_pen_text_native_controls_alpha_apply_cancel_undo)
+APP_TEST(annotation_effect_controls_and_multiple_undo_redo_are_transactional)
+APP_TEST(multiple_undo_save_retarget_and_document_boundaries)
 APP_TEST(skitch_crop_handles_numeric_bounds_buttons_cancel_apply_undo)
 APP_TEST(skitch_bottom_export_moves_status_icon_names_formats_and_ole_payload)
 APP_TEST(timestamp_export_name_on_open_new_and_every_successful_paste_keeps_manual_edits)

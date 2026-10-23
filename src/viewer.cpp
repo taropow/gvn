@@ -188,6 +188,62 @@ class App {
     };
     std::optional<LoadRollback> before_load;
     std::optional<Location> undo_location;
+    struct UndoEntry {
+        std::shared_ptr<Image> image;
+        std::optional<ImageMetadata> metadata;
+        bool modified{};
+        Player player;
+        std::optional<Location> location;
+        std::filesystem::path retarget;
+    };
+    std::vector<UndoEntry> undo_history,redo_history;
+    void clear_undo(){undo_image.reset();undo_metadata.reset();undo_location.reset();undo_player={};undo_history.clear();redo_history.clear();}
+    void trim_undo(){
+        const uint64_t limit=std::clamp(editing.physical_bytes()/8,uint64_t(16*1024*1024),uint64_t(256*1024*1024));
+        uint64_t bytes=undo_image?undo_image->bytes():0;for(const auto &e:undo_history)bytes+=e.image->bytes();for(const auto &e:redo_history)bytes+=e.image->bytes();
+        while(!undo_history.empty()&&(undo_history.size()+redo_history.size()+1>32||bytes>limit)){
+            bytes-=undo_history.front().image->bytes();undo_history.erase(undo_history.begin());}
+        while(redo_history.size()>1&&bytes>limit){bytes-=redo_history.front().image->bytes();redo_history.erase(redo_history.begin());}
+    }
+    void remember_undo(Player previous,std::optional<ImageMetadata> metadata,std::optional<Location> where={}){
+        if(!settings.undo_enabled){clear_undo();return;}
+        // Only references are retained. Reserve before moving any existing state so failure is atomic.
+        undo_history.reserve(32);redo_history.reserve(32);
+        if(undo_image)undo_history.push_back({std::move(undo_image),std::move(undo_metadata),undo_modified,std::move(undo_player),std::move(undo_location),{}});
+        redo_history.clear();undo_image=image;undo_metadata=std::move(metadata);undo_modified=modified;
+        undo_player=std::move(previous);undo_location=std::move(where);trim_undo();
+    }
+    void rebind_older_history(const std::filesystem::path &target,bool saved){
+        auto bind=[&](std::vector<UndoEntry> &entries){for(auto i=entries.rbegin();i!=entries.rend();++i){if(i->location)break;i->retarget=target;if(saved){i->modified=true;
+            auto metadata=i->metadata.value_or(i->image->metadata);metadata.source_format=current_metadata().source_format;metadata.source_bytes=current_metadata().source_bytes;i->metadata=std::move(metadata);}}};
+        if(!undo_location)bind(undo_history);bind(redo_history);
+    }
+    void history_step(bool redo){
+        if(redo?redo_history.empty():!undo_image)return;
+        cancel_load();stop_slideshow();
+        const auto &entry=redo?redo_history.back():UndoEntry{undo_image,undo_metadata,undo_modified,undo_player,undo_location,{}};
+        // Location/player/string copies and optional retarget allocation precede stack mutation.
+        UndoEntry target=entry,current{image,image_metadata,modified,player,entry.location?std::optional<Location>(location()):std::nullopt,{}};
+        if(!target.retarget.empty()){auto rebound=std::make_shared<Image>(*target.image);rebound->path=target.retarget;target.image=std::move(rebound);}
+        std::optional<UndoEntry> older;
+        if(!redo&&!undo_history.empty()){older=undo_history.back();if(!older->retarget.empty()){
+            auto rebound=std::make_shared<Image>(*older->image);rebound->path=older->retarget;older->image=std::move(rebound);}}
+        undo_history.reserve(32);redo_history.reserve(32);
+        if(redo){
+            if(undo_image)undo_history.push_back({std::move(undo_image),std::move(undo_metadata),undo_modified,std::move(undo_player),std::move(undo_location),{}});
+            undo_image=std::move(current.image);undo_metadata=std::move(current.metadata);undo_modified=current.modified;undo_player=std::move(current.player);undo_location=std::move(current.location);
+            redo_history.pop_back();
+        }else{
+            redo_history.push_back(std::move(current));
+            if(undo_history.empty()){undo_image.reset();undo_metadata.reset();undo_location.reset();undo_player={};}
+            else {auto old=std::move(*older);undo_history.pop_back();
+                undo_image=std::move(old.image);undo_metadata=std::move(old.metadata);undo_modified=old.modified;undo_player=std::move(old.player);undo_location=std::move(old.location);}
+        }
+        image=std::move(target.image);image_metadata=std::move(target.metadata);modified=target.modified;player=std::move(target.player);
+        if(target.location)restore_location(std::move(*target.location));
+        player.set_loop(settings.animation_loop,settings.animation_file_loops);reset_animation_clock();renderer.invalidate();
+        view.set_image(image->width,image->height,settings.keep_zoom);selection=selection.clipped(image->width,image->height);layout();apply_display_policy();
+    }
     struct PendingFolder {
         uint64_t sequence{};
         bool last{};
@@ -632,6 +688,7 @@ class App {
         submenu(root, m, L"ファイル");
         m = CreatePopupMenu();
         add(m, Undo, L"元に戻す\tCtrl+Z");
+        add(m, Redo, L"やり直し\tCtrl+Shift+Z");
         separator(m);
         add(m,ToggleEditor,L"画像編集モード");
         HMENU selection_tools=CreatePopupMenu();
@@ -1430,6 +1487,7 @@ class App {
         for (UINT id : {Save, Copy, ArmDrag, Info, ZoomIn, ZoomOut, FitImage, Actual, Fullscreen})
             toolbar.enable(id, image != nullptr);
         toolbar.enable(Undo, undo_image != nullptr);
+        toolbar.enable(Redo,!redo_history.empty());
         toolbar.enable(FileDelete, original_file());
         toolbar.text(FileDelete, settings.recycle_deleted ? L"ごみ箱へ" : L"ファイルを削除");
         toolbar.enable(Previous, !files.empty());
@@ -1449,7 +1507,7 @@ class App {
         if(cropping)editor_chrome.bounds(cropping->box,cropping->scale);
         else if(floating&&!floating->text_annotation)editor_chrome.bounds(floating->box);
         if(floating){
-            for(UINT id:{Save,Copy,ArmDrag,FileDelete,Previous,Next,Undo})toolbar.enable(id,false);
+            for(UINT id:{Save,Copy,ArmDrag,FileDelete,Previous,Next,Undo,Redo})toolbar.enable(id,false);
             std::wostringstream hint;hint<<L"仮置き：ドラッグで移動／ハンドルで拡縮／枠外で回転  Enter:確定  Esc:中止  ";
             hint<<std::fixed<<std::setprecision(1)<<L"X:"<<floating->box.cx-floating->box.width/2<<L" Y:"<<floating->box.cy-floating->box.height/2<<L"  "<<floating->box.width<<L"×"<<floating->box.height<<L"  "<<floating->box.angle<<L"°";
             if(!floating->original_position)hint<<L"（元位置情報なし）";
@@ -1551,7 +1609,7 @@ class App {
                     stop_slideshow();
                     reset_animation_clock();
                     image.reset();image_metadata.reset();undo_metadata.reset();
-                    undo_image.reset();
+                    clear_undo();
                     undo_location.reset();
                     modified = loading = removed_current = drag_armed = false;
                     selection = {};
@@ -1675,7 +1733,7 @@ class App {
         editor_chrome.reset_export_name();
         image_metadata.reset();undo_metadata.reset();
         modified = false;
-        undo_image.reset();
+        clear_undo();
         undo_location.reset();
         selection = {};
         reset_animation_clock();
@@ -1899,11 +1957,7 @@ class App {
             new_document && settings.undo_enabled ? std::optional<Location>(location()) : std::nullopt;
         if (new_document && !folder.empty())
             clipboard_folder = folder;
-        undo_image = settings.undo_enabled ? image : nullptr;
-        undo_metadata=settings.undo_enabled?image_metadata:std::nullopt;
-        undo_modified = modified;
-        undo_player = std::move(next_undo_player);
-        undo_location = std::move(next_undo_location);
+        remember_undo(std::move(next_undo_player),image_metadata,std::move(next_undo_location));
         if (new_document)
             removed_current = false;
         image = std::move(next_image);
@@ -2191,8 +2245,7 @@ class App {
         // Complete image/player/metadata allocations before persisting the option or changing Undo.
         if(choice->dither!=settings.color_depth_dither){auto next=settings;next.color_depth_dither=choice->dither;persisted_settings(next).save(config);}
         if(candidate) {
-            cancel_load(true);undo_image=settings.undo_enabled?image:nullptr;undo_metadata=std::move(next_undo_metadata);
-            undo_modified=modified;undo_player=settings.undo_enabled?std::move(previous_player):Player{};undo_location.reset();
+            cancel_load(true);remember_undo(std::move(previous_player),std::move(next_undo_metadata));
             image=std::move(candidate);image_metadata.reset();modified=true;player=std::move(next_player);selection=rect;
             renderer.invalidate();layout();committed=true;
         }
@@ -2231,8 +2284,7 @@ class App {
         settings.color_adjust_unified=next.color_adjust_unified;settings.color_adjust_hue=next.color_adjust_hue;settings.color_adjust_saturation=next.color_adjust_saturation;
         settings.color_adjust_lightness=next.color_adjust_lightness;settings.color_adjust_gray=next.color_adjust_gray;
         if(candidate) {
-            cancel_load(true);undo_image=settings.undo_enabled?image:nullptr;undo_metadata=std::move(next_undo_metadata);undo_modified=modified;
-            undo_player=settings.undo_enabled?std::move(previous_player):Player{};undo_location.reset();image=std::move(candidate);image_metadata.reset();modified=true;
+            cancel_load(true);remember_undo(std::move(previous_player),std::move(next_undo_metadata));image=std::move(candidate);image_metadata.reset();modified=true;
             player=std::move(next_player);selection=rect;renderer.invalidate();layout();committed=true;
         }
     }
@@ -2252,7 +2304,7 @@ class App {
         auto candidate=choice->image;if(candidate&&(candidate->width!=source->width||candidate->height!=source->height||candidate->frames.size()!=1||candidate->frames[0].pixels.size()!=checked_image_pixels(source->width,source->height)))throw std::runtime_error("Invalid brightness result image");
         Player next_player;if(candidate){next_player.reset(*candidate);next_player.set_loop(settings.animation_loop,settings.animation_file_loops);}auto next_undo_metadata=candidate&&settings.undo_enabled?image_metadata:std::nullopt;
         if(choice->choice.preview!=settings.brightness_preview){auto next=settings;next.brightness_preview=choice->choice.preview;persisted_settings(next).save(config);settings.brightness_preview=next.brightness_preview;}
-        preview({});if(candidate){cancel_load(true);undo_image=settings.undo_enabled?image:nullptr;undo_metadata=std::move(next_undo_metadata);undo_modified=modified;undo_player=settings.undo_enabled?std::move(previous_player):Player{};undo_location.reset();image=std::move(candidate);image_metadata.reset();modified=true;player=std::move(next_player);selection=rect;renderer.invalidate();layout();committed=true;}
+        preview({});if(candidate){cancel_load(true);remember_undo(std::move(previous_player),std::move(next_undo_metadata));image=std::move(candidate);image_metadata.reset();modified=true;player=std::move(next_player);selection=rect;renderer.invalidate();layout();committed=true;}
     }
     void levels_edit() {
         if(!begin_edit())return;const auto source=image;const auto frame=player.frame;const auto rect=selection;auto previous_player=player;const bool was_slideshow=slideshow;bool committed{};
@@ -2272,7 +2324,7 @@ class App {
         auto candidate=choice->image;if(candidate&&(candidate->width!=source->width||candidate->height!=source->height||candidate->frames.size()!=1||candidate->frames[0].pixels.size()!=checked_image_pixels(source->width,source->height)))throw std::runtime_error("Invalid levels result image");
         Player next_player;if(candidate){next_player.reset(*candidate);next_player.set_loop(settings.animation_loop,settings.animation_file_loops);}auto next_undo_metadata=candidate&&settings.undo_enabled?image_metadata:std::nullopt;
         if(choice->choice.preview!=settings.levels_preview){auto next=settings;next.levels_preview=choice->choice.preview;persisted_settings(next).save(config);settings.levels_preview=next.levels_preview;}
-        preview({});if(candidate){cancel_load(true);undo_image=settings.undo_enabled?image:nullptr;undo_metadata=std::move(next_undo_metadata);undo_modified=modified;undo_player=settings.undo_enabled?std::move(previous_player):Player{};undo_location.reset();image=std::move(candidate);image_metadata.reset();modified=true;player=std::move(next_player);selection=rect;renderer.invalidate();layout();committed=true;}
+        preview({});if(candidate){cancel_load(true);remember_undo(std::move(previous_player),std::move(next_undo_metadata));image=std::move(candidate);image_metadata.reset();modified=true;player=std::move(next_player);selection=rect;renderer.invalidate();layout();committed=true;}
     }
     void spatial_filter_edit(bool sharp) {
         if(!begin_edit())return;const auto source=image;const auto frame=player.frame;const auto rect=selection;auto previous_player=player;const bool was_slideshow=slideshow;bool committed{};
@@ -2285,7 +2337,7 @@ class App {
         auto next=settings;if(sharp){next.unsharp_radius=choice->radius;next.unsharp_strength=choice->strength;next.unsharp_threshold=choice->threshold;}else {next.gaussian_radius=choice->radius;next.gaussian_transparency=choice->transparency;}
         if(next.unsharp_radius!=settings.unsharp_radius||next.unsharp_strength!=settings.unsharp_strength||next.unsharp_threshold!=settings.unsharp_threshold||next.gaussian_radius!=settings.gaussian_radius||next.gaussian_transparency!=settings.gaussian_transparency)persisted_settings(next).save(config);
         settings.unsharp_radius=next.unsharp_radius;settings.unsharp_strength=next.unsharp_strength;settings.unsharp_threshold=next.unsharp_threshold;settings.gaussian_radius=next.gaussian_radius;settings.gaussian_transparency=next.gaussian_transparency;
-        cancel_load(true);undo_image=settings.undo_enabled?image:nullptr;undo_metadata=std::move(next_undo_metadata);undo_modified=modified;undo_player=settings.undo_enabled?std::move(previous_player):Player{};undo_location.reset();image=std::move(candidate);image_metadata.reset();modified=true;player=std::move(next_player);selection=rect;renderer.invalidate();layout();committed=true;
+        cancel_load(true);remember_undo(std::move(previous_player),std::move(next_undo_metadata));image=std::move(candidate);image_metadata.reset();modified=true;player=std::move(next_player);selection=rect;renderer.invalidate();layout();committed=true;
     }
     void cp_edit() {
         if(!begin_edit())return;
@@ -2335,8 +2387,7 @@ class App {
         if(next==current_metadata())return;
         auto previous_player=settings.undo_enabled?player:Player{};
         cancel_load(true);
-        undo_image=settings.undo_enabled?image:nullptr;undo_metadata=settings.undo_enabled?image_metadata:std::nullopt;
-        undo_modified=modified;undo_player=std::move(previous_player);undo_location.reset();
+        remember_undo(std::move(previous_player),image_metadata);
         image_metadata=next;modified=true;update();
     }
     Image copied_image() const {
@@ -2468,6 +2519,7 @@ class App {
                 undo_image = std::move(previous);
                 undo_modified = true;
             }
+            rebind_older_history(target,true);
             archive.clear();
             scan_folder(target.parent_path());
             sort_list();
@@ -2488,6 +2540,7 @@ class App {
             previous->path = target;
             undo_image = std::move(previous);
         }
+        rebind_older_history(target,false);
         requested = target;
         current_name = target.filename().wstring();
     }
@@ -2508,7 +2561,7 @@ class App {
             open(files[std::min(index, files.size() - 1)].path, false, false, OpenOrigin::WithinFolder);
         else {
             image.reset();image_metadata.reset();undo_metadata.reset();
-            undo_image.reset();
+            clear_undo();
             undo_location.reset();
             modified = loading = drag_armed = removed_current = false;
             selection = {};
@@ -2775,7 +2828,7 @@ class App {
         SetWindowPos(hwnd, topmost ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0,
                      SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
         if (!settings.undo_enabled) {
-            undo_image.reset();
+            clear_undo();
             undo_location.reset();
         }
         player.set_loop(settings.animation_loop, settings.animation_file_loops);
@@ -3363,7 +3416,7 @@ class App {
                 stop_slideshow();
                 drag_armed = false;
                 image.reset();image_metadata.reset();undo_metadata.reset();
-                undo_image.reset();
+                clear_undo();
                 undo_location.reset();
                 modified = loading = false;
                 removed_current = false;
@@ -3401,28 +3454,8 @@ class App {
             drag_armed = true;
             SetFocus(hwnd);
             break;
-        case Undo:
-            if (undo_image) {
-                cancel_load();
-                stop_slideshow();
-                std::swap(image, undo_image);
-                std::swap(image_metadata,undo_metadata);
-                std::swap(modified, undo_modified);
-                std::swap(player, undo_player);
-                player.set_loop(settings.animation_loop, settings.animation_file_loops);
-                if (undo_location) {
-                    auto current = take_location();
-                    restore_location(std::move(*undo_location));
-                    undo_location = std::move(current);
-                }
-                reset_animation_clock();
-                renderer.invalidate();
-                view.set_image(image->width, image->height, settings.keep_zoom);
-                selection = selection.clipped(image->width,image->height);
-                layout();
-                apply_display_policy();
-            }
-            break;
+        case Undo:history_step(false);break;
+        case Redo:history_step(true);break;
         case SelectMode:
             if(editor_mode&&selection_tool==SelectionTool::Rectangle)set_edit_mode(false);
             else choose_tool(SelectionTool::Rectangle);
@@ -3798,7 +3831,7 @@ class App {
                 bind_file({});
                 requested = path;
                 current_name = path.filename().wstring();
-                undo_image.reset();
+                clear_undo();
                 undo_location.reset();
                 remove_list_entry(path);
                 advance_after_fileop();
@@ -3919,7 +3952,7 @@ class App {
         }
         case Help: {
             std::wstring text = L"設定 → キーで割り当てを変更できます。現在の主な割り当て:\n\n";
-            for (const UINT help_command : {Open, Previous, Next, Copy, Paste, Save, Undo, ArmDrag,
+            for (const UINT help_command : {Open, Previous, Next, Copy, Paste, Save, Undo, Redo, ArmDrag,
                                             Fullscreen, Play, FramePrevious, FrameNext}) {
                 text += command_name(help_command);
                 text += L": ";

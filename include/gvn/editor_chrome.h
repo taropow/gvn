@@ -6,19 +6,21 @@
 namespace gvn {
 namespace editor_id {
 enum : int { Color=7000, Width, Opacity, Font, TextSize, Text, X, Y, W, H, Angle, Scale, Anchor,
-    Apply, Cancel, Name, Format, Drag, Hint, Error, TextUpdate, Last };
+    Apply, Cancel, Name, Format, Drag, Hint, Error, TextUpdate,
+    Outline, OutlineColor, OutlineWidth, Shadow, ShadowColor, ShadowOffset, ShadowBlur, ShadowOpacity, Last };
 }
 enum class EditorPanel { None, Pen, Text, Crop, Transform };
 class EditorChrome {
     HWND owner{};
     HFONT font{};UINT dpi{};
     HICON drag_icon{};
-    bool filling{},drag_pending{};POINT drag_start{};
+    bool filling{},drag_pending{},drag_hot{};POINT drag_start{};
     std::map<int,HWND> controls;
     std::map<int,HWND> labels;
     EditorPanel panel{EditorPanel::None};
     std::wstring export_default;
     Pixel color{245,30,84,255};
+    Pixel outline_color{255,255,255,255},shadow_color{0,0,0,255};
     static LRESULT CALLBACK procedure(HWND,UINT,WPARAM,LPARAM);
     static LRESULT CALLBACK drag_procedure(HWND,UINT,WPARAM,LPARAM,UINT_PTR,DWORD_PTR);
     void create(HWND,bool editing=true);
@@ -36,6 +38,7 @@ class EditorChrome {
     double number(int id,double min,double max) const;
     std::wstring text(int id) const;
     PenStyle pen() const;
+    AnnotationEffects effects() const;
     Image text_image(const EditMemory &) const;
     void bounds(const FloatingBox &,double scale=1);
     FloatingBox edited_bounds(const FloatingBox &) const;

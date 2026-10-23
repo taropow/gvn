@@ -17,6 +17,7 @@ std::vector<Binding> default_bindings() {
             {Paste, L"Ctrl+V"},
             {Cut, L"Ctrl+X"},
             {Undo, L"Ctrl+Z"},
+            {Redo, L"Ctrl+Shift+Z"},
             {SelectAll, L"Ctrl+A"},
             {ArmDrag, L"Ctrl+Shift+D"},
             {Previous, L"Left"},
@@ -718,6 +719,11 @@ void Settings::load(const std::filesystem::path &path) {
             for(auto &b:loaded)if(b.command==Play)b.command=ToolPan;
     }
     // A corrupt hand-edited map must never create ambiguous dispatch.
+    if(existing_profile&&read(modern?L"KeyBindings":L"Keys",std::to_wstring(Redo),L"@missing")==L"@missing"){
+        const bool conflict=std::any_of(loaded.begin(),loaded.end(),[](const auto &b){UINT key{},mods{};
+            return b.command!=Redo&&parse_key(b.key,key,mods)&&key=='Z'&&mods==3;});
+        if(conflict)std::erase_if(loaded,[](const auto &b){return b.command==Redo;});
+    }
     if (valid_bindings(loaded))
         bindings = std::move(loaded);
 }

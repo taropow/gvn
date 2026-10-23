@@ -69,6 +69,12 @@
         app.replace(std::move(source),false,true);const auto original=app.image;
         CHECK(SendMessageW(app.status,SB_GETICON,0,0)<=0&&skitch_visible(app.editor_chrome.bottom));
         auto drag=app.editor_chrome.control(editor_id::Drag);SetWindowTextW(app.editor_chrome.control(editor_id::Name),L"テスト画像");
+        for(int logical:{960,520,360})for(UINT dpi:{96u,144u,192u}){
+            const int width=MulDiv(logical,dpi,96);CHECK(app.editor_chrome.layout_bottom(app.hwnd,width,900,24,dpi,true,true)==MulDiv(36,dpi,96));
+            RECT previous{},panel{};GetClientRect(app.editor_chrome.bottom,&panel);
+            for(int id:{editor_id::Name,editor_id::Format,editor_id::Drag}){RECT r{};GetWindowRect(app.editor_chrome.control(id),&r);MapWindowPoints(nullptr,app.editor_chrome.bottom,reinterpret_cast<POINT *>(&r),2);
+                CHECK(r.left>=previous.right&&r.top>=0&&r.right<=width&&r.bottom<=panel.bottom);CHECK(std::abs((r.top+r.bottom)-(previous.top+previous.bottom))<=MulDiv(4,dpi,96)||id==editor_id::Name);previous=r;}}
+        app.layout();
         std::vector<std::filesystem::path> exported;
         app.dialogs.file_drag=[&](const auto &path){CHECK(GetCapture()!=drag&&!app.player.playing&&std::filesystem::is_regular_file(path));
             FORMATETC format{CF_HDROP,nullptr,DVASPECT_CONTENT,-1,TYMED_HGLOBAL};const auto data=file_data_object(path);CHECK(data->QueryGetData(&format)==S_OK);
@@ -81,4 +87,37 @@
         CHECK(exported[0].filename()==L"テスト画像.png"&&exported[1].extension()==L".jpg"&&exported[2].extension()==L".bmp"&&exported[3].extension()==L".gif");
         for(const auto &p:exported)std::filesystem::remove_all(p.parent_path());
         CHECK(app.image==original&&!app.modified);command(ToolCrop);CHECK(!IsWindowEnabled(drag));command(CancelSelection);CHECK(IsWindowEnabled(drag));
+    }
+    void annotation_effect_controls_and_multiple_undo_redo_are_transactional(){
+        ShowWindow(app.hwnd,SW_SHOWNOACTIVATE);app.settings.confirm_unsaved=false;app.replace(new_image(320,200),false,true);command(ToolPen);command(Actual);
+        auto click=[&](int id){SendMessageW(app.editor_chrome.control(id),BM_CLICK,0,0);};click(editor_id::Outline);click(editor_id::Shadow);
+        CHECK(app.editor_chrome.pen().effects.outline&&app.editor_chrome.pen().effects.shadow);
+        std::vector<std::shared_ptr<Image>> states{app.image};
+        for(int n=0;n<6;++n){selection_mouse(WM_LBUTTONDOWN,30,20+n*25,MK_LBUTTON);selection_mouse(WM_LBUTTONUP,180,20+n*25);states.push_back(app.image);}
+        for(int n=5;n>=0;--n){command(Undo);CHECK(app.image==states[n]);}
+        for(int n=1;n<=6;++n){command(Redo);CHECK(app.image==states[n]);}CHECK(app.redo_history.empty());
+        command(Undo);command(Undo);command(Negative);CHECK(app.redo_history.empty());const auto branch=app.image;command(Redo);CHECK(app.image==branch);
+        command(ToolText);SetWindowTextW(app.editor_chrome.control(editor_id::Text),L"縁取りと影");selection_mouse(WM_LBUTTONDOWN,40,40,MK_LBUTTON);
+        CHECK(app.floating&&app.floating->text_annotation);const auto initial_width=app.floating->source->width;
+        SetWindowTextW(app.editor_chrome.control(editor_id::OutlineWidth),L"5");SendMessageW(app.editor_chrome.top,WM_COMMAND,MAKEWPARAM(editor_id::OutlineWidth,EN_KILLFOCUS),0);
+        CHECK(app.floating->source->width>initial_width);click(editor_id::Apply);CHECK(!app.floating);command(Undo);CHECK(app.image==branch);command(Redo);CHECK(app.image!=branch);
+        app.clear_undo();for(int n=0;n<45;++n)app.change_resolution(100+n,100+n);CHECK(app.undo_history.size()==31);
+        for(int n=0;n<32;++n)command(Undo);CHECK(!app.undo_image&&app.current_metadata().dpi_x==112);command(Redo);CHECK(app.current_metadata().dpi_x==113);
+        command(CloseImage);CHECK(!app.undo_image&&app.undo_history.empty()&&app.redo_history.empty());
+        app.replace(new_image(1024,1024),false,true);app.editing.physical_bytes=[](){return uint64_t(128*1024*1024);};
+        for(int n=0;n<10;++n)command(Negative);CHECK(app.undo_image&&app.undo_history.size()<=3);command(Undo);CHECK(app.image);command(Redo);CHECK(app.image);
+        auto settings=app.settings;settings.undo_enabled=false;app.apply_settings(settings);CHECK(!app.undo_image&&app.undo_history.empty()&&app.redo_history.empty());
+    }
+    void multiple_undo_save_retarget_and_document_boundaries(){
+        const auto path=copy(L"alpha.png",L"history/source.png"),target=temporary/L"history/saved.png";
+        app.settings.confirm_unsaved=false;app.settings.save_as_retarget=true;open(path);const auto original=app.image->frames[0].pixels;
+        command(Negative);const auto first=app.image->frames[0].pixels;command(FlipH);const auto second=app.image->frames[0].pixels;
+        app.change_resolution(144,144);paths.push_back(target);command(SaveAs);CHECK(!app.modified&&app.image->path==target);
+        command(Undo);CHECK(app.image->frames[0].pixels==second&&app.current_metadata().dpi_x!=144&&app.modified&&app.image->path==target);
+        command(Undo);CHECK(app.image->frames[0].pixels==first&&app.image->path==target&&app.modified);
+        command(Undo);CHECK(app.image->frames[0].pixels==original&&app.image->path==target&&app.modified&&app.current_metadata().source_format==L"PNG");
+        for(int n=0;n<3;++n)command(Redo);CHECK(app.image->frames[0].pixels==second&&app.current_metadata().dpi_x==144&&!app.modified&&app.image->path==target);
+        const auto saved=app.image;const auto clipboard=load_image(fixture(L"page1.png"));copy_image(app.hwnd,clipboard,0);command(NewPaste);CHECK(app.requested.empty());
+        command(Undo);CHECK(app.image==saved&&app.requested==target);command(Undo);CHECK(app.image->frames[0].pixels==second&&app.modified);
+        command(Redo);CHECK(app.image==saved&&!app.modified);command(Redo);CHECK(app.image->frames[0].pixels==clipboard.frames[0].pixels&&app.requested.empty());
     }

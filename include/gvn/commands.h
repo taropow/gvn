@@ -246,6 +246,7 @@ enum Command {
     ToolPen,
     ToolText,
     ToolCrop,
+    Redo,
     CopyDestBase = 1000,
     MoveDestBase = 1010,
     ExternalBase = 1030,

@@ -379,14 +379,24 @@ void Renderer::draw_editor_overlay(ID2D1RenderTarget *context,ID2D1SolidColorBru
     Microsoft::WRL::ComPtr<ID2D1Factory> owner;context->GetFactory(&owner);
     if(!pen_points.empty()){
         context->PushAxisAlignedClip(canvas,D2D1_ANTIALIAS_MODE_ALIASED);
-        const auto c=pen_style.color;drawing_brush->SetColor(D2D1::ColorF(c.r/255.f,c.g/255.f,c.b/255.f,c.a/255.f));
-        const float width=float(pen_style.width*view.scale);
-        if(pen_points.size()==1)context->FillEllipse(D2D1::Ellipse(screen(pen_points[0]),width/2,width/2),drawing_brush);
-        else {ComPtr<ID2D1PathGeometry> path;ComPtr<ID2D1GeometrySink> sink;ComPtr<ID2D1StrokeStyle> style;
+        ComPtr<ID2D1PathGeometry> path;ComPtr<ID2D1StrokeStyle> style;
+        if(pen_points.size()>1){ComPtr<ID2D1GeometrySink> sink;
             verify(owner->CreatePathGeometry(&path));verify(path->Open(&sink));sink->BeginFigure(screen(pen_points[0]),D2D1_FIGURE_BEGIN_HOLLOW);
             for(size_t n=1;n<pen_points.size();++n)sink->AddLine(screen(pen_points[n]));sink->EndFigure(D2D1_FIGURE_END_OPEN);verify(sink->Close());
             auto props=D2D1::StrokeStyleProperties();props.startCap=props.endCap=props.dashCap=D2D1_CAP_STYLE_ROUND;props.lineJoin=D2D1_LINE_JOIN_ROUND;
-            verify(owner->CreateStrokeStyle(props,nullptr,0,&style));context->DrawGeometry(path.Get(),drawing_brush,width,style.Get());}
+            verify(owner->CreateStrokeStyle(props,nullptr,0,&style));}
+        const auto stroke=[&](Pixel c,double pixels,double offset){
+            drawing_brush->SetColor(D2D1::ColorF(c.r/255.f,c.g/255.f,c.b/255.f,c.a/255.f));
+            const float width=float(pixels*view.scale),shift=float(offset*view.scale);
+            context->SetTransform(D2D1::Matrix3x2F::Translation(shift,shift));
+            if(path)context->DrawGeometry(path.Get(),drawing_brush,width,style.Get());
+            else context->FillEllipse(D2D1::Ellipse(screen(pen_points[0]),width/2,width/2),drawing_brush);
+            context->SetTransform(D2D1::Matrix3x2F::Identity());};
+        const auto &e=pen_style.effects;const double outside=pen_style.width+(e.outline?2*e.outline_width:0);
+        if(e.shadow){auto c=e.shadow_color;
+            if(e.shadow_blur){c.a=uint8_t(c.a/6);for(int n=5;n>=0;--n)stroke(c,outside+n*e.shadow_blur*.8,e.shadow_offset);}
+            else stroke(c,outside,e.shadow_offset);}
+        if(e.outline)stroke(e.outline_color,outside,0);stroke(pen_style.color,pen_style.width,0);
         context->PopAxisAlignedClip();
     }
     if(crop_box){

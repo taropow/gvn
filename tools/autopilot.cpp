@@ -410,6 +410,7 @@ const std::map<std::string, UINT> command_ids{
     C(Grid),C(GridFree),C(Grid2),C(Grid4),C(Grid8),C(Grid16),C(Grid32),
     C(ClearSelection),
     C(Undo),
+    C(Redo),
     C(Negative),
     C(Gray),
     C(RotateRight),
@@ -2172,7 +2173,7 @@ struct Autopilot {
             return;
         }
         if(s[0]=="editor_set"||s[0]=="editor_click"||s[0]=="editor_expect") {
-            const std::map<std::string,int> ids{{"Width",editor_id::Width},{"Opacity",editor_id::Opacity},{"Font",editor_id::Font},{"TextSize",editor_id::TextSize},{"Text",editor_id::Text},
+            const std::map<std::string,int> ids{{"Outline",editor_id::Outline},{"OutlineWidth",editor_id::OutlineWidth},{"Shadow",editor_id::Shadow},{"ShadowOffset",editor_id::ShadowOffset},{"ShadowBlur",editor_id::ShadowBlur},{"ShadowOpacity",editor_id::ShadowOpacity},{"Width",editor_id::Width},{"Opacity",editor_id::Opacity},{"Font",editor_id::Font},{"TextSize",editor_id::TextSize},{"Text",editor_id::Text},
                 {"X",editor_id::X},{"Y",editor_id::Y},{"W",editor_id::W},{"H",editor_id::H},{"Angle",editor_id::Angle},{"Scale",editor_id::Scale},{"Anchor",editor_id::Anchor},
                 {"Apply",editor_id::Apply},{"Cancel",editor_id::Cancel},{"Name",editor_id::Name},{"Format",editor_id::Format}};
             const auto id=ids.at(s.at(1));const auto h=app.editor_chrome.control(id);own(h);

@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <cmath>
 #include <cwctype>
+#include <limits>
 namespace gvn {
 namespace {
 uint8_t byte(double v){return uint8_t(std::clamp(std::lround(v),0l,255l));}
@@ -29,13 +30,60 @@ struct TextDc {
         if(font)DeleteObject(font);if(bitmap)DeleteObject(bitmap);if(dc)DeleteDC(dc);}
 };
 }
+int annotation_padding(const AnnotationEffects &e){
+    if((e.outline&&(!std::isfinite(e.outline_width)||e.outline_width<1||e.outline_width>16))||
+       (e.shadow&&(std::abs(int64_t(e.shadow_offset))>64||e.shadow_blur<0||e.shadow_blur>32)))
+        throw std::invalid_argument("フチ・影の数値の範囲を確認してください。");
+    return int(std::ceil(e.outline?e.outline_width:0))+(e.shadow?std::abs(e.shadow_offset)+3*e.shadow_blur:0)+2;
+}
+Image decorate_annotation(const Image &source,const AnnotationEffects &e,const EditMemory &memory){
+    if(!e.outline&&!e.shadow)return source;
+    const int pad=annotation_padding(e),w=int(source.width)+2*pad,h=int(source.height)+2*pad;
+    const auto count=memory.pixels(w,h);if(memory.before_allocate)memory.before_allocate(count*10);
+    auto out=new_image(w,h,memory);
+    // A small distance field gives a round outline in linear time, independent of its width.
+    std::vector<float> distance(count,1e9f);
+    for(unsigned y=0;y<source.height;++y)for(unsigned x=0;x<source.width;++x){
+        const auto a=source.frames.at(0).pixels[size_t(y)*source.width+x].a;
+        if(a)distance[size_t(y+pad)*w+x+pad]=1.f-a/255.f;
+    }
+    if(e.outline){
+        constexpr float diagonal=1.41421356f;
+        for(int y=0;y<h;++y)for(int x=0;x<w;++x){auto &d=distance[size_t(y)*w+x];
+            if(x)d=std::min(d,distance[size_t(y)*w+x-1]+1);if(y){d=std::min(d,distance[size_t(y-1)*w+x]+1);
+                if(x)d=std::min(d,distance[size_t(y-1)*w+x-1]+diagonal);if(x+1<w)d=std::min(d,distance[size_t(y-1)*w+x+1]+diagonal);}}
+        for(int y=h-1;y>=0;--y)for(int x=w-1;x>=0;--x){auto &d=distance[size_t(y)*w+x];
+            if(x+1<w)d=std::min(d,distance[size_t(y)*w+x+1]+1);if(y+1<h){d=std::min(d,distance[size_t(y+1)*w+x]+1);
+                if(x)d=std::min(d,distance[size_t(y+1)*w+x-1]+diagonal);if(x+1<w)d=std::min(d,distance[size_t(y+1)*w+x+1]+diagonal);}}
+        for(size_t n=0;n<count;++n){auto c=e.outline_color;c.a=byte(std::clamp(e.outline_width+1-distance[n],0.,1.)*c.a);out.frames[0].pixels[n]=c;}
+    }
+    for(unsigned y=0;y<source.height;++y)for(unsigned x=0;x<source.width;++x){auto &p=out.frames[0].pixels[size_t(y+pad)*w+x+pad];p=over(source.frames[0].pixels[size_t(y)*source.width+x],p);}
+    if(e.shadow){
+        std::vector<uint8_t> mask(count),scratch(count);
+        for(int y=0;y<h;++y)for(int x=0;x<w;++x){const int sx=x-e.shadow_offset,sy=y-e.shadow_offset;
+            if(sx>=0&&sy>=0&&sx<w&&sy<h)mask[size_t(y)*w+x]=out.frames[0].pixels[size_t(sy)*w+sx].a;}
+        const int radius=e.shadow_blur,divisor=2*radius+1;
+        // Three separable box passes approximate a Gaussian without a large convolution kernel.
+        if(radius)for(int pass=0;pass<3;++pass){
+            for(int y=0;y<h;++y){unsigned sum{};for(int x=0;x<=radius&&x<w;++x)sum+=mask[size_t(y)*w+x];
+                for(int x=0;x<w;++x){scratch[size_t(y)*w+x]=uint8_t((sum+divisor/2)/divisor);
+                    if(x-radius>=0)sum-=mask[size_t(y)*w+x-radius];if(x+radius+1<w)sum+=mask[size_t(y)*w+x+radius+1];}}
+            for(int x=0;x<w;++x){unsigned sum{};for(int y=0;y<=radius&&y<h;++y)sum+=scratch[size_t(y)*w+x];
+                for(int y=0;y<h;++y){mask[size_t(y)*w+x]=uint8_t((sum+divisor/2)/divisor);
+                    if(y-radius>=0)sum-=scratch[size_t(y-radius)*w+x];if(y+radius+1<h)sum+=scratch[size_t(y+radius+1)*w+x];}}
+        }
+        for(size_t n=0;n<count;++n){auto c=e.shadow_color;c.a=uint8_t((unsigned(c.a)*mask[n]+127)/255);out.frames[0].pixels[n]=over(out.frames[0].pixels[n],c);}
+    }
+    return out;
+}
 Image draw_pen(const Image &source,std::span<const FloatPoint> points,PenStyle style,const SelectionRegion &selection,const EditMemory &memory){
     if(points.empty()||points.size()>65536||!std::isfinite(style.width)||style.width<1||style.width>512||source.frames.empty())
         throw std::invalid_argument("Invalid pen stroke");
     double l=source.width,t=source.height,r=0,b=0;
     for(auto p:points){if(!std::isfinite(p.x)||!std::isfinite(p.y)||std::abs(p.x)>1e8||std::abs(p.y)>1e8)throw std::invalid_argument("Invalid stroke point");
         l=std::min(l,p.x);t=std::min(t,p.y);r=std::max(r,p.x);b=std::max(b,p.y);}
-    const double radius=style.width/2,margin=radius+1;
+    const bool effects=style.effects.outline||style.effects.shadow;
+    const double radius=style.width/2,margin=radius+1+(effects?annotation_padding(style.effects):0);
     const int x0=int(std::floor(std::clamp(l-margin,0.,double(source.width)))),y0=int(std::floor(std::clamp(t-margin,0.,double(source.height))));
     const int x1=int(std::ceil(std::clamp(r+margin,0.,double(source.width)))),y1=int(std::ceil(std::clamp(b+margin,0.,double(source.height))));
     const int width=std::max(0,x1-x0),height=std::max(0,y1-y0);
@@ -51,16 +99,23 @@ Image draw_pen(const Image &source,std::span<const FloatPoint> points,PenStyle s
         const int top=int(std::floor(std::clamp(std::min(a.y,z.y)-margin,double(y0),double(y1))));
         const int bottom=int(std::ceil(std::clamp(std::max(a.y,z.y)+margin,double(y0),double(y1))));
         for(int y=top;y<bottom;++y)for(int x=left;x<right;++x){
-            if(!selection.empty()&&!selection.contains(x,y))continue;
+            if(!effects&&!selection.empty()&&!selection.contains(x,y))continue;
             const auto alpha=byte(std::clamp(radius+.5-distance({x+.5,y+.5},a,z),0.,1.)*style.color.a);
             auto &value=coverage[size_t(y-y0)*width+x-x0];value=std::max(value,alpha);
         }
+    }
+    if(effects){
+        auto stamp=new_image(width,height,memory);for(size_t n=0;n<mask_size;++n){auto c=style.color;c.a=coverage[n];stamp.frames[0].pixels[n]=c;}
+        const auto decorated=decorate_annotation(stamp,style.effects,memory);const int pad=annotation_padding(style.effects);
+        for(int y=y0;y<y1;++y)for(int x=x0;x<x1;++x){if(!selection.empty()&&!selection.contains(x,y))continue;
+            const auto c=decorated.frames[0].pixels[size_t(y-y0+pad)*decorated.width+x-x0+pad];if(c.a){auto &p=out.frames[0].pixels[size_t(y)*source.width+x];p=over(c,p);}}
+        return out;
     }
     for(int y=y0;y<y1;++y)for(int x=x0;x<x1;++x){auto color=style.color;color.a=coverage[size_t(y-y0)*width+x-x0];
         if(color.a){auto &p=out.frames[0].pixels[size_t(y)*source.width+x];p=over(color,p);}}
     return out;
 }
-Image make_text_stamp(const std::wstring &text,const std::wstring &family,double pixels,Pixel color,const EditMemory &memory){
+Image make_text_stamp(const std::wstring &text,const std::wstring &family,double pixels,Pixel color,const EditMemory &memory,const AnnotationEffects &effects){
     if(text.empty()||text.size()>4096||family.size()>128||!std::isfinite(pixels)||pixels<1||pixels>512||
        std::all_of(text.begin(),text.end(),[](wchar_t c){return std::iswspace(c)!=0;}))throw std::invalid_argument("文字を入力してください。");
     TextDc drawing;if(!drawing.dc)throw std::runtime_error("Cannot create text surface");
@@ -86,7 +141,7 @@ Image make_text_stamp(const std::wstring &text,const std::wstring &family,double
     for(int y=0;y<h;++y)for(int x=0;x<w;++x){unsigned sum{};
         for(int j=0;j<scale;++j)for(int i=0;i<scale;++i)sum+=mask[size_t(y*scale+j)*sw+x*scale+i]&255;
         auto p=color;p.a=uint8_t((sum*color.a+2040)/(16*255));out.frames[0].pixels[size_t(y)*w+x]=p;}
-    return out;
+    return effects.outline||effects.shadow?decorate_annotation(out,effects,memory):std::move(out);
 }
 Image crop_oriented(const Image &source,const FloatingBox &box,double output_scale,const EditMemory &memory){
     if(!box.valid()||!std::isfinite(output_scale)||output_scale<.01||output_scale>100||source.frames.empty())

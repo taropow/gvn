@@ -36,6 +36,8 @@ const wchar_t *command_label(UINT id) {
     case TransformSelection:return L"位置・サイズ・角度";
     case Undo:
         return L"元に戻す (Ctrl+Z)";
+    case Redo:
+        return L"やり直し (Ctrl+Shift+Z)";
     case Info:
         return L"画像情報";
     case Previous:
@@ -255,6 +257,9 @@ static HBITMAP icon_bitmap(UINT id, int size) {
         line(16, 8, 6, 8, RGB(75, 75, 75));
         shape({{3, 8}, {9, 3}, {9, 13}}, RGB(75, 75, 75), RGB(75, 75, 75));
         break;
+    case Redo:
+        line(4,14,4,8,RGB(75,75,75));line(4,8,14,8,RGB(75,75,75));
+        shape({{17,8},{11,3},{11,13}},RGB(75,75,75),RGB(75,75,75));break;
     case Previous:
     case Next:
     case ParentFolder:

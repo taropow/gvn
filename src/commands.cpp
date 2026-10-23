@@ -50,6 +50,7 @@ const std::vector<CommandInfo> &command_catalog() {
             {FileDelete, L"ごみ箱へ…"},
             {FileDeleteDirect, L"ファイルを直接削除（ごみ箱を使わない）"},
             {Undo, L"元に戻す"},
+            {Redo, L"やり直し"},
             {SelectAll, L"すべて選択"},
             {ClearSelection, L"選択を解除"},
             {SelectMode, L"矩形選択／閲覧モードを切り替え"},
