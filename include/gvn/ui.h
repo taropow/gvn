@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <optional>
+#include <map>
 namespace gvn {
 bool initialize_controls();
 const wchar_t *command_label(UINT command);
@@ -19,6 +20,8 @@ class IconToolbar {
     bool floating_mode{},built_floating{};
     HWND host{};
     int bar_height{};
+    int measured_width{-1},measured_height{},measured_extent{};
+    std::map<UINT,std::wstring> texts;
     int play_bitmap{-1}, pause_bitmap{-1};
     void rebuild();
 

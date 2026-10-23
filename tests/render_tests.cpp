@@ -38,6 +38,20 @@ TEST(simd_premultiply_matches_scalar_for_every_color_alpha_pair_unaligned_and_ta
                 check(start, count, offset);
     CHECK(rgba == original);
 }
+TEST(live_size_uses_cached_source_then_restores_selected_quality_and_alpha){
+    HWND window=CreateWindowExW(0,L"STATIC",L"Live resize",WS_POPUP,0,0,512,384,nullptr,nullptr,nullptr,nullptr);CHECK(window);
+    auto image=new_image(1024,768);for(size_t n=0;n<image.frames[0].pixels.size();++n)image.frames[0].pixels[n]={uint8_t(n*7),uint8_t(n*13),uint8_t(n*29),uint8_t(n%256)};
+    const auto original=image.frames[0].pixels;View view;view.resize(512,384);view.set_image(image.width,image.height);Renderer renderer;
+    for(int method:{DisplaySimple,DisplayLinear,DisplayLanczos3}){
+        renderer.down=renderer.up=method;CHECK(SUCCEEDED(renderer.draw(window,&image,0,view,0,0)));CHECK(renderer.sample_current(&image,0,view));
+        renderer.resizing=true;
+        for(int n=0;n<4;++n){view.resize(520+n*9,390+n*7);CHECK(SUCCEEDED(renderer.draw(window,&image,0,view,0,0)));
+            CHECK(renderer.filter(view)==(method==DisplaySimple?DisplaySimple:DisplayLinear));CHECK(renderer.sample_bytes()==0&&renderer.source_bytes()>=image.bytes());}
+        renderer.resizing=false;CHECK(SUCCEEDED(renderer.draw(window,&image,0,view,0,0)));
+        CHECK(renderer.filter(view)==method&&renderer.sample_current(&image,0,view)&&renderer.source_bytes()==0);CHECK(image.frames[0].pixels==original);
+    }
+    DestroyWindow(window);
+}
 TEST(borrowed_rgba_rows_match_legacy_pixels_for_all_filters_and_keep_workspace_bounded) {
     std::vector<Pixel> rgba(128 * 73);
     const uint8_t alphas[]{0, 1, 37, 127, 128, 254, 255};

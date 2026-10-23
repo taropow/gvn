@@ -1097,9 +1097,12 @@ class App {
                 // from the previous window can hide part of a small image or leave
                 // extra empty space when the toolbar changes its number of rows.
                 toolbar.configure(settings.toolbar_center,settings.toolbar_line,settings.toolbar_large);
-                const int upper=toolbar_shown?toolbar.measure_height(client_width,dpi):0;
+                const auto panel=cropping?EditorPanel::Crop:floating?(floating->text_annotation?EditorPanel::Text:EditorPanel::Transform):
+                    selection_tool==SelectionTool::Pen?EditorPanel::Pen:selection_tool==SelectionTool::Text?EditorPanel::Text:EditorPanel::None;
+                const int upper=(toolbar_shown?toolbar.measure_height(client_width,dpi):0)+
+                    ((editor_mode||floating||cropping)?EditorChrome::top_height(client_width,dpi,panel,floating||cropping):0);
                 const int lower=(status_shown?MulDiv(22,dpi,96):0)+
-                    (image->animated()?playback.measure_height(client_width,dpi):0);
+                    (image->animated()?playback.measure_height(client_width,dpi):0)+EditorChrome::bottom_height(dpi);
                 const int horizontal=settings.scrollbars&&image_w>client_width?
                     GetSystemMetricsForDpi(SM_CYHSCROLL,dpi):0;
                 height=std::max(image_h+extra_y+upper+lower+horizontal,static_cast<int>(minimum.cy));

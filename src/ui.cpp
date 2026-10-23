@@ -488,6 +488,7 @@ void IconToolbar::create(HWND parent, bool playback,bool editing_tools) {
     SendMessageW(hwnd, TB_SETUNICODEFORMAT, TRUE, 0);
 }
 void IconToolbar::rebuild() {
+    measured_width=-1;texts.clear();
     struct Saved {
         BYTE state{};
         std::wstring text;
@@ -539,6 +540,7 @@ void IconToolbar::rebuild() {
             if(id==CommitSelection||id==CancelSelection||id==TransformSelection)item.fsStyle|=BTNS_AUTOSIZE|BTNS_SHOWTEXT;
             item.iString =
                 reinterpret_cast<INT_PTR>(saved.contains(id) ? saved[id].text.c_str() : command_label(id));
+            texts[id]=reinterpret_cast<const wchar_t *>(item.iString);
         }
         SendMessageW(hwnd, TB_ADDBUTTONSW, 1, reinterpret_cast<LPARAM>(&item));
     }
@@ -579,16 +581,21 @@ int IconToolbar::measure_height(int width, UINT new_dpi) {
         rebuild();
     }
     const int divider = !player && line ? std::max(2, MulDiv(2, dpi, 96)) : 0;
-    RECT rc{};
     int height = MulDiv(large ? 34 : 26, dpi, 96);
     if (!player) {
+        if(measured_width==width)return measured_height+divider;
         const int count = static_cast<int>(SendMessageW(hwnd, TB_BUTTONCOUNT, 0, 0));
         for (int rows = 1; rows <= count; ++rows) {
+            RECT rc{};
             SendMessageW(hwnd, TB_SETROWS, MAKEWPARAM(rows, TRUE), reinterpret_cast<LPARAM>(&rc));
-            if (rc.right - rc.left <= width || rows == count)
+            LONG right{},bottom{};
+            for(int n=0;n<count;++n){TBBUTTON item{};RECT bounds{};SendMessageW(hwnd,TB_GETBUTTON,n,reinterpret_cast<LPARAM>(&item));
+                if(!(item.fsStyle&BTNS_SEP)&&!(item.fsState&TBSTATE_HIDDEN)&&SendMessageW(hwnd,TB_GETITEMRECT,n,reinterpret_cast<LPARAM>(&bounds))){right=std::max(right,bounds.right);bottom=std::max(bottom,bounds.bottom);}}
+            measured_extent=int(right);measured_height=std::max(height,int(bottom)+MulDiv(2,dpi,96));
+            if (right <= width || rows == count)
                 break;
         }
-        height = std::max(height, static_cast<int>(rc.bottom - rc.top));
+        measured_width=width;height=measured_height;
     }
     return height + divider;
 }
@@ -600,8 +607,8 @@ int IconToolbar::layout(int width, UINT new_dpi, bool visible, int x, int y) {
     const int height = measured - divider;
     ShowWindow(bar_window(), visible ? SW_SHOW : SW_HIDE);
     ShowWindow(hwnd, visible ? SW_SHOW : SW_HIDE);
-    int extent = 0;
-    for (int i = 0; i < SendMessageW(hwnd, TB_BUTTONCOUNT, 0, 0); ++i) {
+    int extent = player?0:measured_extent;
+    for (int i = 0; player&&i < SendMessageW(hwnd, TB_BUTTONCOUNT, 0, 0); ++i) {
         TBBUTTON item{};
         RECT bounds{};
         SendMessageW(hwnd, TB_GETBUTTON, i, reinterpret_cast<LPARAM>(&item));
@@ -621,12 +628,16 @@ int IconToolbar::layout(int width, UINT new_dpi, bool visible, int x, int y) {
     return visible ? bar_height : 0;
 }
 void IconToolbar::enable(UINT command, bool enabled) {
+    const auto state=SendMessageW(hwnd,TB_GETSTATE,command,0);if(state<0||bool(state&TBSTATE_ENABLED)==enabled)return;
     SendMessageW(hwnd, TB_ENABLEBUTTON, command, MAKELPARAM(enabled, 0));
 }
 void IconToolbar::check(UINT command, bool checked) {
+    const auto state=SendMessageW(hwnd,TB_GETSTATE,command,0);if(state<0||bool(state&TBSTATE_CHECKED)==checked)return;
     SendMessageW(hwnd, TB_CHECKBUTTON, command, MAKELPARAM(checked, 0));
 }
 void IconToolbar::text(UINT command, const wchar_t *value) {
+    if(const auto found=texts.find(command);found!=texts.end()&&found->second==value)return;
+    texts[command]=value;measured_width=-1;
     TBBUTTONINFOW info{sizeof(info)};
     info.dwMask = TBIF_TEXT;
     info.pszText = const_cast<wchar_t *>(value);

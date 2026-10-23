@@ -69,7 +69,7 @@
         app.replace(std::move(source),false,true);const auto original=app.image;
         CHECK(SendMessageW(app.status,SB_GETICON,0,0)<=0&&skitch_visible(app.editor_chrome.bottom));
         auto drag=app.editor_chrome.control(editor_id::Drag);SetWindowTextW(app.editor_chrome.control(editor_id::Name),L"テスト画像");
-        for(int logical:{960,520,360})for(UINT dpi:{96u,144u,192u}){
+        for(int logical:{960,520,360,120})for(UINT dpi:{96u,144u,192u}){
             const int width=MulDiv(logical,dpi,96);CHECK(app.editor_chrome.layout_bottom(app.hwnd,width,900,24,dpi,true,true)==MulDiv(36,dpi,96));
             RECT previous{},panel{};GetClientRect(app.editor_chrome.bottom,&panel);
             for(int id:{editor_id::Name,editor_id::Format,editor_id::Drag}){RECT r{};GetWindowRect(app.editor_chrome.control(id),&r);MapWindowPoints(nullptr,app.editor_chrome.bottom,reinterpret_cast<POINT *>(&r),2);

@@ -59,6 +59,14 @@ TEST(annotation_outline_shadow_layers_keep_alpha_edges_and_source){
     EditMemory fail;fail.before_allocate=[](size_t){throw std::bad_alloc();};THROWS(decorate_annotation(source,e,fail));CHECK(source.frames[0].pixels==original);
     e.outline_width=17;THROWS(decorate_annotation(source,e));e.outline_width=2;e.shadow_blur=33;THROWS(decorate_annotation(source,e));
 }
+TEST(shadow_blur_stays_within_requested_radius){
+    auto dot=new_image(1,1);dot.frames[0].pixels[0]={240,20,80,255};AnnotationEffects e;e.shadow=true;e.shadow_offset=8;
+    for(int radius:{0,1,2,3,5,32}){e.shadow_blur=radius;const auto out=decorate_annotation(dot,e);const int pad=annotation_padding(e);
+        bool found{};for(int y=0;y<int(out.height);++y)for(int x=0;x<int(out.width);++x){const auto c=out.frames[0].pixels[size_t(y)*out.width+x];
+            if(c.a&&c.r==0){found=true;CHECK(std::abs(x-pad-e.shadow_offset)<=radius&&std::abs(y-pad-e.shadow_offset)<=radius);}}
+        if(radius<=3)CHECK(found);
+    }
+}
 TEST(pen_and_text_effects_clip_selection_without_flattening_alpha){
     auto source=new_image(80,60);source.frames[0].pixels[7*80+20]={11,22,33,0};AnnotationEffects e;e.outline=true;e.shadow=true;
     const FloatPoint line[]{{10,25},{60,25}};const SelectionRegion selection{5,5,55,45};

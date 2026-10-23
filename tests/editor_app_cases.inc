@@ -178,3 +178,32 @@
             command(Copy);CHECK(paste_image(app.hwnd).frames[0].pixels==pixels);
         }
     }
+
+    void live_resize_restores_quality_preserves_document_and_removes_empty_toolbar_row(){
+        ShowWindow(app.hwnd,SW_SHOWNOACTIVATE);app.settings.confirm_unsaved=false;command(DisplayUnchanged);
+        app.replace(new_image(1600,1200),false,true);app.clear_undo();const auto original=app.image;const auto rgba=original->frames[0].pixels;
+        app.settings.display_down=app.settings.display_up=DisplayLanczos3;command(FitImage);app.update();
+        for(int width:{1300,480,520,1300}){
+            SetWindowPos(app.hwnd,nullptr,0,0,width,850,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE);app.layout();app.update();
+            LONG bottom{};for(int n=0;n<SendMessageW(app.toolbar.hwnd,TB_BUTTONCOUNT,0,0);++n){TBBUTTON button{};RECT rect{};
+                SendMessageW(app.toolbar.hwnd,TB_GETBUTTON,n,reinterpret_cast<LPARAM>(&button));if(!(button.fsStyle&BTNS_SEP)){
+                    CHECK(SendMessageW(app.toolbar.hwnd,TB_GETITEMRECT,n,reinterpret_cast<LPARAM>(&rect)));bottom=std::max(bottom,rect.bottom);}}
+            CHECK(app.toolbar.height()>=bottom&&app.toolbar.height()-bottom<=MulDiv(6,GetDpiForWindow(app.hwnd),96));
+            if(width==1300)CHECK(app.toolbar.height()<=MulDiv(28,GetDpiForWindow(app.hwnd),96));
+        }
+        CHECK(SUCCEEDED(app.render_scene())&&app.renderer.sample_current(original.get(),0,app.view));
+        app.message(WM_ENTERSIZEMOVE,0,0);
+        for(int n=0;n<4;++n){SetWindowPos(app.hwnd,nullptr,0,0,1000+n*20,700+n*15,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE);
+            CHECK(SUCCEEDED(app.render_scene())&&app.renderer.resizing&&app.renderer.filter(app.view)==DisplayLinear);
+            CHECK(app.renderer.sample_bytes()==0&&app.renderer.source_bytes()>=original->bytes());}
+        app.message(WM_EXITSIZEMOVE,0,0);CHECK(SUCCEEDED(app.render_scene()));
+        CHECK(!app.renderer.resizing&&app.renderer.filter(app.view)==DisplayLanczos3&&app.renderer.sample_current(original.get(),0,app.view)&&app.renderer.source_bytes()==0);
+        command(ToolPen);app.layout();app.update();app.layout();int changes{};
+        auto field=app.editor_chrome.control(editor_id::Width);
+        const SUBCLASSPROC probe=[](HWND h,UINT msg,WPARAM w,LPARAM l,UINT_PTR,DWORD_PTR data)->LRESULT{
+            if(msg==WM_SHOWWINDOW||msg==WM_WINDOWPOSCHANGED)++*reinterpret_cast<int *>(data);return DefSubclassProc(h,msg,w,l);};CHECK(SetWindowSubclass(field,probe,987,reinterpret_cast<DWORD_PTR>(&changes)));
+        // Remove the probe before any assertion can unwind its counter.
+        app.layout();app.layout();app.layout();RemoveWindowSubclass(field,probe,987);
+        CHECK(changes==0&&skitch_visible(field));CHECK(app.image==original&&!app.modified&&!app.undo_image&&original->frames[0].pixels==rgba);
+        app.message(WM_ENTERSIZEMOVE,0,0);app.message(WM_CANCELMODE,0,0);CHECK(!app.renderer.resizing);CHECK(SUCCEEDED(app.render_scene())&&app.renderer.filter(app.view)==DisplayLanczos3);
+    }

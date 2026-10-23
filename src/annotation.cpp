@@ -34,7 +34,7 @@ int annotation_padding(const AnnotationEffects &e){
     if((e.outline&&(!std::isfinite(e.outline_width)||e.outline_width<1||e.outline_width>16))||
        (e.shadow&&(std::abs(int64_t(e.shadow_offset))>64||e.shadow_blur<0||e.shadow_blur>32)))
         throw std::invalid_argument("フチ・影の数値の範囲を確認してください。");
-    return int(std::ceil(e.outline?e.outline_width:0))+(e.shadow?std::abs(e.shadow_offset)+3*e.shadow_blur:0)+2;
+    return int(std::ceil(e.outline?e.outline_width:0))+(e.shadow?std::abs(e.shadow_offset)+e.shadow_blur:0)+2;
 }
 Image decorate_annotation(const Image &source,const AnnotationEffects &e,const EditMemory &memory){
     if(!e.outline&&!e.shadow)return source;
@@ -62,9 +62,11 @@ Image decorate_annotation(const Image &source,const AnnotationEffects &e,const E
         std::vector<uint8_t> mask(count),scratch(count);
         for(int y=0;y<h;++y)for(int x=0;x<w;++x){const int sx=x-e.shadow_offset,sy=y-e.shadow_offset;
             if(sx>=0&&sy>=0&&sx<w&&sy<h)mask[size_t(y)*w+x]=out.frames[0].pixels[size_t(sy)*w+sx].a;}
-        const int radius=e.shadow_blur,divisor=2*radius+1;
         // Three separable box passes approximate a Gaussian without a large convolution kernel.
-        if(radius)for(int pass=0;pass<3;++pass){
+        // Split the requested radius across the passes; applying it three times
+        // makes a nominal 3px shadow spread to 9px and look excessively soft.
+        if(e.shadow_blur)for(int pass=0;pass<3;++pass){
+            const int radius=(e.shadow_blur+pass)/3,divisor=2*radius+1;if(!radius)continue;
             for(int y=0;y<h;++y){unsigned sum{};for(int x=0;x<=radius&&x<w;++x)sum+=mask[size_t(y)*w+x];
                 for(int x=0;x<w;++x){scratch[size_t(y)*w+x]=uint8_t((sum+divisor/2)/divisor);
                     if(x-radius>=0)sum-=mask[size_t(y)*w+x-radius];if(x+radius+1<w)sum+=mask[size_t(y)*w+x+radius+1];}}

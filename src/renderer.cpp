@@ -188,7 +188,7 @@ int Renderer::filter(const View &view) const {
     const auto method=std::clamp(view.scale<1?down:up,0,kLastDisplayFilter);
     // Selected quality applies to fit, manual zoom and selection tools alike.
     // Interactive previews may use Linear temporarily, then restore the chosen method.
-    if(dragging_low)return method==DisplaySimple?DisplaySimple:DisplayLinear;
+    if(dragging_low||resizing)return method==DisplaySimple?DisplaySimple:DisplayLinear;
     return method>1&&sampling_limited(view)?DisplayLinear:method;
 }
 bool Renderer::sample_current(const Image *image, size_t frame, const View &view) const {
@@ -217,6 +217,11 @@ bool Renderer::prepare_sample(const Image *image, size_t frame, const View &view
         sampled = nullptr;
         sampled_bitmap.Reset();
         return false;
+    }
+    if(resizing&&image->width<=bitmap_limit&&image->height<=bitmap_limit){
+        // A size gesture changes the destination every frame. Reuse one source bitmap
+        // and let Direct2D scale it; rebuild the selected-quality tile after the gesture.
+        tile={};sampled=nullptr;sampled_bitmap.Reset();return false;
     }
     if (!sample_current(image, frame, view)) {
         if (view.manual || resizing) {
@@ -251,8 +256,8 @@ ComPtr<ID2D1Bitmap> Renderer::tile_bitmap(ID2D1RenderTarget *context) {
     return result;
 }
 void Renderer::resize(UINT width, UINT height) {
-    if (target)
-        target->Resize(D2D1::SizeU(std::max(1u, width), std::max(1u, height)));
+    if (target){const auto before=target->GetPixelSize(),next=D2D1::SizeU(std::max(1u,width),std::max(1u,height));
+        if(before.width!=next.width||before.height!=next.height)target->Resize(next);}
 }
 HRESULT Renderer::draw(HWND hwnd, const Image *image, size_t frame, const View &view, int top, int bottom,
                        const Rect *selection) {
@@ -394,7 +399,7 @@ void Renderer::draw_editor_overlay(ID2D1RenderTarget *context,ID2D1SolidColorBru
             context->SetTransform(D2D1::Matrix3x2F::Identity());};
         const auto &e=pen_style.effects;const double outside=pen_style.width+(e.outline?2*e.outline_width:0);
         if(e.shadow){auto c=e.shadow_color;
-            if(e.shadow_blur){c.a=uint8_t(c.a/6);for(int n=5;n>=0;--n)stroke(c,outside+n*e.shadow_blur*.8,e.shadow_offset);}
+            if(e.shadow_blur){c.a=uint8_t(c.a/6);for(int n=5;n>=0;--n)stroke(c,outside+n*e.shadow_blur*.4,e.shadow_offset);}
             else stroke(c,outside,e.shadow_offset);}
         if(e.outline)stroke(e.outline_color,outside,0);stroke(pen_style.color,pen_style.width,0);
         context->PopAxisAlignedClip();

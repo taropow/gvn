@@ -62,6 +62,9 @@ void ViewerIme::suppress(HWND window) {
         }
         found = entries_.end() - 1;
     }
+    // Size changes reapply the policy to catch newly-created controls. Leave an
+    // already detached context alone instead of repeating an IMM state change.
+    if(const auto current=ImmGetContext(window))ImmReleaseContext(window,current);else return;
     if (const auto context = ImmAssociateContext(window, nullptr))
         found->previous = context; // Preserve a newer context after a language/profile change.
 }

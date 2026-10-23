@@ -5309,7 +5309,7 @@ struct AppAudit {
         CHECK(client.right>=app.toolbar.ideal_width()&&app.view.height>=edited->height&&app.view.scale==1);
         next=app.settings;next.toolbar=false;next.status=false;app.apply_settings(next);
         command(DisplayWindowImage);
-        CHECK(app.top==0&&app.bottom==0&&app.view.width>=edited->width&&app.view.height>=edited->height);
+        CHECK(app.top==0&&app.bottom==EditorChrome::bottom_height(GetDpiForWindow(app.hwnd))&&app.view.width>=edited->width&&app.view.height>=edited->height);
         command(Copy);CHECK(paste_image(app.hwnd).frames[0].pixels==pixels);
         CHECK(app.image==edited&&app.undo_image==undo&&app.modified&&notices.empty());
     }
@@ -7299,6 +7299,7 @@ APP_TEST(polygon_effects_and_cut_preserve_unselected_pixels_and_alpha)
 APP_TEST(editor_toggle_native_sidebar_and_viewport_preserve_document)
 APP_TEST(editor_unifies_legacy_keys_mouse_tools_units_and_cancel)
 APP_TEST(editor_short_window_tools_scroll_and_animation_layout)
+APP_TEST(live_resize_restores_quality_preserves_document_and_removes_empty_toolbar_row)
 
 APP_TEST(three_quality_choices_drive_actual_zoom_editor_fullscreen_without_changing_rgba)
 APP_TEST(skitch_pen_text_native_controls_alpha_apply_cancel_undo)

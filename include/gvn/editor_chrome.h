@@ -13,10 +13,12 @@ enum class EditorPanel { None, Pen, Text, Crop, Transform };
 class EditorChrome {
     HWND owner{};
     HFONT font{};UINT dpi{};
+    UINT anchor_dpi{},format_dpi{};
     HICON drag_icon{};
     bool filling{},drag_pending{},drag_hot{};POINT drag_start{};
     std::map<int,HWND> controls;
     std::map<int,HWND> labels;
+    std::map<HWND,RECT> placements;
     EditorPanel panel{EditorPanel::None};
     std::wstring export_default;
     Pixel color{245,30,84,255};
@@ -25,9 +27,12 @@ class EditorChrome {
     static LRESULT CALLBACK drag_procedure(HWND,UINT,WPARAM,LPARAM,UINT_PTR,DWORD_PTR);
     void create(HWND,bool editing=true);
     void put(int,const std::wstring &);
+    void position(HWND,int,int,int,int);
   public:
     HWND top{},bottom{};
     ~EditorChrome();
+    static int top_height(int width,UINT dpi,EditorPanel,bool applying);
+    static int bottom_height(UINT dpi){return MulDiv(36,dpi,96);}
     int layout_top(HWND,int width,int y,UINT,bool visible,EditorPanel,bool applying);
     int layout_bottom(HWND,int width,int client_height,int occupied,UINT,bool visible,bool enabled);
     HWND control(int id) const {const auto p=controls.find(id);return p==controls.end()?nullptr:p->second;}

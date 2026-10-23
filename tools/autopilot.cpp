@@ -2124,6 +2124,39 @@ struct Autopilot {
                                     throw std::runtime_error("Unknown state: " + name);
     }
     void execute(const std::vector<std::string> &s) {
+        if(s[0]=="resize_benchmark"){
+            using Clock=std::chrono::steady_clock;
+            const auto ms=[](auto a,auto b){return std::chrono::duration<double,std::milli>(b-a).count();};
+            std::ofstream report(output_path(s.at(1)));report<<"{\"method\":\"Native WM_SIZE (SetWindowPos) + explicit WM_PAINT on private desktop; 2 warm-up and 20 measured sizes per case\",\"cases\":[";
+            auto large_image=std::make_shared<Image>(new_image(3840,2160));
+            for(unsigned y=0;y<large_image->height;++y)for(unsigned x=0;x<large_image->width;++x)large_image->frames[0].pixels[size_t(y)*large_image->width+x]={uint8_t(x*7+y),uint8_t(x+y*3),uint8_t(x*3+y*5),uint8_t((x+y)%256)};
+            const auto small_image=std::make_shared<Image>(new_image(512,384));
+            app.settings.confirm_unsaved=false;app.command(DisplayUnchanged);
+            struct Case{const char *name;std::shared_ptr<Image> image;int method;bool editor,actual;};
+            const Case cases[]{{"empty",{},DisplayLinear,false,false},{"fit-512-fast",small_image,DisplayLinear,false,false},
+                {"fit-4k-fast",large_image,DisplayLinear,false,false},{"fit-4k-lanczos3",large_image,DisplayLanczos3,false,false},
+                {"editor-4k-lanczos3",large_image,DisplayLanczos3,true,false},{"actual-4k",large_image,DisplayLanczos3,false,true}};
+            bool comma=false;
+            for(const auto &c:cases){
+                app.set_edit_mode(false);if(c.image)app.replace(c.image,false,true);else app.command(CloseImage);app.clear_undo();
+                app.settings.display_down=app.settings.display_up=c.method;app.render_settings();
+                if(c.editor)app.command(ToolPen);app.command(c.actual?Actual:FitImage);
+                SetWindowPos(app.hwnd,nullptr,0,0,900,650,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE);app.update();
+                app.message(WM_ENTERSIZEMOVE,0,0);if(comma)report<<',';comma=true;
+                report<<"{\"name\":"<<quote(c.name)<<",\"frames\":[";
+                for(int n=-2;n<20;++n){const int k=n+2;DrawMetrics metrics;app.renderer.trace=&metrics;
+                    const auto begin=Clock::now();SetWindowPos(app.hwnd,nullptr,0,0,900+(k*29)%240,650+(k*17)%160,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE);
+                    const auto arranged=Clock::now();SendMessageW(app.hwnd,WM_PAINT,0,0);const auto end=Clock::now();app.renderer.trace=nullptr;
+                    require(app.smoke_error.empty(),"Resize benchmark failed to render");
+                    if(n>=0)report<<(n?",":"")<<"{\"total_ms\":"<<ms(begin,end)<<",\"layout_ms\":"<<ms(begin,arranged)<<",\"paint_ms\":"<<ms(arranged,end)
+                        <<",\"sample_ms\":"<<metrics.sampling_ms<<",\"upload_ms\":"<<metrics.upload_ms<<",\"scene_ms\":"<<metrics.scene_ms<<'}';
+                }
+                app.message(WM_EXITSIZEMOVE,0,0);const auto begin=Clock::now();SendMessageW(app.hwnd,WM_PAINT,0,0);
+                report<<"],\"settled_ms\":"<<ms(begin,Clock::now())<<",\"toolbar_height\":"<<app.toolbar.height()<<",\"toolbar_item_bottom\":";
+                LONG bottom{};for(int n=0;n<SendMessageW(app.toolbar.hwnd,TB_BUTTONCOUNT,0,0);++n){RECT r{};SendMessageW(app.toolbar.hwnd,TB_GETITEMRECT,n,reinterpret_cast<LPARAM>(&r));bottom=std::max(bottom,r.bottom);}report<<bottom<<'}';report.flush();
+            }
+            report<<"]}\n";return;
+        }
         if(s[0]=="rect_dialog"){SendMessageW(app.hwnd,WM_COMMAND,SelectNumbers,0);return;}
         if(s[0].starts_with("rect_")||(selection_rect_dialog&&s[0].starts_with("prompt_"))) {
             require(selection_rect_dialog&&selection_rect_dialog->ready(),"Actual numeric selection dialog is not open");own(selection_rect_dialog->window());
