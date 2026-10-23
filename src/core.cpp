@@ -115,7 +115,7 @@ size_t Image::bytes() const {
         if (frame.indexed)
             total += frame.indexed->bytes();
     }
-    return total + (rgb16 ? sizeof(Rgb16Colors) : 0) + (indexed_source ? indexed_source->bytes() : 0);
+    return total + (metadata.prompt_source ? metadata.prompt_source->byte_size : 0) + (rgb16 ? sizeof(Rgb16Colors) : 0) + (indexed_source ? indexed_source->bytes() : 0);
 }
 std::shared_ptr<const IndexedPixels> image_indices(const Image &image, size_t frame) {
     const auto &displayed = image.frames.at(frame);

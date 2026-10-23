@@ -2027,7 +2027,7 @@ struct AppAudit {
         open(fixture(L"alpha.png"));command(Info);CHECK(notices.back().find(L"未指定のため72 DPI")!=std::wstring::npos);
     }
     void native_controls_and_menu() {
-        CHECK(SendMessageW(app.toolbar.hwnd, TB_BUTTONCOUNT, 0, 0) == 27);
+        CHECK(SendMessageW(app.toolbar.hwnd, TB_BUTTONCOUNT, 0, 0) == 28);
         CHECK(!SendMessageW(app.toolbar.hwnd, TB_ISBUTTONENABLED, Save, 0));
         CHECK(!GetMenu(app.hwnd));
         paths.push_back(fixture(L"alpha.png"));
@@ -6971,6 +6971,7 @@ void background_changes_preserve_image_animation_copy_save_and_ole() {
 #include "responsive_app_cases.inc"
 #include "feedback_app_cases.inc"
 #include "daily_hotpath_app_cases.inc"
+#include "prompt_app_cases.inc"
 };
 } // namespace gvn
 
@@ -7344,6 +7345,8 @@ APP_TEST(responsive_native_update_and_layout_benchmark)
 APP_TEST(responsive_native_updates_preserve_status_theme_and_document)
 APP_TEST(responsive_animation_controls_only_write_changed_values)
 
+APP_TEST(prompt_toolbar_current_snapshot_edits_navigation_and_no_file_reread)
+APP_TEST(prompt_encoded_clipboard_and_archive_follow_the_displayed_image)
 APP_TEST(daily_hotpaths_benchmark)
 APP_TEST(daily_reused_menu_matches_rebuilt_state_and_navigation)
 

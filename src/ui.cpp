@@ -14,7 +14,7 @@
 namespace gvn {
 bool initialize_controls() {
     INITCOMMONCONTROLSEX controls{sizeof(controls), ICC_BAR_CLASSES | ICC_STANDARD_CLASSES | ICC_UPDOWN_CLASS | ICC_TAB_CLASSES |
-                                                        ICC_LISTVIEW_CLASSES};
+                                                        ICC_LISTVIEW_CLASSES | ICC_TREEVIEW_CLASSES};
     return InitCommonControlsEx(&controls) != FALSE;
 }
 constexpr UINT kPauseIcon = 65000;
@@ -41,6 +41,7 @@ const wchar_t *command_label(UINT id) {
         return L"やり直し (Ctrl+Shift+Z)";
     case Info:
         return L"画像情報";
+    case ShowPrompt:return L"プロンプト表示";
     case Previous:
         return L"前の画像 (←)";
     case Next:
@@ -169,6 +170,8 @@ static HBITMAP icon_bitmap(UINT id, int size) {
     constexpr COLORREF blue = RGB(32, 123, 206), green = RGB(47, 151, 61), red = RGB(219, 63, 61),
                        paper = RGB(249, 252, 255);
     switch (id) {
+    case ShowPrompt:
+        rectangle(3,2,16,18,paper);line(6,6,13,6,blue,1);line(6,9,13,9,blue,1);line(6,12,11,12,blue,1);line(12,16,18,11,green,2);break;
     case ToolPen:
         line(4,16,15,4,red,4);circle(3,14,7,18,red,red);break;
     case ToolText:
@@ -398,7 +401,7 @@ static HBITMAP icon_bitmap(UINT id, int size) {
     return result;
 }
 static constexpr UINT buttons[]{
-    Open, Save,         FileDelete,  0, Copy,      Paste, ArmDrag, Undo,    0,        Info,   Previous,
+    Open, Save,         FileDelete,  0, Copy,      Paste, ArmDrag, Undo,    0,        Info, ShowPrompt,  Previous,
     Next, ParentFolder, ChildFolder, 0, Slideshow, 0,     ZoomIn,  ZoomOut, FitImage, Actual, Fullscreen,
     0,    ToggleEditor, Preferences,  Help,MoreCommands};
 static constexpr UINT tool_buttons[]{ToolPan,ToolPen,ToolText,SelectMove,SelectRectangle,SelectFreehand,SelectPolygon,0,
@@ -659,7 +662,7 @@ void IconToolbar::arrange_overflow(int width){
             if(previous&&separator>=0){items[separator].hidden=false;total+=items[separator].width;}separator=-1;previous=true;total+=item.width;}
         return total;};
     if(overflow&&extent()>width){for(auto &item:items)if(item.button.idCommand==MoreCommands)item.hidden=false;
-        for(UINT id:{Help,ChildFolder,ParentFolder,Slideshow,Info,ArmDrag,FileDelete,Save,Fullscreen,ZoomOut,ZoomIn,Undo,Actual,Preferences,FitImage,Paste,Copy,Previous,Next,ToggleEditor}){
+        for(UINT id:{Help,ChildFolder,ParentFolder,Slideshow,Info,ShowPrompt,ArmDrag,FileDelete,Save,Fullscreen,ZoomOut,ZoomIn,Undo,Actual,Preferences,FitImage,Paste,Copy,Previous,Next,ToggleEditor}){
             if(extent()<=width)break;for(auto &item:items)if(item.button.idCommand==id){item.hidden=true;overflow_commands.push_back(id);break;}}
     }
     extent();

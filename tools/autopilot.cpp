@@ -782,6 +782,7 @@ struct Autopilot {
     ResizeDialog *resize{};
     ResizeDialog *canvas{};
     ImageInfoDialog *information{};
+    PromptDialog *prompts{};
     SelectionUnitsDialog *selection_units_dialog{};
     SelectionRectDialog *selection_rect_dialog{};
     uint64_t rect_wait_started{};
@@ -1155,6 +1156,10 @@ struct Autopilot {
             printing=&dialog;struct Reset{PrintDialog *&p;~Reset(){p=nullptr;}} reset{printing};
             print_choice=dialog.run(owner);if(print_choice)++print_commits;
         };
+        app.dialogs.prompt_viewer=[&](HWND owner,const PromptDocument &data){
+            PromptDialog dialog(data);prompts=&dialog;
+            struct Reset {PromptDialog *&pointer;~Reset(){pointer=nullptr;}} reset{prompts};dialog.show(owner);
+        };
         app.dialogs.image_info=[&](HWND owner,const ImageInfoData &data,bool automatic,const ImageInfoDialog::Counter &counter){
             if(!native_info){errors.push_back(data.text());return automatic;}
             ImageInfoDialog dialog(data,automatic,counter);information=&dialog;
@@ -1372,6 +1377,7 @@ struct Autopilot {
         return search.found;
     }
     void close_owned_modals() {
+        if(prompts&&IsWindow(prompts->window()))SendMessageW(prompts->window(),WM_CLOSE,0,0);
         EndMenu(); // Only this private UI thread's native menu loop.
         if (open_gate)
             open_gate->release();
@@ -2274,6 +2280,23 @@ struct Autopilot {
             return;
         }
 
+        if(s.at(0)=="prompts_open") {SendMessageW(app.hwnd,WM_COMMAND,ShowPrompt,0);return;}
+        if(s.at(0).starts_with("prompts_")) {
+            require(prompts&&prompts->ready(),"Actual prompt viewer is not open");own(prompts->window());
+            if(s[0]=="prompts_close")SendMessageW(prompts->window(),WM_COMMAND,IDOK,0);
+            else if(s[0]=="prompts_snapshot")capture(prompts->window(),output_path(s.at(1)));
+            else if(s[0]=="prompts_select"){
+                const auto key=widen(s.at(1));bool found{};const auto &fields=prompts->document().fields;
+                for(size_t n=0;n<fields.size();++n)if(fields[n].group+L"/"+fields[n].label==key){prompts->select(n);found=true;break;}
+                require(found,"Prompt field is missing");
+            }else if(s[0]=="prompts_expect")require(window_text(prompts->control(prompt_control::Value)).find(widen(s.at(1)))!=std::wstring::npos,"Actual prompt text differs");
+            else if(s[0]=="prompts_status")require(window_text(prompts->control(prompt_control::Status)).find(widen(s.at(1)))!=std::wstring::npos,"Prompt status differs");
+            else if(s[0]=="prompts_copy"){
+                const int key=s.at(1)=="positive"?prompt_control::Positive:s.at(1)=="negative"?prompt_control::Negative:prompt_control::Copy;
+                require(IsWindowEnabled(prompts->control(key)),"Prompt copy is disabled");SendMessageW(prompts->control(key),BM_CLICK,0,0);
+            }else if(s[0]=="prompts_resize")SetWindowPos(prompts->window(),nullptr,0,0,std::stoi(s.at(1)),std::stoi(s.at(2)),SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE);
+            else require(false,"Unknown prompt viewer operation");return;
+        }
         if(s.at(0)=="image_info") {
             native_info=true;struct Reset {bool &value;~Reset(){value=false;}} reset{native_info};
             SendMessageW(app.hwnd,WM_COMMAND,Info,0);return;
@@ -4164,6 +4187,10 @@ struct Autopilot {
             if(!step[0].starts_with("print_")&&!step[0].starts_with("expect")){failed=done=true;results[position].error="Unexpected print dialog blocks operation";close_owned_modals();return;}
         }
         print_wait_started=0;
+        if(prompts){
+            if(!prompts->ready()||!IsWindow(prompts->window())||!locally_visible(prompts->window()))return;
+            if(!step[0].starts_with("prompts_")&&!step[0].starts_with("expect")){failed=done=true;results[position].error="Unexpected prompt viewer blocks operation";close_owned_modals();return;}
+        }
         if(information) {
             if(!information->ready()||!IsWindow(information->window())||!locally_visible(information->window())) {
                 if(!info_wait_started)info_wait_started=GetTickCount64();if(GetTickCount64()-info_wait_started<10000)return;

@@ -71,7 +71,14 @@ struct Rgb16Colors {
 };
 enum class ImageColorType : uint8_t { Unknown,Palette,Rgb,Bitfields,Gray,Cmyk };
 const wchar_t *image_color_type_name(ImageColorType);
+// Immutable UTF-8 PNG text, shared by edits/Undo. byte_size is cached for loader budgets.
+struct PromptSource {
+    std::vector<std::pair<std::string,std::string>> text;
+    std::string issue;
+    size_t byte_size{};
+};
 struct ImageMetadata {
+    std::shared_ptr<const PromptSource> prompt_source;
     uint32_t original_width{},original_height{},original_bpp{};
     double dpi_x{72},dpi_y{72};
     bool operator==(const ImageMetadata &) const = default;

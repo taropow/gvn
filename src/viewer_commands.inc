@@ -379,6 +379,7 @@
         m = CreatePopupMenu();
         add(m, Preferences, L"設定…");
         add(m, Info, L"画像情報\tI");
+        add(m, ShowPrompt, L"プロンプト表示");
         add(m, Association, L"既定のアプリを設定…");
         add(m, Help, L"操作説明\tF1");
         add(m, About, L"バージョン情報…");

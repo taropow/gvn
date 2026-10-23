@@ -46,7 +46,7 @@ for scenario in scenarios:
         for step in data['steps']:
             action = step['action'].split('\t')
             if action[0] in {'snapshot','snapshot_small','fit_snapshot','font_snapshot','color_snapshot','save_snapshot',
-                             'transfer_snapshot','boundary_snapshot','about_snapshot','info_snapshot','grid_snapshot','rect_snapshot','print_snapshot','resize_snapshot','canvas_snapshot','jump_snapshot','rainbow_snapshot','cp_snapshot','picker_snapshot','pal_snapshot','pal_picker_snapshot','native_menu_snapshot'}:
+                             'transfer_snapshot','boundary_snapshot','about_snapshot','info_snapshot','grid_snapshot','rect_snapshot','print_snapshot','resize_snapshot','canvas_snapshot','jump_snapshot','rainbow_snapshot','cp_snapshot','picker_snapshot','pal_snapshot','pal_picker_snapshot','native_menu_snapshot','prompts_snapshot'}:
                 capture_kinds[Path(action[1]).name] = action[0]
                 if action[0] == 'snapshot_small':
                     assert len(action) == 4 and int(action[2]) > 0 and int(action[3]) > 0

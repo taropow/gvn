@@ -60,5 +60,12 @@
     "archive_sha256": "b65b66b99f0424b93525f987386f22fc5efb9da2bfc92ad4a532249aaffbab0e",
     "files": 174,
     "source_files_sha256": "6a4a68237179d51da335ce3d24c57ebdf4ddc6b164442cda314f3768c8fdb705"
+  },
+  {
+    "name": "picojson",
+    "repository": "https://github.com/kazuho/picojson",
+    "revision": "111c9be5188f7350c2eac9ddaedd8cca3d7bf394",
+    "files": 3,
+    "source_files_sha256": "226ce7a416b670ec82b9d0b57e2ed77cf56f261d876f027e26a759bc529645e7"
   }
 ]

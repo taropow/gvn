@@ -17,5 +17,5 @@ for package in manifest:
     assert len(files) == package['files'] and actual == package['source_files_sha256'], package['name']+' source tree changed'
     total += len(files)
     names.append(package['name'])
-assert set(names) == {'zlib', 'libpng', 'libjpeg-turbo', 'giflib'}
+assert set(names) == {'zlib', 'libpng', 'libjpeg-turbo', 'giflib', 'picojson'}
 print(json.dumps(dict(passed=True, files=total, libraries=names)))

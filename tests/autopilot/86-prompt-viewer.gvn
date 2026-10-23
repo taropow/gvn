@@ -1,0 +1,57 @@
+resize	1000	760
+settings
+tab	General
+set	UiTheme	1
+click	OK
+open	${fixtures}/prompts/parts.png
+wait
+remember	original
+prompts_open
+prompts_status	対応する内訳あり
+prompts_select	スロット/日本語原文
+prompts_expect	朝の光 ☀
+prompts_copy	field
+expect_clipboard_text	朝の光 ☀
+prompts_snapshot	prompt-slot-light.png
+prompts_select	キャラ タブ1 · 黒髪の子/OFF · 帽子
+prompts_expect	hat
+prompts_select	キャラ タブ1 · 黒髪の子/ONトグルのみ
+prompts_expect	school uniform
+prompts_select	送信済み全文/ポジティブ
+prompts_expect	RESOLVED POSITIVE
+prompts_snapshot	prompt-final-light.png
+prompts_resize	720	460
+prompts_snapshot	prompt-compact.png
+prompts_close
+expect_same	original	true
+settings
+tab	General
+set	UiTheme	2
+click	OK
+prompts_open
+prompts_select	拡張プロンプト/[画風] 柔らかい光 · 重み 1.2
+prompts_expect	soft lighting
+prompts_snapshot	prompt-extension-dark.png
+prompts_close
+open	${fixtures}/prompts/invalid.png
+wait
+prompts_open
+prompts_status	内訳の解析失敗
+prompts_select	全文/ポジティブ
+prompts_expect	UPSTREAM POSITIVE
+prompts_snapshot	prompt-invalid-fallback.png
+prompts_close
+open	${fixtures}/prompts/unknown.png
+wait
+prompts_open
+prompts_status	未対応バージョン
+prompts_select	詳細/元JSON · inpainter-parts
+prompts_expect	do not interpret
+prompts_close
+open	${fixtures}/alpha.png
+wait
+prompts_open
+prompts_status	プロンプト情報なし
+prompts_snapshot	prompt-no-info.png
+prompts_close
+expect	error_count	0

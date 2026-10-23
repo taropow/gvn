@@ -21,6 +21,7 @@ New-Item -ItemType Directory -Path $licenses -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $taskRoot 'third_party\libplum\LICENSE') -Destination (Join-Path $licenses 'libplum.txt')
 Copy-Item -LiteralPath (Join-Path $taskRoot 'third_party\psd_sdk\LICENSE') -Destination (Join-Path $licenses 'psd_sdk.txt')
 Copy-Item -LiteralPath (Join-Path $taskRoot 'third_party\miniz\LICENSE') -Destination (Join-Path $licenses 'miniz.txt')
+Copy-Item -LiteralPath (Join-Path $taskRoot 'third_party\picojson\LICENSE') -Destination (Join-Path $licenses 'picojson.txt')
 Copy-Item -LiteralPath (Join-Path $taskRoot 'third_party\libpng\LICENSE') -Destination (Join-Path $licenses 'libpng.txt')
 Copy-Item -LiteralPath (Join-Path $taskRoot 'third_party\zlib\LICENSE') -Destination (Join-Path $licenses 'zlib.txt')
 Copy-Item -LiteralPath (Join-Path $taskRoot 'third_party\libjpeg-turbo\LICENSE.md') -Destination (Join-Path $licenses 'libjpeg-turbo.txt')

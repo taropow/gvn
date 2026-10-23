@@ -24,6 +24,7 @@ const std::vector<CommandInfo> &command_catalog() {
             {Checker, L"透明部分を市松模様で表示"},
             {Nearest, L"最近傍補間"},
             {Info, L"画像情報"},
+            {ShowPrompt, L"プロンプト表示"},
             {Play, L"再生 / 一時停止"},
             {FramePrevious, L"前のフレーム"},
             {FrameNext, L"次のフレーム"},

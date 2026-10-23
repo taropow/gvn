@@ -23,6 +23,7 @@
 #include "gvn/display_quality.h"
 #include "gvn/resize_dialog.h"
 #include "gvn/image_info_dialog.h"
+#include "gvn/prompt_dialog.h"
 #include "gvn/selection_units_dialog.h"
 #include "gvn/selection_rect_dialog.h"
 #include "gvn/palette_dialog.h"
@@ -84,6 +85,7 @@ class App {
         decltype(std::function{gvn::choose_resize}) resize = gvn::choose_resize;
         decltype(std::function{gvn::choose_canvas}) canvas = gvn::choose_canvas;
         decltype(std::function{gvn::show_image_info}) image_info = gvn::show_image_info;
+        decltype(std::function{gvn::show_prompt}) prompt_viewer=gvn::show_prompt;
         decltype(std::function{gvn::print_image}) print = gvn::print_image;
         decltype(std::function{gvn::choose_selection_units}) selection_units = gvn::choose_selection_units;
         decltype(std::function{gvn::choose_selection_rect}) selection_rect = gvn::choose_selection_rect;
@@ -3400,6 +3402,12 @@ class App {
             if (chosen)
                 command(chosen);
             break;
+        }
+        case ShowPrompt: {
+            if(image){auto data=describe_prompts(current_metadata().prompt_source);
+                data.source_name=caption_name()+(modified?L" · 加工前の生成メタデータ":L"");
+                dialogs.prompt_viewer(hwnd,data);}
+            return;
         }
         case Info:
             show_info();

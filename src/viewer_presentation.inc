@@ -56,7 +56,7 @@
     }
     void update_command_controls() {
         const auto commands=command_context();
-        for(UINT id:{Save,Copy,ArmDrag,Info,ZoomIn,ZoomOut,FitImage,Actual,Fullscreen,Undo,Redo,FileDelete,Previous,Next})toolbar.enable(id,common_command_enabled(id,commands));
+        for(UINT id:{Save,Copy,ArmDrag,Info,ShowPrompt,ZoomIn,ZoomOut,FitImage,Actual,Fullscreen,Undo,Redo,FileDelete,Previous,Next})toolbar.enable(id,common_command_enabled(id,commands));
         toolbar.text(FileDelete,command_caption(settings,FileDelete,settings.recycle_deleted?L"ごみ箱へ":L"ファイルを削除").c_str());
 
         const bool reversed = comic && settings.comic_rtl && settings.comic_toolbar_reverse;

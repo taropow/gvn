@@ -7,7 +7,7 @@ inline std::wstring command_caption(const Settings &settings,unsigned id,const s
 }
 struct CommandContext {bool image{},pending{},busy{},file{},selection{},undo{},redo{},files{};};
 inline bool common_command_enabled(unsigned id,const CommandContext &s){
- switch(id){case Save:case SaveAs:case Copy:case ArmDrag:return s.image&&!s.pending;case Info:case ZoomIn:case ZoomOut:case FitImage:case Actual:return s.image;case Fullscreen:return true;
+ switch(id){case Save:case SaveAs:case Copy:case ArmDrag:return s.image&&!s.pending;case Info:case ShowPrompt:case ZoomIn:case ZoomOut:case FitImage:case Actual:return s.image;case Fullscreen:return true;
  case Undo:return s.pending||s.undo;case Redo:return s.redo&&!s.pending;case FileDelete:return s.file&&!s.pending;case Previous:case Next:return s.files;default:return true;}
 }
 }

@@ -1,4 +1,5 @@
 #include "image_metadata.h"
+#include "gvn/prompt_metadata.h"
 #include <cmath>
 #include <cstring>
 namespace gvn {
@@ -105,6 +106,7 @@ void read_container_metadata(Image &image,std::span<const uint8_t> bytes) {
     const auto le16=[&](size_t p){return uint32_t(bytes[p])|(uint32_t(bytes[p+1])<<8);};
     const auto le32=[&](size_t p){return uint32_t(bytes[p])|(uint32_t(bytes[p+1])<<8)|(uint32_t(bytes[p+2])<<16)|(uint32_t(bytes[p+3])<<24);};
     if(bytes.size()>=33&&!std::memcmp(bytes.data(),"\x89PNG\r\n\x1a\n",8)) {
+        m.prompt_source=read_png_prompt_source(bytes);
         static constexpr int channels[]{1,0,3,1,2,0,4};
         if(bytes[25]<std::size(channels))m.original_bpp=bytes[24]*channels[bytes[25]];
         if(bytes[25]==3)m.original_color_type=ImageColorType::Palette;
