@@ -46,8 +46,8 @@ for scenario in scenarios:
         for step in data['steps']:
             action = step['action'].split('\t')
             if action[0] in {'snapshot','snapshot_small','fit_snapshot','font_snapshot','color_snapshot','save_snapshot',
-                             'transfer_snapshot','boundary_snapshot','about_snapshot','info_snapshot','grid_snapshot','rect_snapshot','print_snapshot','resize_snapshot','canvas_snapshot','jump_snapshot','rainbow_snapshot','cp_snapshot','picker_snapshot','pal_snapshot','pal_picker_snapshot','native_menu_snapshot','prompts_snapshot'}:
-                capture_kinds[Path(action[1]).name] = action[0]
+                             'transfer_snapshot','boundary_snapshot','about_snapshot','info_snapshot','grid_snapshot','rect_snapshot','print_snapshot','resize_snapshot','canvas_snapshot','jump_snapshot','rainbow_snapshot','cp_snapshot','picker_snapshot','pal_snapshot','pal_picker_snapshot','native_menu_snapshot','context_native_snapshot','prompts_snapshot'}:
+                capture_kinds[Path(action[1]).name] = 'native_menu_snapshot' if action[0]=='context_native_snapshot' else action[0]
                 if action[0] == 'snapshot_small':
                     assert len(action) == 4 and int(action[2]) > 0 and int(action[3]) > 0
                     small_sizes[Path(action[1]).name] = (int(action[2]),int(action[3]))
@@ -61,7 +61,7 @@ for scenario in scenarios:
                 elif kind in {'color_snapshot','pal_picker_snapshot'}:
                     assert image.width>=280 and image.height>=400,('Color-circle capture too small',path)
                 elif kind == 'native_menu_snapshot':
-                    assert image.width>=160 and image.height>=140,('Menu capture too small',path)
+                    assert image.width>=96 and image.height>=140,('Menu capture too small',path) # Short category-only menus are legitimately narrower.
                 elif kind == 'snapshot_small':
                     assert image.size == small_sizes[path.name],('Small capture dimensions differ',path,image.size)
                 else:

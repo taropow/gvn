@@ -229,6 +229,7 @@ static HBITMAP icon_bitmap(UINT id, int size) {
         line(7, 6, 10, 3, green);
         line(10, 3, 13, 6, green);
         break;
+    case SaveAs:
     case Save:
         rectangle(3, 2, 17, 18, RGB(105, 128, 202));
         rectangle(6, 3, 14, 8, paper);
@@ -239,6 +240,10 @@ static HBITMAP icon_bitmap(UINT id, int size) {
         line(4, 4, 16, 16, red, 3);
         line(16, 4, 4, 16, red, 3);
         break;
+    case NewImage:
+        rectangle(4,2,16,18,paper);line(7,10,13,10,green,2);line(10,7,10,13,green,2);break;
+    case Cut:
+        circle(2,13,8,19,paper,blue);circle(11,13,17,19,paper,blue);line(6,15,15,2);line(13,15,4,2);break;
     case Copy:
         rectangle(2, 2, 12, 14, paper);
         rectangle(7, 6, 17, 18, paper);
@@ -348,6 +353,7 @@ static HBITMAP icon_bitmap(UINT id, int size) {
         }
         break;
     case MoreCommands:for(int x:{4,10,16})circle(x-1,9,x+1,11,RGB(50,55,63),RGB(50,55,63));break;
+    case ConfigureContextMenu:
     case Preferences:
         circle(3, 3, 17, 17, RGB(162, 174, 190), RGB(72, 86, 107));
         circle(7, 7, 13, 13, paper, RGB(72, 86, 107));

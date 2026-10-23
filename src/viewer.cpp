@@ -2391,6 +2391,9 @@ class App {
     }
 #include "viewer_editor.inc"
     void command(UINT id,bool keyboard=false) {
+        if(id==PopupContext){context_popup(cursor_screen());return;}
+        if(id==ConfigureContextMenu){preferences(PreferencePage::ContextMenu);return;}
+        if(id>=PopupAll&&id<=PopupExternal){popup_menu(id,cursor_screen());return;}
         if(!common_command_enabled(id,command_context()))return;
         // Resolve clipboard input before cancelling an in-progress edit or asking
         // to discard the current document. Unusable input is an intentional no-op.
@@ -3528,6 +3531,7 @@ class App {
             view.pan_x = (xmin + xmax) / 2, view.pan_y = (ymin + ymax) / 2;
         view.manual = true;
     }
+#include "viewer_context_menu.inc"
     void popup_menu(UINT action, POINT point) {
         auto root = menu(true);
         HMENU selected = root;
@@ -3634,9 +3638,12 @@ class App {
                                          settings.zoom_below, settings.zoom_above);
         view.zoom_to(target, x, y);
     }
-    void pointer_action(unsigned action, POINT point) {
+    void pointer_action(unsigned action, POINT point,bool right_context=false) {
         if (action == MouseNone)
             return;
+        if(action==PopupContext||(right_context&&action==PopupAll)){
+            auto p=client_point(point);ClientToScreen(hwnd,&p);context_popup(p);return;
+        }
         if (action == MouseZoomIn || action == MouseZoomOut) {
             step_zoom(action == MouseZoomIn, point.x, point.y - top);
             update();
@@ -3674,7 +3681,7 @@ class App {
             if(selection_tool==SelectionTool::Pen&&!floating){start_pen(point);return;}
             if(selection_tool==SelectionTool::Text&&!floating){start_text(point);return;}
         }
-        if(floating&&!space_pan){
+        if(floating&&!space_pan&&button!=1){
             if(button==0&&point.x>=0&&point.x<view.width){SetFocus(hwnd);const auto p=floating_point(point);
                 floating_drag_button=button;floating_drag=FloatingDrag{floating->box,p,floating_hit(floating->box,p,7./view.scale)};SetCapture(hwnd);}
             return;
@@ -3721,7 +3728,7 @@ class App {
     void pointer_up(unsigned button, POINT point) {
         if(button==0&&pen_player){finish_pen(point);return;}
         if(button==0&&crop_drag){cropping->box=crop_drag->moved(floating_point(point),(GetKeyState(VK_SHIFT)&0x8000)!=0);crop_drag.reset();if(GetCapture()==hwnd)ReleaseCapture();update();return;}
-        if(floating&&!space_pan){
+        if(floating&&!space_pan&&button!=1){
             if(button==floating_drag_button&&floating_drag){floating->box=floating_drag->moved(floating_point(point),(GetKeyState(VK_SHIFT)&0x8000)!=0);
                 floating_drag.reset();if(GetCapture()==hwnd)ReleaseCapture();update();}
             return;
@@ -3744,6 +3751,8 @@ class App {
             active_drag_button = active_drag_action = 0;
             panning = selecting = drag_pending = false;
         }
+        if(button==1){const int threshold=std::max(1,MulDiv(settings.mouse.drag_threshold,GetDpiForWindow(hwnd),96));
+            press.moved=press.moved||std::abs(point.x-press.origin.x)>threshold||std::abs(point.y-press.origin.y)>threshold;}
         mouse_presses[button] = {};
         mouse_buttons &= ~(1u << button);
         if (!mouse_buttons && GetCapture() == hwnd)
@@ -3762,7 +3771,7 @@ class App {
                 settings.mouse.action(static_cast<MouseGesture>(button), press.held, press.modifiers);
             if (action)
                 consume_pointer(press.held);
-            pointer_action(action, point);
+            pointer_action(action, point,button==1&&!press.held&&!press.modifiers);
         }
         if (was_view_drag) {
             finish_overlay_scroll();
@@ -4230,6 +4239,7 @@ class App {
                 smoke_error = e.what();
             }
             EndPaint(hwnd, &ps);
+            toast.repaint();
             return 0;
         }
         case WM_PRINTCLIENT:
@@ -4255,7 +4265,10 @@ class App {
         }
         case WM_INITMENUPOPUP:
             // The system menu owns SC_CLOSE/SC_MAXIMIZE availability itself.
-            if (!HIWORD(l)) refresh_menu_state(reinterpret_cast<HMENU>(w),command_context());
+            if(!HIWORD(l)){
+                const auto menu=reinterpret_cast<HMENU>(w);
+                if(contextual_menu(menu))context_init(menu);else refresh_menu_state(menu,command_context());
+            }
             ui_theme_menu(reinterpret_cast<HMENU>(w));
             return 0;
         case WM_SETTINGCHANGE:
@@ -4460,12 +4473,12 @@ class App {
             POINT point{GET_X_LPARAM(l), GET_Y_LPARAM(l)};
             if (point.x == -1) {
                 GetCursorPos(&point);
-                popup_menu(PopupAll, point);
+                context_popup(point);
             } else {
                 ScreenToClient(hwnd, &point);
                 pointer_action(
                     settings.mouse.action(MouseGesture::RightClick, mouse_buttons, pointer_modifiers()),
-                    canvas_point(point));
+                    canvas_point(point),!mouse_buttons&&!pointer_modifiers());
             }
             return 0;
         }

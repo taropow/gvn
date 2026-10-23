@@ -16,9 +16,10 @@
         auto next=app.settings;next.set_keys(Copy,{L"Ctrl+Shift+C"});next.toast_duration=500;app.apply_settings(next);app.command(Copy,true);
         CHECK(app.toast.key()==L"Ctrl+Shift+C");
         SendMessageW(app.toast.window(),WM_TIMER,1,0);CHECK(feedback_visible());
-        const auto limit=GetTickCount64()+2000;
+        const auto started=GetTickCount64();CHECK(app.toast.deadline()>=started+1900);
+        const auto limit=GetTickCount64()+4000;
         while(feedback_visible()&&GetTickCount64()<limit){pump();MsgWaitForMultipleObjectsEx(0,nullptr,10,QS_ALLINPUT,MWMO_INPUTAVAILABLE);}
-        CHECK(!feedback_visible()&&!app.toast.timer_active()&&notices.empty());
+        CHECK(!feedback_visible()&&!app.toast.timer_active()&&notices.empty()&&GetTickCount64()-started>=1900);
     }
     void feedback_silent_paste_failures_keep_document_and_pending_edit(){
         ShowWindow(app.hwnd,SW_SHOWNOACTIVATE);app.settings.confirm_unsaved=false;app.replace(selection_fixture(32,24),false,true);
@@ -84,7 +85,7 @@
         PreferencesDialog dialog(app.settings,[&](const Settings &next){app.apply_settings(next);});const auto window=dialog.create(app.hwnd);CHECK(window);ShowWindow(window,SW_SHOWNOACTIVATE);
         for(int id:{preference_id::ToastEnabled,preference_id::CommandSound})SendMessageW(dialog.control(id),BM_CLICK,0,0);
         SendMessageW(dialog.control(preference_id::ToastViewCommands),BM_CLICK,0,0);
-        SetWindowTextW(dialog.control(preference_id::ToastDuration),L"750");SendMessageW(dialog.control(preference_id::ApplyButton),BM_CLICK,0,0);
-        CHECK(!app.settings.toast_enabled&&!app.settings.command_sound&&app.settings.toast_view_commands&&app.settings.toast_duration==750);
+        SetWindowTextW(dialog.control(preference_id::ToastDuration),L"2500");SendMessageW(dialog.control(preference_id::ApplyButton),BM_CLICK,0,0);
+        CHECK(!app.settings.toast_enabled&&!app.settings.command_sound&&app.settings.toast_view_commands&&app.settings.toast_duration==2500);
         CHECK(!feedback_visible()&&!app.toast.timer_active());SendMessageW(dialog.control(IDCANCEL),BM_CLICK,0,0);
     }

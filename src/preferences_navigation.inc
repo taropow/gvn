@@ -8,7 +8,7 @@
     static int group_for(int page){switch(static_cast<Page>(page)){
         case Page::General:case Page::Window:return 0;
         case Page::Background:case Page::Display:case Page::Zoom:case Page::Fullscreen:case Page::Bars:return 1;
-        case Page::Keys:case Page::Mouse:case Page::MouseCustom:return 2;
+        case Page::Keys:case Page::Mouse:case Page::MouseCustom:case Page::ContextMenu:return 2;
         case Page::Move:case Page::FileOperations:case Page::Loading:return 3;
         case Page::Slideshow:return 4;case Page::Mask:return 5;case Page::External:return 6;default:return 0;}}
     std::wstring field_value(const Field &f) const{
@@ -49,7 +49,7 @@
         const auto matches=[&](const std::wstring &candidate){std::wistringstream words(query);std::wstring word;const auto haystack=folded(candidate);while(words>>word)if(haystack.find(word)==std::wstring::npos)return false;return true;};
         for(const auto &f:schema){const int page=int(f.page);const auto title=std::wstring(group_titles[group_for(page)])+L" › "+titles[page]+L" › "+f.label;
             if(matches(title+search_alias(f))){const auto row=SendMessageW(search_results,LB_ADDSTRING,0,reinterpret_cast<LPARAM>(title.c_str()));SendMessageW(search_results,LB_SETITEMDATA,row,search_targets.size());search_targets.push_back({page,f.id});}}
-        for(auto [page,alias]:{std::pair{Page::Keys,L"ショートカット キー キーバインド shortcut"},{Page::MouseCustom,L"マウス ボタン ホイール 割り当て ジェスチャ"},{Page::External,L"連携 外部アプリ クリスタ CLIP STUDIO Photoshop"},{Page::FileOperations,L"保存 コピー 移動 振り分け先 フォルダ"}}){
+        for(auto [page,alias]:{std::pair{Page::Keys,L"ショートカット キー キーバインド shortcut"},{Page::MouseCustom,L"マウス ボタン ホイール 割り当て ジェスチャ"},{Page::ContextMenu,L"右クリック コンテキスト メニュー カスタム 順序 区切り線"},{Page::External,L"連携 外部アプリ クリスタ CLIP STUDIO Photoshop"},{Page::FileOperations,L"保存 コピー 移動 振り分け先 フォルダ"}}){
             const auto title=std::wstring(titles[int(page)])+L" › "+alias;if(matches(title)){const auto row=SendMessageW(search_results,LB_ADDSTRING,0,reinterpret_cast<LPARAM>(title.c_str()));SendMessageW(search_results,LB_SETITEMDATA,row,search_targets.size());search_targets.push_back({int(page),0});}}
         if(search_targets.empty())SendMessageW(search_results,LB_ADDSTRING,0,reinterpret_cast<LPARAM>(L"一致する設定がありません"));
         else SendMessageW(search_results,LB_SETCURSEL,0,0);

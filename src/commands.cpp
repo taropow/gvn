@@ -25,6 +25,8 @@ const std::vector<CommandInfo> &command_catalog() {
             {Nearest, L"最近傍補間"},
             {Info, L"画像情報"},
             {ShowPrompt, L"プロンプト表示"},
+            {PopupContext,L"ポップアップ: 状態に応じた右クリックメニュー"},
+            {ConfigureContextMenu,L"右クリックメニューを設定…"},
             {Play, L"再生 / 一時停止"},
             {FramePrevious, L"前のフレーム"},
             {FrameNext, L"次のフレーム"},

@@ -1,0 +1,80 @@
+# Real native context menus; only owned popup MN messages, no global input.
+resize	1000	760
+settings
+tab	General
+set	ToastDuration	2000
+set	CommandSound	false
+set	UiTheme	2
+click	OK
+open	${fixtures}/display-alpha.png
+wait
+remember	source
+context_native_open
+context_native_snapshot	compact-dark.png
+context_native_pick	Copy
+toast_contains	コピーしました
+wait_ms	1100
+repaint_main
+expect	toast.visible	true
+snapshot	toast-after-repaint-1s.png
+wait_ms	1200
+expect	toast.visible	false
+context_native_open
+context_native_all
+context_native_snapshot	full-menu-lazy.png	all
+native_menu_close
+command	SelectRectangle
+command	Actual
+select_pixels	80	70	240	200
+context_native_open
+context_native_snapshot	selection-context.png
+native_menu_close
+command	SelectMove
+context_native_open
+context_native_snapshot	transform-context.png
+native_menu_close
+expect	floating.active	true
+context_native_open
+context_native_pick	CancelSelection
+expect	floating.active	false
+expect_same	source	true
+settings
+tab	ContextMenu
+set	ContextMode	2
+context_row	0
+click	ContextDown
+click	ContextRemove
+click	ContextSeparatorButton
+context_choice	Copy
+click	ContextAdd
+snapshot	custom-menu-settings.png
+click	OK
+persisted
+context_native_open
+context_native_snapshot	custom-context.png
+native_menu_close
+settings
+tab	ContextMenu
+set	ContextMode	1
+click	OK
+context_native_open
+context_native_snapshot	legacy-context.png
+native_menu_close
+settings
+tab	ContextMenu
+set	ContextMode	0
+tab	General
+set	UiTheme	1
+click	OK
+open	${fixtures}/blend.apng
+wait
+player	StopAnimation
+context_native_open
+context_native_snapshot	animation-context.png
+context_native_pick	FrameNext
+expect	frame	1
+command	CloseImage
+context_native_open
+context_native_snapshot	empty-context.png
+native_menu_close
+expect	error_count	0

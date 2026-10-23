@@ -441,7 +441,7 @@ const std::map<std::string, UINT> command_ids{
     C(ScrollDown),
     C(ScrollLeft),
     C(ScrollRight),
-    C(PopupAll),
+    C(PopupAll),C(PopupContext),C(ConfigureContextMenu),
     C(PopupView),
     C(ZoomNumber),
     C(Last),
@@ -561,7 +561,7 @@ const std::map<std::string, int> preference_ids{
     P(FullUp),
     P(HideTaskbar),
     P(HideWait),
-    P(Tabs),P(Groups),P(Search),P(SearchResults),P(ResetField),P(Related),P(UiTheme),P(UiDensity),P(ToolbarOverflow),P(ToastEnabled),P(CommandSound),P(ToastViewCommands),P(ToastDuration),
+    P(Tabs),P(Groups),P(Search),P(SearchResults),P(ResetField),P(Related),P(UiTheme),P(UiDensity),P(ToolbarOverflow),P(ToastEnabled),P(CommandSound),P(ToastViewCommands),P(ToastDuration),P(ContextMode),P(ContextList),P(ContextChoice),P(ContextAdd),P(ContextRemove),P(ContextUp),P(ContextDown),P(ContextSeparatorButton),
     P(WindowCenter),
     P(WindowToolbarMin),
     P(StartupPosition),
@@ -709,7 +709,7 @@ const std::map<std::string, int> page_ids{
 #define T(x) {#x, static_cast<int>(PreferencePage::x)}
     T(General), T(Background),  T(Window),         T(Display), T(Zoom), T(Fullscreen),
     T(Bars),    T(Move),        T(FileOperations), T(Loading), T(Mask), T(Keys),
-    T(Mouse),   T(MouseCustom), T(Slideshow),      T(External)
+    T(Mouse),   T(MouseCustom), T(Slideshow),      T(External),T(ContextMenu)
 #undef T
 };
 const std::map<std::string, DWORD> save_ids{
@@ -2903,6 +2903,40 @@ struct Autopilot {
             const auto from=point(std::stod(s.at(1)),op=="color_drag_hue"?0:std::stod(s.at(2))),to=point(std::stod(s.at(op=="color_drag_hue"?2:3)),op=="color_drag_hue"?0:std::stod(s.at(4)));
             SendMessageW(wheel,WM_LBUTTONDOWN,MK_LBUTTON,MAKELPARAM(from.x,from.y));SendMessageW(wheel,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(to.x,to.y));SendMessageW(wheel,WM_LBUTTONUP,0,MAKELPARAM(to.x,to.y));return;
         }
+        if(op=="context_row"){
+            const auto list=control("ContextList");const int row=std::stoi(s.at(1));require(row>=0&&row<SendMessageW(list,LB_GETCOUNT,0,0),"Context row missing");SendMessageW(list,LB_SETCURSEL,row,0);return;
+        }
+        if(op=="context_choice"){
+            const auto id=command_ids.at(s.at(1));size_t row{};while(row<context_menu_choices().size()&&context_menu_choices()[row].id!=id)++row;
+            require(row<context_menu_choices().size(),"Context choice missing");SendMessageW(control("ContextChoice"),CB_SETCURSEL,row,0);return;
+        }
+        if(op=="repaint_main"){InvalidateRect(app.hwnd,nullptr,FALSE);UpdateWindow(app.hwnd);return;}
+        if(op=="context_native_open"){
+            auto previous=std::move(app.dialogs.popup);
+            using Popup=std::function<UINT(HWND,HMENU,POINT)>;
+            struct Restore{Popup &target;Popup previous;~Restore(){target=std::move(previous);}} restore{app.dialogs.popup,std::move(previous)};
+            app.dialogs.popup=[](HWND owner,HMENU menu,POINT p)->UINT{ui_theme_menu(menu);return TrackPopupMenu(menu,TPM_RETURNCMD|TPM_RIGHTBUTTON,p.x,p.y,0,owner,nullptr);};
+            POINT p{app.left+24,app.top+24};ClientToScreen(app.hwnd,&p);app.context_popup(p);return;
+        }
+        if(op=="context_native_snapshot"||op=="context_native_pick"||op=="context_native_all"){
+            const auto desired=op=="context_native_snapshot"&&s.size()>2&&s[2]=="all"?app.contextual_all:app.contextual_root;
+            struct Search{HMENU menu;HWND window;} search{desired,{}};
+            EnumWindows([](HWND h,LPARAM data)->BOOL{DWORD pid{};GetWindowThreadProcessId(h,&pid);wchar_t cls[64]{};GetClassNameW(h,cls,64);
+                if(pid==GetCurrentProcessId()&&wcscmp(cls,L"#32768")==0&&(GetWindowLongPtrW(h,GWL_STYLE)&WS_VISIBLE)){
+                    MENUBARINFO info{sizeof(info)};auto &search=*reinterpret_cast<Search *>(data);
+                    if(GetMenuBarInfo(h,OBJID_CLIENT,0,&info)&&(!search.menu||search.menu==info.hMenu)){search.window=h;return FALSE;}}
+                return TRUE;},reinterpret_cast<LPARAM>(&search));
+            require(search.window!=nullptr,"Owned context popup missing");own(search.window);
+            if(op=="context_native_snapshot"){capture(search.window,output_path(s.at(1)),app.hwnd);return;}
+            int row=-1;const auto menu=app.contextual_root;require(menu!=nullptr,"Compact context root missing");
+            if(op=="context_native_all")row=GetMenuItemCount(menu)-1;
+            else{const auto id=command_ids.at(s.at(1));for(int n=0;n<GetMenuItemCount(menu);++n)if(GetMenuItemID(menu,n)==id){row=n;break;}}
+            require(row>=0&&!(GetMenuState(menu,row,MF_BYPOSITION)&(MF_GRAYED|MF_DISABLED|MF_SEPARATOR)),"Context item missing or disabled");
+            SendMessageW(search.window,0x1e5,row,0);require(GetMenuState(menu,row,MF_BYPOSITION)&MF_HILITE,"Context item did not highlight");
+            // Windows' internal MN protocol stays in this owned test driver.
+            if(op=="context_native_all")PostMessageW(search.window,0x1e3,0,0);
+            else{PostMessageW(search.window,0x1ed,row,0);PostMessageW(search.window,0x1ef,row,0);}return;
+        }
         if(op=="native_menu_open"){
             const int index=std::stoi(s.at(1));const auto submenu=GetSubMenu(app.main_menu,index);require(submenu!=nullptr,"Native menu index is missing");RECT item{};require(GetMenuItemRect(app.hwnd,app.main_menu,index,&item),"Native menu bar is hidden");ui_theme_menu(submenu);
             TrackPopupMenu(submenu,TPM_RETURNCMD|TPM_LEFTALIGN,item.left,item.bottom,0,app.hwnd,nullptr);return;
@@ -4611,9 +4645,9 @@ struct Autopilot {
                 "Scenario deadline exceeded after " + std::to_string(budget) + " ms";
         }
         std::ofstream report(output / L"result.json");
-        report << "{\"method\":\"GVN native controls; real modal dialogs; private station; timer-driven "
+        report << "{\"method\":\"GVN native controls; explicit context_native/native_menu actions use real popups; default popup choices are scripted; real modal dialogs; private station; timer-driven "
                   "scenario; PrintWindow/WM_PRINT + shared Direct2D scene; scripted confirmation "
-                  "replies; scripted private-desktop cursor position; popup selection, outgoing OLE loop, "
+                  "replies; scripted private-desktop cursor position; default popup choices, outgoing OLE loop, "
                   "optional new-viewer process launch and folder browser replies substituted and reported; incoming Shell folder data "
                   "delivered to actual registered IDropTarget; real native boundary dialog buttons; "
                   "audio requests counted without playing system sound; navigation bounded to owned "

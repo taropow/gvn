@@ -10,6 +10,9 @@ void CommandToast::dismiss(){
     if(!hwnd)return;
     KillTimer(hwnd,1);timer=false;busy=false;message.clear();shortcut.clear();ShowWindow(hwnd,SW_HIDE);
 }
+void CommandToast::repaint(){
+    if(hwnd&&(GetWindowLongPtrW(hwnd,GWL_STYLE)&WS_VISIBLE)){InvalidateRect(hwnd,nullptr,FALSE);UpdateWindow(hwnd);}
+}
 void CommandToast::show(HWND owner,RECT area,const std::wstring &value,const std::wstring &key,bool pending,UINT duration){
     if(!hwnd){
         WNDCLASSW cls{};cls.lpfnWndProc=procedure;cls.hInstance=GetModuleHandleW(nullptr);cls.lpszClassName=L"GVN.CommandToast";
@@ -20,11 +23,12 @@ void CommandToast::show(HWND owner,RECT area,const std::wstring &value,const std
     }
     message=value;shortcut=key;busy=pending;
     KillTimer(hwnd,1);timer=false;
-    if(!busy){expires=GetTickCount64()+duration;timer=SetTimer(hwnd,1,duration,nullptr)!=0;}
+    expires=0;
     layout(area);ShowWindow(hwnd,SW_SHOWNA);InvalidateRect(hwnd,nullptr,FALSE);
     // Paint the acceptance before a synchronous encoder/edit begins. Does not
     // dispatch unrelated queued commands or touch the canvas render target.
     UpdateWindow(hwnd);
+    if(!busy){duration=std::clamp(duration,2000u,10000u);expires=GetTickCount64()+duration;timer=SetTimer(hwnd,1,duration,nullptr)!=0;}
 }
 void CommandToast::layout(RECT area){
     canvas=area;if(!hwnd)return;
@@ -57,7 +61,7 @@ LRESULT CALLBACK CommandToast::procedure(HWND h,UINT m,WPARAM w,LPARAM l){
     if(m==WM_ERASEBKGND)return 1;
     if(m==WM_PAINT){PAINTSTRUCT ps{};auto dc=BeginPaint(h,&ps);self->paint(dc);EndPaint(h,&ps);return 0;}
     if(m==WM_PRINTCLIENT){self->paint(reinterpret_cast<HDC>(w));return 0;}
-    if(m==WM_TIMER&&w==1){if(GetTickCount64()>=self->expires)self->dismiss();return 0;}
+    if(m==WM_TIMER&&w==1){if(!self->busy&&self->timer&&GetTickCount64()>=self->expires)self->dismiss();return 0;}
     if(m==WM_NCDESTROY){KillTimer(h,1);self->hwnd=nullptr;self->timer=false;}
     return DefWindowProcW(h,m,w,l);
 }

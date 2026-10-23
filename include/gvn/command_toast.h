@@ -19,6 +19,8 @@ class CommandToast {
     void show(HWND,RECT,const std::wstring &,const std::wstring &,bool pending,UINT duration);
     void layout(RECT);
     void dismiss();
+    void repaint();
+    uint64_t deadline() const{return expires;}
     HWND window() const{return hwnd;}
     bool pending() const{return busy;}
     bool timer_active() const{return timer;}

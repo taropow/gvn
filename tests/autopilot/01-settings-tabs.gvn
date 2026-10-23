@@ -1,5 +1,5 @@
 settings
-expect	tabs	16
+expect	tabs	17
 snapshot	01-general.png
 tab	Background
 set	Checker	true

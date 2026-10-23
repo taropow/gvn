@@ -21,13 +21,14 @@ enum class PreferencePage {
     MouseCustom,
     Slideshow,
     External,
+    ContextMenu,
     Count
 };
 namespace preference_id {
 constexpr int Groups=103,Search=104,SearchResults=105,ResetField=106,Related=107;
 constexpr int Tabs = 100, ApplyButton = 101, Reset = 102, PageBase = 1000, ScrollBase = 1500;
 enum : int {
-    UiTheme=650,UiDensity,ToolbarOverflow,ToastEnabled,CommandSound,ToastViewCommands,ToastDuration,
+    UiTheme=650,UiDensity,ToolbarOverflow,ToastEnabled,CommandSound,ToastViewCommands,ToastDuration,ContextMode,
     Undo = 200,
     History,
     PasteNew,
@@ -203,6 +204,8 @@ constexpr int MouseList = 440, MouseGestureChoice = 441, MouseHeld = 442, MouseM
               MouseActionChoice = 444, MouseAssign = 445, MouseClear = 446, MouseInherit = 447,
               MouseExplanation = 448;
 constexpr int WindowCurrent = 450;
+constexpr int ContextList=720,ContextChoice=721,ContextAdd=722,ContextRemove=723,ContextUp=724,
+              ContextDown=725,ContextSeparatorButton=726,ContextHelp=727;
 constexpr int ExternalName = 460, ExternalSend = 461, ExternalShow = 462, ExternalVerb = 463,
               ExternalQuit = 464, ExternalSeparator = 465, ExternalArchiveMember = 466,
               ExternalArchiveFolder = 467, ExternalUp = 468, ExternalDown = 469, ExternalReset = 470,

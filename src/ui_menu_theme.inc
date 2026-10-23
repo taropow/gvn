@@ -6,15 +6,28 @@ struct MenuItem {
     HMENU menu{},submenu{};
     UINT position{},type{};
     bool bar{};
+    UINT command{};bool icon{};
 };
 std::map<HMENU,std::vector<MenuItem>> themed_menus;
+std::set<HMENU> icon_menus;
+struct MenuIcons {
+    std::map<std::tuple<UINT,int,bool,bool>,HICON> cache;
+    ~MenuIcons(){for(auto [key,icon]:cache)if(icon)DestroyIcon(icon);}
+    HICON get(UINT command,int size,bool disabled){
+        if(command==FileCopy||command==CopyPath||command==CopyFileName||command==CopyFolderPath||command==CopyFolderName)command=Copy;
+        else if(command==FileMove||(command>=ExternalBase&&command<ExternalBase+9)||command==External)command=ArmDrag;
+        else if(command==RenameFile)command=ToolPen;
+        const auto key=std::tuple{command,size,disabled,colors.dark};
+        const auto found=cache.find(key);if(found!=cache.end())return found->second;
+        return cache.emplace(key,command_icon(command,size,disabled)).first->second;}
+} menu_icons;
 void theme_menu(HMENU menu,bool bar){
     if(!menu)return;
     const int count=GetMenuItemCount(menu);if(count<0)return;
     auto &items=themed_menus[menu];items.resize(count);
     MENUINFO background{sizeof(background)};background.fMask=MIM_BACKGROUND;background.hbrBack=ui_brush(colors.surface);SetMenuInfo(menu,&background);
-    for(int n=0;n<count;++n){wchar_t title[2048]{};MENUITEMINFOW info{sizeof(info)};info.fMask=MIIM_STRING|MIIM_FTYPE|MIIM_SUBMENU;info.dwTypeData=title;info.cch=2048;if(!GetMenuItemInfoW(menu,n,TRUE,&info))continue;
-        auto &item=items[n];item.title=title;item.menu=menu;item.submenu=info.hSubMenu;item.position=n;item.type=info.fType&~MFT_OWNERDRAW;item.bar=bar;
+    for(int n=0;n<count;++n){wchar_t title[2048]{};MENUITEMINFOW info{sizeof(info)};info.fMask=MIIM_STRING|MIIM_FTYPE|MIIM_SUBMENU|MIIM_ID;info.dwTypeData=title;info.cch=2048;if(!GetMenuItemInfoW(menu,n,TRUE,&info))continue;
+        auto &item=items[n];item.title=title;item.menu=menu;item.submenu=info.hSubMenu;item.position=n;item.type=info.fType&~MFT_OWNERDRAW;item.bar=bar;item.command=info.wID;item.icon=!bar&&!info.hSubMenu&&icon_menus.contains(menu);
         item.accessible={MSAA_MENU_SIG,DWORD(item.title.size()),item.title.data()};
         MENUITEMINFOW draw{sizeof(draw)};draw.fMask=MIIM_FTYPE|MIIM_DATA;draw.fType=item.type|(colors.contrast?0:MFT_OWNERDRAW);draw.dwItemData=colors.contrast?0:reinterpret_cast<ULONG_PTR>(&item);SetMenuItemInfoW(menu,n,TRUE,&draw);
         if(info.hSubMenu)theme_menu(info.hSubMenu,false);
@@ -60,6 +73,8 @@ bool draw_menu(HWND owner,const DRAWITEMSTRUCT &draw,bool gaps){
     const UINT format=DT_SINGLELINE|DT_VCENTER|((draw.itemState&ODS_NOACCEL)?DT_HIDEPREFIX:0);
     label(owner,draw.hDC,title,text_area,ink,format|DT_LEFT);if(!item->bar)label(owner,draw.hDC,shortcut,text_area,disabled?colors.muted:ink,format|DT_RIGHT);
     if(draw.itemState&ODS_CHECKED){const int x=r.left+9*px,y=(r.top+r.bottom)/2;line(draw.hDC,x-2*px,y,x,y+3*px,ink,2*px);line(draw.hDC,x,y+3*px,x+5*px,y-3*px,ink,2*px);}
+    else if(item->icon){const int size=MulDiv(16,GetDpiForWindow(owner),96);
+        if(const auto icon=menu_icons.get(item->command,size,disabled))DrawIconEx(draw.hDC,r.left+6*px,(r.top+r.bottom-size)/2,icon,size,size,0,nullptr,DI_NORMAL);}
     if(item->submenu&&!item->bar){const int x=r.right-10*px,y=(r.top+r.bottom)/2;line(draw.hDC,x-2*px,y-3*px,x+px,y,ink);line(draw.hDC,x+px,y,x-2*px,y+3*px,ink);}
     if(item->bar&&gaps)menu_gaps(owner);return true;
 }

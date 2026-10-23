@@ -1,4 +1,5 @@
 #include "gvn/ui_theme.h"
+#include "gvn/commands.h"
 #include <commctrl.h>
 #include <windowsx.h>
 #include <dwmapi.h>
@@ -8,7 +9,10 @@
 #include <algorithm>
 #include <map>
 #include <string>
+#include <set>
+#include <tuple>
 namespace gvn {
+HICON command_icon(UINT,int,bool);
 namespace {
 UiPalette colors{RGB(246,247,249),RGB(255,255,255),RGB(35,39,46),RGB(104,112,124),RGB(216,220,226),RGB(30,104,210),RGB(227,238,253),RGB(255,255,255)};
 uint64_t generation{1};int density{};
@@ -101,7 +105,8 @@ void set_ui_theme(int mode,int spacing){
  else colors={RGB(246,247,249),RGB(255,255,255),RGB(35,39,46),RGB(104,112,124),RGB(216,220,226),RGB(30,104,210),RGB(227,238,253),RGB(255,255,255),false,false};
 }
 void ui_theme_menu(HMENU menu,bool bar){theme_menu(menu,bar);}
-void ui_destroy_menu(HMENU menu){if(menu){std::vector<HMENU> list;collect_menus(menu,list);DestroyMenu(menu);for(const auto handle:list)themed_menus.erase(handle);}}
+void ui_menu_icons(HMENU menu){if(menu){std::vector<HMENU> list;collect_menus(menu,list);for(auto h:list)icon_menus.insert(h);}}
+void ui_destroy_menu(HMENU menu){if(menu){std::vector<HMENU> list;collect_menus(menu,list);DestroyMenu(menu);for(const auto handle:list){themed_menus.erase(handle);icon_menus.erase(handle);}}}
 void ui_set_scroll_info(HWND h,const SCROLLINFO &info){
  SCROLLINFO old{sizeof(old),SIF_ALL};GetScrollInfo(h,SB_CTL,&old);
  const bool changed=((info.fMask&SIF_RANGE)&&(info.nMin!=old.nMin||info.nMax!=old.nMax))||((info.fMask&SIF_PAGE)&&info.nPage!=old.nPage)||((info.fMask&SIF_POS)&&info.nPos!=old.nPos);

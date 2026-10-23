@@ -2,7 +2,7 @@ open	${fixtures}/mask-reference/png/source-alpha.png
 wait
 remember	original
 menu	ConfigureMask
-expect	tabs	16
+expect	tabs	17
 expect_text	GlassSize	8
 expect_checked	FLNegative	true
 expect_checked	GlassRemainder	false

@@ -6973,6 +6973,7 @@ void background_changes_preserve_image_animation_copy_save_and_ole() {
 #include "daily_hotpath_app_cases.inc"
 #include "prompt_app_cases.inc"
 #include "everyday_app_cases.inc"
+#include "context_app_cases.inc"
 };
 } // namespace gvn
 
@@ -7362,3 +7363,8 @@ APP_TEST(everyday_damage_timer_and_minimized_updates)
 
 APP_TEST(everyday_copy_and_export_reuse_preserve_pixels_alpha_origin_and_metadata)
 APP_TEST(everyday_async_display_accepts_commands_preserves_quality_and_discards_stale_jobs)
+
+APP_TEST(context_compact_empty_selected_animation_and_lazy_full_menu)
+APP_TEST(context_keeps_floating_and_crop_until_explicit_apply_or_cancel)
+APP_TEST(context_preferences_customize_order_visibility_separators_apply_cancel_reset)
+APP_TEST(feedback_minimum_deadline_survives_pending_timer_and_canvas_repaint)

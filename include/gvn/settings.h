@@ -1,5 +1,6 @@
 #pragma once
 #include "commands.h"
+#include "context_menu.h"
 #include "mouse.h"
 #include "core.h"
 #include "loading.h"
@@ -27,6 +28,8 @@ struct Settings {
     bool toolbar_overflow{true};
     bool toast_enabled{true},command_sound{true},toast_view_commands{};
     int toast_duration{2000};
+    int context_menu_mode{}; // compact, legacy full menu, custom
+    std::vector<unsigned> context_menu_items=default_context_items();
     bool allow_multiple{true}, activate_reused{true}, activate_dropped{true};
     bool reopen_last{};
     bool disable_ime{true};

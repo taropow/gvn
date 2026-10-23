@@ -335,13 +335,15 @@ std::vector<Field> fields() {
     check(Page::General,cid::ToastEnabled,L"操作のトースト通知を表示する",&Settings::toast_enabled);
     check(Page::General,cid::CommandSound,L"操作完了時に短い確認音を鳴らす",&Settings::command_sound);
     check(Page::General,cid::ToastViewCommands,L"最前面・見開き・ループなどの表示切り替えも通知する",&Settings::toast_view_commands);
-    number(Page::General,cid::ToastDuration,L"トーストの表示時間（ms）",&Settings::toast_duration,500,10000);
+    number(Page::General,cid::ToastDuration,L"トーストの表示時間（ms）",&Settings::toast_duration,2000,10000);
+    combo(Page::ContextMenu,cid::ContextMode,L"右クリックメニュー",&Settings::context_menu_mode,
+          {L"コンパクト（状態に応じた操作）",L"従来の全メニュー",L"カスタム"});
     return out;
 }
 constexpr const wchar_t *titles[]{L"全般",       L"背景", L"ウィンドウ", L"表示",         L"ズーム",
                                   L"全画面表示", L"バー", L"移動",       L"ファイル操作", L"ファイル読み込み",
                                   L"マスク",     L"キー", L"マウス",     L"マウス割当",   L"スライド",
-                                  L"外部アプリ"};
+                                  L"外部アプリ",L"右クリック"};
 std::wstring get_text(HWND control) {
     std::wstring text(static_cast<size_t>(GetWindowTextLengthW(control)) + 1, L'\0');
     GetWindowTextW(control, text.data(), static_cast<int>(text.size()));
@@ -503,6 +505,8 @@ struct PreferencesDialog::Impl {
         return result;
     }
     void dependencies() {
+        const bool custom=SendMessageW(find(cid::ContextMode),CB_GETCURSEL,0,0)==2;
+        for(int id:{cid::ContextList,cid::ContextChoice,cid::ContextAdd,cid::ContextRemove,cid::ContextUp,cid::ContextDown,cid::ContextSeparatorButton})if(find(id))EnableWindow(find(id),custom);
         const auto checked = [&](int id) { return SendMessageW(find(id), BM_GETCHECK, 0, 0) == BST_CHECKED; };
         const auto enable = [&](int id, bool value) {
             EnableWindow(find(id), value);
@@ -776,6 +780,7 @@ struct PreferencesDialog::Impl {
             SetWindowSubclass(find(f.id), field_focus_proc, 2, reinterpret_cast<DWORD_PTR>(this));
         }
         pref_elapsed("page-schema",int(index),measured);measured=pref_now();
+        if(requested==Page::ContextMenu)initialize_context();
         if (requested == Page::Window) {
             make(pages[static_cast<int>(Page::Window)], L"BUTTON", L"現在の位置とサイズを取り込む",
                  WS_TABSTOP, cid::WindowCurrent);
@@ -852,6 +857,7 @@ struct PreferencesDialog::Impl {
         page_ready[index] = true;
         building = previous;remember_fields();
     }
+#include "preferences_context.inc"
     void initialize_external() {
         const auto page = pages[static_cast<size_t>(Page::External)];
         const auto labeled = [&](int id, const wchar_t *label, const wchar_t *cls, DWORD style) {
@@ -1363,6 +1369,7 @@ struct PreferencesDialog::Impl {
                 else
                     f.number_value(draft) = f.number_value(defaults);
             }
+        if(selected==int(Page::ContextMenu)){draft.context_menu_items=defaults.context_menu_items;fill_context();}
         if (selected == static_cast<int>(Page::Keys))
             draft.bindings = defaults.bindings;
         if (selected == static_cast<int>(Page::Move))
@@ -1475,6 +1482,7 @@ struct PreferencesDialog::Impl {
         content[static_cast<size_t>(Page::Background)] += 116;
         content[static_cast<size_t>(Page::FileOperations)] += 260;
         content[static_cast<size_t>(Page::External)] = 470;
+        content[size_t(Page::ContextMenu)]=390;
         content[static_cast<size_t>(Page::Mask)] = 354;
         const int page_height = MulDiv(area.bottom - area.top, 96, dpi);
         for (size_t i = 0; i < pages.size(); ++i) {
@@ -1614,6 +1622,14 @@ struct PreferencesDialog::Impl {
             at(cid::ExternalArchiveMember, 32, 282, w - 64, 26); at(cid::ExternalArchiveFolder, 32, 316, w - 64, 26);
             at(cid::ExternalReset, 18, 366, 250, 28); at(cid::ExternalHelp, 18, 406, w - 36, 56);
         }
+        if(selected==int(Page::ContextMenu)){
+            const int w=width-(content[selected]>page_height?MulDiv(GetSystemMetricsForDpi(SM_CXVSCROLL,dpi),96,dpi):0),offset=scroll_y[selected];
+            const auto at=[&](int id,int x,int y,int width,int height){place(find(id),x,y-offset,width,height);};
+            at(cid::ContextHelp,18,56,w-36,40);at(cid::ContextList,18,104,w-176,150);
+            at(cid::ContextUp,w-146,104,128,28);at(cid::ContextDown,w-146,140,128,28);
+            at(cid::ContextRemove,w-146,176,128,28);at(cid::ContextSeparatorButton,w-146,212,128,28);
+            at(cid::ContextChoice,18,270,w-176,260);at(cid::ContextAdd,w-146,270,128,28);
+        }
         int bottom = static_cast<int>(rc.bottom) - px(43), right = static_cast<int>(rc.right) - px(12);
         MoveWindow(find(cid::Reset), px(12), bottom, px(205), px(29), TRUE);
         for (int id : {cid::ApplyButton, IDCANCEL, IDOK}) {
@@ -1714,6 +1730,8 @@ struct PreferencesDialog::Impl {
         }
         if (m == WM_COMMAND) {
             const int id = LOWORD(w), code = HIWORD(w);
+            if((id==cid::ContextList&&code==LBN_SELCHANGE)||(id==cid::ContextChoice&&code==CBN_SELCHANGE))return TRUE;
+            if(!building&&context_action(id))return TRUE;
             if(id==cid::Search&&code==EN_CHANGE){search_changed();return TRUE;}
             if(id==cid::SearchResults){if(code==LBN_DBLCLK)open_search_result();return TRUE;}
             if(id==cid::ResetField){reset_field(focused_field);return TRUE;}

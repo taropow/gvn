@@ -1718,8 +1718,18 @@ TEST(command_feedback_settings_defaults_persist_and_clamp){
     const auto path=std::filesystem::temp_directory_path()/L"gvn-feedback-settings-test.ini";
     value.toast_enabled=false;value.command_sound=false;value.toast_view_commands=true;value.toast_duration=750;value.save(path);
     WritePrivateProfileSectionW(L"Interface",L"ui_theme=1\0\0",path.c_str());
-    Settings next;next.load(path);CHECK(!next.toast_enabled&&!next.command_sound&&next.toast_view_commands&&next.toast_duration==750);
-    WritePrivateProfileStringW(L"Feedback",L"toast_duration",L"1",path.c_str());next.load(path);CHECK(next.toast_duration==500);
+    Settings next;next.load(path);CHECK(!next.toast_enabled&&!next.command_sound&&next.toast_view_commands&&next.toast_duration==2000);
+    WritePrivateProfileStringW(L"Feedback",L"toast_duration",L"1",path.c_str());next.load(path);CHECK(next.toast_duration==2000);
     WritePrivateProfileStringW(L"Feedback",L"toast_duration",L"999999",path.c_str());next.load(path);CHECK(next.toast_duration==10000);
     std::filesystem::remove(path);
+}
+
+TEST(context_menu_defaults_roundtrip_and_validation_preserve_custom_bindings){
+    const auto path=std::filesystem::temp_directory_path()/(L"GVN-context-"+std::to_wstring(GetCurrentProcessId())+L".ini");
+    Settings s;CHECK(s.context_menu_mode==0&&s.context_menu_items==default_context_items());
+    s.context_menu_mode=2;s.context_menu_items={Paste,0,Copy,ContextFile,0,ContextRotate};s.mouse.assign(MouseGesture::RightClick,0,0,Info);s.set_keys(Copy,{L"Ctrl+Shift+C"});s.save(path);
+    Settings copy;copy.load(path);CHECK(copy.context_menu_mode==2&&copy.context_menu_items==s.context_menu_items&&copy.mouse.exact(MouseGesture::RightClick,0,0)==Info&&copy.keys_for(Copy)==s.keys_for(Copy));
+    WritePrivateProfileStringW(L"ContextMenu",L"Mode",L"99",path.c_str());WritePrivateProfileStringW(L"ContextMenu",L"0",L"4294967295",path.c_str());WritePrivateProfileStringW(L"ContextMenu",L"2",L"not-an-id",path.c_str());
+    copy.load(path);CHECK(copy.context_menu_mode==2&&copy.context_menu_items==std::vector<unsigned>{0,ContextFile,0,ContextRotate});
+    CHECK(validated_context_items(std::vector<unsigned>{Copy,Copy,0,0,Paste})==std::vector<unsigned>{Copy,0,0,Paste});std::filesystem::remove(path);
 }

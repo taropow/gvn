@@ -249,6 +249,8 @@ enum Command {
     ToolCrop,
     Redo,
     ShowPrompt,
+    PopupContext,
+    ConfigureContextMenu,
     CopyDestBase = 1000,
     MoveDestBase = 1010,
     ExternalBase = 1030,
