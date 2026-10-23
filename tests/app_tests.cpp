@@ -1515,6 +1515,24 @@ struct AppAudit {
         CHECK(!app.image && !app.undo_image && app.loader->stats().cache_bytes == 0);
         CHECK(app.loader->stats().foreground_bytes == 0);
     }
+    void unusable_clipboard_is_silent_before_cancelling_pending_edits() {
+        app.settings.confirm_unsaved=false;app.replace(selection_fixture(48,32),false,true);command(Negative);
+        const auto original=app.image,undo=app.undo_image;const auto source=selection_fixture(12,8);
+        copy_image(app.hwnd,source,0);command(PasteSelection);CHECK(app.floating);
+        const auto floating_source=app.floating->source;const auto notices_before=notices.size();
+        clipboard_text(L"ordinary text, not an image");const auto sequence=GetClipboardSequenceNumber();
+        for(auto id:{Paste,NewPaste,PasteSelection,NewWindowPaste}){command(id);CHECK(app.floating&&app.floating->source==floating_source&&app.image==original&&app.undo_image==undo&&app.modified);}
+        CHECK(GetClipboardSequenceNumber()==sequence&&notices.size()==notices_before&&new_windows.empty());
+        command(CancelSelection);command(ToolCrop);CHECK(app.cropping);const auto crop=app.cropping->box;
+        for(auto id:{Paste,NewPaste,PasteSelection,NewWindowPaste}){command(id);CHECK(app.cropping&&app.cropping->box.cx==crop.cx&&app.cropping->box.cy==crop.cy&&app.image==original&&app.undo_image==undo);}
+        command(CancelSelection);
+        CHECK(OpenClipboard(app.hwnd));CHECK(EmptyClipboard());const auto broken=GlobalAlloc(GMEM_MOVEABLE|GMEM_ZEROINIT,8);CHECK(broken);CHECK(SetClipboardData(RegisterClipboardFormatW(L"PNG"),broken));CHECK(CloseClipboard());
+        for(auto id:{Paste,NewPaste,PasteSelection,NewWindowPaste}){command(id);CHECK(app.image==original&&app.undo_image==undo&&app.modified&&!app.floating&&!app.loading);}
+        CHECK(notices.size()==notices_before&&new_windows.empty());command(CloseImage);CHECK(!app.image);
+        const POINT point{100,app.top+100};app.message(WM_LBUTTONDOWN,MK_LBUTTON,MAKELPARAM(point.x,point.y));app.message(WM_LBUTTONUP,0,MAKELPARAM(point.x,point.y));
+        CHECK(!app.image&&!app.loading&&notices.size()==notices_before);
+        copy_image(app.hwnd,source,0);command(Paste);CHECK(app.image&&app.image->frames[0].pixels==source.frames[0].pixels);
+    }
     void empty_canvas_tap_pastes_rgba_or_path_and_restores_status_parts() {
         app.settings.confirm_unsaved = false;
         app.update();
@@ -1611,7 +1629,7 @@ struct AppAudit {
         command(Paste);
         wait();
         CHECK(app.image == current && app.folder == folder && same_path(app.requested, next));
-        CHECK(notices.size() == before_notices + 1);
+        CHECK(notices.size() == before_notices);
         const auto corrupt = temporary / L"corrupt.png";
         std::ofstream(corrupt) << "not an image";
         clipboard_text(corrupt.wstring());
@@ -1621,9 +1639,11 @@ struct AppAudit {
         for (const auto &invalid : {L"", L"relative.png", L"C:relative.png", L"https://example.org/a.png",
                                     L"C:\\first.png\r\nC:\\second.png", L"C:\\unsupported.exe"}) {
             clipboard_text(invalid);
-            THROWS(app.command(Paste));
+            app.command(Paste);
             CHECK(app.image == current && same_path(app.requested, next) && !app.loading);
         }
+        CHECK(notices.size()==before_notices);
+        app.open(corrupt);wait();CHECK(notices.size()==before_notices+1); // Explicit opens still report real errors.
         CHECK(read_file(first) == read_file(fixture(L"alpha.png")));
     }
     void viewer_defaults_skip_unsaved_prompt_and_zoom_wheel() {
@@ -3582,7 +3602,7 @@ struct AppAudit {
         CHECK(std::get<std::filesystem::path>(new_windows.back()) == fixture(L"alpha.png"));
         clipboard_text(L"ordinary unsupported text");
         sequence = GetClipboardSequenceNumber();
-        THROWS(command(NewWindowPaste));
+        command(NewWindowPaste);
         CHECK(new_windows.size() == 2 && GetClipboardSequenceNumber() == sequence);
         CHECK(app.image == image && app.undo_image == undo && app.modified && notices.empty());
     }
@@ -7034,6 +7054,7 @@ APP_TEST(jump_commits_only_accept_and_keeps_cancelled_modified_image)
 APP_TEST(jump_cancels_pending_load_and_honors_all_comic_direction_flags)
 APP_TEST(jump_changed_document_does_not_apply_old_choice_or_settings)
 APP_TEST(jump_retires_busy_preview_without_blocking_main_loader_or_accumulating_services)
+APP_TEST(unusable_clipboard_is_silent_before_cancelling_pending_edits)
 APP_TEST(clipboard_full_paths_open_files_and_keep_alpha)
 APP_TEST(clipboard_path_cancel_invalid_and_failed_load_preserve_document)
 APP_TEST(selection_crop_resize_canvas_and_undo)

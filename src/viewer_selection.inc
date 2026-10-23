@@ -1,12 +1,10 @@
-    void begin_floating() {
-        if(cropping)cancel_crop();
-        if(loading)throw std::runtime_error("Wait for the current image to finish loading");
-        auto content=paste_selection_clipboard(hwnd);
+    void begin_floating(SelectionClipboard content) {
         auto source=std::make_shared<Image>(still_frame(content.image,0,false));
-        if(floating)cancel_floating();
         auto canvas=image?std::make_shared<Image>(still_frame(*image,player.frame,false)):
             std::make_shared<Image>(new_image(content.origin?content.origin->canvas_width:source->width,
                                               content.origin?content.origin->canvas_height:source->height,edit_memory()));
+        if(cropping)cancel_crop();
+        if(floating)cancel_floating();
         FloatingPaste next{image,canvas,source,{},player,view,content.origin,slideshow,content.invalid_metadata};
         next.previous_selection=selection;
         next.box={double(content.origin?content.origin->x:0)+source->width/2.,double(content.origin?content.origin->y:0)+source->height/2.,double(source->width),double(source->height),0};

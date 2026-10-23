@@ -1,3 +1,5 @@
+GVN 0.68.1: 貼り付けに使える画像やパスがない場合は、エラーを表示せず何もしません。空キャンバスのタップと選択範囲でのペーストも同様です。[仕様](docs/gvn-clipboard-interop.md)、[確認記録](docs/verification/0.68.1-quiet-paste-related.json)。
+
 GVN 0.68.0: 色相リング＋彩度・明度の四角いエリア、RGB／HSV／16進数入力の共通カラー選択画面を追加。メニューバー・ポップアップメニュー・スクロールバーもテーマの色に統一しました。
 
 [操作・仕様](docs/gvn-editor-mode.md)、[確認記録](docs/verification/0.68.0-color-circle-related.json)。普段使い用は `G:\gvn\app\gvd.exe`。

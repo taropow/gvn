@@ -76,7 +76,7 @@ static std::wstring size_text(uint64_t bytes) {
 class App {
     friend struct AppAudit;
     friend struct Autopilot;
-    enum class OpenOrigin { Explicit, WithinFolder, Folder, Startup };
+    enum class OpenOrigin { Explicit, WithinFolder, Folder, Startup, Clipboard };
     // Keep native dialogs at the boundary so command tests can supply deterministic answers.
     struct Dialogs {
         decltype(std::function{gvn::choose_resize}) resize = gvn::choose_resize;
@@ -189,7 +189,7 @@ class App {
         size_t index{};
         bool removed{};
         std::optional<Location> replaced;
-        bool navigation_before{}, next_navigation{}, no_activate{};
+        bool navigation_before{}, next_navigation{}, no_activate{}, quiet{};
         std::filesystem::path source_folder, remember_departed;
     };
     std::optional<LoadRollback> before_load;
@@ -1192,7 +1192,8 @@ class App {
         }
         before_load->next_navigation = next_navigation;
         before_load->no_activate = false;
-        if (origin == OpenOrigin::Explicit)
+        before_load->quiet = origin == OpenOrigin::Clipboard;
+        if (origin == OpenOrigin::Explicit || origin == OpenOrigin::Clipboard)
             before_load->remember_departed = before_load->source_folder;
         pending_folder.reset();
         pending_open.reset();
@@ -1261,10 +1262,12 @@ class App {
             return;
         loading = false;
         if (!result->error.empty()) {
+            const bool quiet = before_load && before_load->quiet;
             const bool folder_error = pending_folder.has_value();
             pending_folder.reset();
             pending_open.reset();
             rollback_load();
+            if (quiet) {update();return;}
             if (smoke) {
                 smoke_error = result->error;
                 finish_smoke();
@@ -1286,8 +1289,9 @@ class App {
             }
             auto &match = *result->open_match;
             if (match.path.empty()) {
+                const bool quiet = before_load && before_load->quiet;
                 rollback_load();
-                if (!intent->allow_empty)
+                if (!intent->allow_empty && !quiet)
                     dialogs.ask(hwnd, L"このフォルダには対応画像がありません。", L"GVN", MB_OK);
                 update();
                 return;
@@ -2404,11 +2408,19 @@ class App {
 #include "viewer_editor.inc"
     void command(UINT id) {
         if(!common_command_enabled(id,command_context()))return;
+        // Resolve clipboard input before cancelling an in-progress edit or asking
+        // to discard the current document. Unusable input is an intentional no-op.
+        std::optional<ClipboardContent> paste_input;
+        std::optional<SelectionClipboard> selection_input;
+        try {
+            if(id==Paste||id==NewPaste||id==NewWindowPaste)paste_input=paste_clipboard(hwnd);
+            if(id==PasteSelection){if(loading)return;selection_input=paste_selection_clipboard(hwnd);}
+        } catch(const std::exception &) {return;}
         if(id==ToolPen||id==ToolText){choose_tool(id==ToolPen?SelectionTool::Pen:SelectionTool::Text);return;}
         if(id==ToolCrop){begin_crop();return;}
         if(cropping){if(id==CommitSelection){commit_crop();return;}if(id==CancelSelection||id==Undo||id==ClearSelection){cancel_crop();return;}
             const bool viewing=(id>=ZoomIn&&id<=Nearest)||(id>=ScrollUp&&id<=ScrollCenter)||id==ToggleMenu||id==ToggleToolbar||id==ToggleStatus;
-            if(!viewing&&id!=ToggleEditor)cancel_crop();}
+            if(!viewing&&id!=ToggleEditor&&id!=PasteSelection)cancel_crop();}
         if(id==ToggleEditor){set_edit_mode(!editor_mode);return;}
         if(floating){
             if(id==CommitSelection){commit_floating();return;}
@@ -2422,7 +2434,7 @@ class App {
             if(leaving)cancel_floating();
             else if(!viewing&&id!=PasteSelection){status_text(image?4:0,L"先に貼り付けを確定するか、中止してください");return;}
         }
-        if(id==PasteSelection){begin_floating();return;}
+        if(id==PasteSelection){try{begin_floating(std::move(*selection_input));}catch(const std::exception &){}return;}
         if(id==CommitSelection||id==CancelSelection||id==TransformSelection)return;
         if ((id >= PopupAll && id <= PopupExternal) || id == ViewRotate || id == Wallpaper) {
             popup_menu(id, cursor_screen());
@@ -2866,9 +2878,10 @@ class App {
             break;
         case Paste:
         case NewPaste: {
-            auto content = paste_clipboard(hwnd);
+            try {
+            auto content = std::move(*paste_input);
             if (auto path = std::get_if<std::filesystem::path>(&content)) {
-                open(*path);
+                open(*path,false,true,OpenOrigin::Clipboard);
                 break;
             }
             auto pasted = std::move(std::get<Image>(content));
@@ -2884,6 +2897,7 @@ class App {
             if (discard()) {
                 replace_clipboard_document(std::move(pasted));
             }
+            } catch(const std::exception &) {} // Failed paste keeps the document and stays silent.
             break;
         }
         case CloseImage:
@@ -3383,7 +3397,7 @@ class App {
                 copy_current_selection(frame);
                 content = std::move(frame);
             } else if (id == NewWindowPaste) {
-                auto pasted = paste_clipboard(hwnd);
+                auto pasted = std::move(*paste_input);
                 if (auto path = std::get_if<std::filesystem::path>(&pasted))
                     content = std::move(*path);
                 else

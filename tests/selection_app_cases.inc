@@ -125,9 +125,9 @@
         CHECK(app.floating->source->frames[0].pixels==source.frames[0].pixels);
         app.editing.allocating=[](size_t){throw std::bad_alloc();};THROWS(command(CommitSelection));
         CHECK(app.floating&&app.image==original&&app.undo_image==undo&&!app.modified);app.editing.allocating={};
-        command(CancelSelection);app.loading=true;THROWS(command(PasteSelection));app.loading=false;
+        command(CancelSelection);app.loading=true;command(PasteSelection);app.loading=false;
         CHECK(!app.floating&&app.image==original);
-        clipboard_text(L"This is not an image path");THROWS(command(PasteSelection));CHECK(app.image==original&&app.undo_image==undo);
+        clipboard_text(L"This is not an image path");command(PasteSelection);CHECK(app.image==original&&app.undo_image==undo);
         open(fixture(L"blend.apng"));const auto animation=app.image;const auto frame=app.player.frame;const bool playing=app.player.playing;
         copy_image(app.hwnd,source,0);command(PasteSelection);CHECK(!app.player.playing&&app.image==animation);
         command(CancelSelection);CHECK(app.player.frame==frame&&app.player.playing==playing&&app.image==animation);

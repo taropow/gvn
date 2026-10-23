@@ -1,0 +1,46 @@
+# Private clipboard only: unsupported/corrupt input stays silent and preserves UI state.
+focus	Main
+clipboard_data	text/plain	${fixtures}/invalid.bin
+key	Ctrl+V
+command	NewPaste
+command	PasteSelection
+command	NewWindowPaste
+expect	has_image	false
+expect	error_count	0
+clipboard_data	PNG	${fixtures}/invalid.bin
+key	Ctrl+V
+expect	has_image	false
+expect	error_count	0
+open	${fixtures}/display-alpha.png
+wait
+remember	original
+command	ToolCrop
+clipboard_data	text/plain	${fixtures}/invalid.bin
+key	Ctrl+V
+command	PasteSelection
+expect	crop.active	true
+expect_same	original	true
+command	CancelSelection
+clipboard_path	${output}/missing.png
+key	Ctrl+V
+wait
+expect_same	original	true
+expect	error_count	0
+clipboard_path	${fixtures}/truncated.psd
+key	Ctrl+V
+wait
+expect_same	original	true
+expect	error_count	0
+clipboard_data	PNG	${fixtures}/alpha.png
+command	PasteSelection
+expect	floating.active	true
+clipboard_data	text/plain	${fixtures}/invalid.bin
+key	Ctrl+V
+command	PasteSelection
+expect	floating.active	true
+expect_same	original	true
+command	CancelSelection
+clipboard_data	PNG	${fixtures}/alpha.png
+command	NewPaste
+pixel_copy
+expect	error_count	0
