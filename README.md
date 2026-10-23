@@ -1,3 +1,7 @@
+GVN 0.68.0: 色相リング＋彩度・明度の四角いエリア、RGB／HSV／16進数入力の共通カラー選択画面を追加。メニューバー・ポップアップメニュー・スクロールバーもテーマの色に統一しました。
+
+[操作・仕様](docs/gvn-editor-mode.md)、[確認記録](docs/verification/0.68.0-color-circle-related.json)。普段使い用は `G:\gvn\app\gvd.exe`。
+
 GVN 0.67.0: 共通テーマ（OS追従／ライト／ダーク）、整理した設定カテゴリと検索、編集オプションの詳細開閉、狭い窓の「その他」を追加。基準点は青い9マスにし、ステータスバーは「ドラッグ・ファイル名・形式」の順にしました。
 
 [操作と設計](docs/gvn-editor-mode.md)、[確認記録](docs/verification/0.67.0-modern-ui-related.json)。普段使い用は `G:\gvn\app\gvd.exe`。旧ウィンドウを閉じずに更新でき、次の起動から新しい版を使います。従来の作業をmainへ取り込み、今回の変更はcodex/modern-uiで管理しています。

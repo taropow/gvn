@@ -12,4 +12,7 @@ HBRUSH ui_brush(COLORREF);
 int ui_button_size(bool large);
 int ui_icon_size(bool large);
 LRESULT ui_toolbar_draw(LPARAM);
+void ui_theme_menu(HMENU,bool menubar=false);
+void ui_destroy_menu(HMENU);
+void ui_set_scroll_info(HWND,const SCROLLINFO &);
 }

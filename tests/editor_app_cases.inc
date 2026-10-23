@@ -57,7 +57,7 @@
     void editor_short_window_tools_scroll_and_animation_layout() {
         ShowWindow(app.hwnd,SW_SHOWNOACTIVATE);app.settings.confirm_unsaved=false;app.replace(selection_fixture(),false,true);command(ToggleEditor);
         SetWindowPos(app.hwnd,nullptr,0,0,360,240,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE);app.layout();
-        SCROLLINFO info{sizeof(info),SIF_ALL};CHECK(GetScrollInfo(app.editor_tools.bar_window(),SB_VERT,&info));CHECK(info.nMax>int(info.nPage));
+        SCROLLINFO info{sizeof(info),SIF_ALL};CHECK(GetScrollInfo(app.editor_tools.scroll_window(),SB_CTL,&info));CHECK(info.nMax>int(info.nPage));
         SendMessageW(app.editor_tools.bar_window(),WM_VSCROLL,SB_BOTTOM,0);RECT tools{},bar{};GetWindowRect(app.editor_tools.hwnd,&bar);GetWindowRect(app.editor_tools.bar_window(),&tools);CHECK(bar.top<tools.top);
         const int left=app.left;SendMessageW(app.editor_tools.bar_window(),WM_VSCROLL,SB_TOP,0);GetWindowRect(app.editor_tools.hwnd,&bar);CHECK(bar.top==tools.top&&app.left==left);
         open(fixture(L"blend.apng"));CHECK(app.editor_mode&&app.image->animated());

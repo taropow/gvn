@@ -46,7 +46,7 @@ for scenario in scenarios:
         for step in data['steps']:
             action = step['action'].split('\t')
             if action[0] in {'snapshot','snapshot_small','fit_snapshot','font_snapshot','color_snapshot','save_snapshot',
-                             'transfer_snapshot','boundary_snapshot','about_snapshot','info_snapshot','grid_snapshot','rect_snapshot','print_snapshot','resize_snapshot','canvas_snapshot','jump_snapshot','rainbow_snapshot','cp_snapshot','picker_snapshot'}:
+                             'transfer_snapshot','boundary_snapshot','about_snapshot','info_snapshot','grid_snapshot','rect_snapshot','print_snapshot','resize_snapshot','canvas_snapshot','jump_snapshot','rainbow_snapshot','cp_snapshot','picker_snapshot','pal_snapshot','pal_picker_snapshot','native_menu_snapshot'}:
                 capture_kinds[Path(action[1]).name] = action[0]
                 if action[0] == 'snapshot_small':
                     assert len(action) == 4 and int(action[2]) > 0 and int(action[3]) > 0
@@ -58,11 +58,21 @@ for scenario in scenarios:
                 minimum_height = 100 if kind in {'boundary_snapshot','about_snapshot'} else 200
                 if kind == 'fit_snapshot':
                     assert image.width>=64 and image.height>=64,('Fitted window capture too small',path)
+                elif kind in {'color_snapshot','pal_picker_snapshot'}:
+                    assert image.width>=280 and image.height>=400,('Color-circle capture too small',path)
+                elif kind == 'native_menu_snapshot':
+                    assert image.width>=160 and image.height>=140,('Menu capture too small',path)
                 elif kind == 'snapshot_small':
                     assert image.size == small_sizes[path.name],('Small capture dimensions differ',path,image.size)
                 else:
                     assert image.width>=300 and image.height>=minimum_height,('Capture too small',path)
-                assert len(image.convert('RGB').getcolors(image.width*image.height) or [])>=8,('Blank/monochrome window capture',path)
+                colors = image.convert('RGB').getcolors(image.width*image.height) or []
+                if kind == 'native_menu_snapshot':
+                    # Native GDI menu fonts on this private desktop are aliased:
+                    # background, text and separators are exactly three colors.
+                    assert len(colors)>=3 and sum(count for count,_ in colors)-max(count for count,_ in colors)>=500,('Menu text/border pixels missing',path)
+                else:
+                    assert len(colors)>=8,('Blank/monochrome window capture',path)
                 captures.append({'name':path.name,'kind':kind,'size':list(image.size),'sha256':hashlib.sha256(path.read_bytes()).hexdigest()})
         summary['scenarios'].append({'name':scenario.name,'scenario_sha256':scenario_hashes[scenario.resolve()],
                                      'passed':True,'steps':len(data['steps']),'captures':captures})

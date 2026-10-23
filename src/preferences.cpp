@@ -1,3 +1,4 @@
+#include "gvn/color_dialog.h"
 #include "gvn/preferences.h"
 #include "gvn/ui_theme.h"
 #include "gvn/ui.h"
@@ -581,7 +582,7 @@ struct PreferencesDialog::Impl {
     static LRESULT CALLBACK field_focus_proc(HWND h, UINT m, WPARAM w, LPARAM l, UINT_PTR, DWORD_PTR data) {
         const auto self=reinterpret_cast<Impl *>(data);
         if(m==WM_SETFOCUS){self->reveal_control(h);self->focused_field=GetDlgCtrlID(h);if(self->focused_field>=5000)self->focused_field-=5000;const bool resettable=std::any_of(self->schema.begin(),self->schema.end(),[&](const auto &f){return f.id==self->focused_field;});EnableWindow(self->find(cid::ResetField),resettable);}
-        if(m==WM_CONTEXTMENU){auto menu=CreatePopupMenu();AppendMenuW(menu,MF_STRING,1,L"この項目を標準に戻す");AppendMenuW(menu,MF_STRING,2,L"関連する設定…");RECT rect{};GetWindowRect(h,&rect);const int x=GET_X_LPARAM(l)==-1?rect.left:GET_X_LPARAM(l),y=GET_Y_LPARAM(l)==-1?rect.bottom:GET_Y_LPARAM(l);const auto id=TrackPopupMenu(menu,TPM_RETURNCMD|TPM_RIGHTBUTTON,x,y,0,self->hwnd,nullptr);DestroyMenu(menu);if(id==1)self->reset_field(GetDlgCtrlID(h));if(id==2)self->related_settings(h);return 0;}
+        if(m==WM_CONTEXTMENU){auto menu=CreatePopupMenu();AppendMenuW(menu,MF_STRING,1,L"この項目を標準に戻す");AppendMenuW(menu,MF_STRING,2,L"関連する設定…");RECT rect{};GetWindowRect(h,&rect);const int x=GET_X_LPARAM(l)==-1?rect.left:GET_X_LPARAM(l),y=GET_Y_LPARAM(l)==-1?rect.bottom:GET_Y_LPARAM(l);ui_theme_menu(menu);const auto id=TrackPopupMenu(menu,TPM_RETURNCMD|TPM_RIGHTBUTTON,x,y,0,self->hwnd,nullptr);ui_destroy_menu(menu);if(id==1)self->reset_field(GetDlgCtrlID(h));if(id==2)self->related_settings(h);return 0;}
         return DefSubclassProc(h, m, w, l);
     }
     static LRESULT CALLBACK page_proc(HWND h, UINT m, WPARAM w, LPARAM l, UINT_PTR, DWORD_PTR data) {
@@ -1482,7 +1483,7 @@ struct PreferencesDialog::Impl {
                             content[i] - 1,
                             static_cast<UINT>(std::max(1, page_height)),
                             scroll_y[i]};
-            SetScrollInfo(page_scrollbars[i], SB_CTL, &info, TRUE);
+            ui_set_scroll_info(page_scrollbars[i],info);
             ShowWindow(page_scrollbars[i], content[i] > page_height ? SW_SHOW : SW_HIDE);
             RECT client{};
             GetClientRect(pages[i], &client);
@@ -1852,10 +1853,6 @@ struct PreferencesDialog::Impl {
             }
             for (const auto &f : schema)
                 if (f.kind == Kind::Color && id == f.id + 5000) {
-                    static COLORREF custom[16]{};
-                    CHOOSECOLORW c{sizeof(c)};
-                    c.hwndOwner = hwnd;
-                    c.lpCustColors = custom;
                     auto initial = draft.*f.color;
                     try {
                         const auto text = get_text(find(f.id));
@@ -1865,12 +1862,8 @@ struct PreferencesDialog::Impl {
                             initial = static_cast<uint32_t>(value);
                     } catch (...) {
                     }
-                    c.rgbResult = RGB(initial >> 16 & 255, initial >> 8 & 255, initial & 255);
-                    c.Flags = CC_FULLOPEN | CC_RGBINIT;
-                    if (ChooseColorW(&c)) {
-                        const auto value = (GetRValue(c.rgbResult) << 16) | (GetGValue(c.rgbResult) << 8) |
-                                           GetBValue(c.rgbResult);
-                        SetWindowTextW(find(f.id), hex(value).c_str());
+                    if (const auto value=choose_color(hwnd,initial)) {
+                        SetWindowTextW(find(f.id), hex(*value).c_str());
                         changed();
                         invalidate_preview();
                     }

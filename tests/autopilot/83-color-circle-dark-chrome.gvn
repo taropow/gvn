@@ -1,0 +1,77 @@
+# Owned native dialogs, color-wheel input and actual native popup on private desktop.
+resize	900	730
+open	${fixtures}/display-alpha.png
+wait
+remember	original
+settings
+tab	General
+set	UiTheme	1
+tab	Bars
+set	Menu	true
+set	Scrollbars	true
+click	OK
+command	ToolPen
+editor_click	Color
+color_hex	#F64080
+color_expect	246	64	128
+color_hsv	240	100	100
+color_expect	0	0	255
+color_drag_hue	240	0
+color_expect	255	0	0
+color_drag_sv	50	50	0	100
+color_expect	255	255	255
+color_hex	18A070
+color_snapshot	color-circle-light.png
+color_close	OK
+expect_same	original	true
+editor_click	Color
+color_expect	24	160	112
+color_set	1	2	3
+color_close	Cancel
+editor_click	Color
+color_expect	24	160	112
+color_close	Cancel
+editor_click	Details
+editor_click	Outline
+editor_click	OutlineColor
+color_hex	112233
+color_close	OK
+editor_click	OutlineColor
+color_expect	17	34	51
+color_close	Cancel
+editor_click	Shadow
+editor_click	ShadowColor
+color_hex	102030
+color_close	Cancel
+editor_click	ShadowColor
+color_expect	0	0	0
+color_close	Cancel
+settings
+tab	General
+set	UiTheme	2
+click	OK
+editor_click	Color
+color_snapshot	color-circle-dark.png
+color_close	Cancel
+command	Actual
+command	ZoomIn
+command	ZoomIn
+command	ZoomIn
+command	ZoomIn
+expect	scroll.horizontal	true
+expect	scroll.vertical	true
+canvas_key	horizontal	Right
+canvas_key	vertical	Down
+snapshot	dark-menu-and-scrollbars.png
+native_menu_open	0
+native_menu_snapshot	dark-file-menu.png
+native_menu_close
+resize	500	330
+snapshot	dark-tools-scrollbar.png
+settings
+tab	General
+set	UiTheme	1
+click	OK
+snapshot	light-menu-and-scrollbars.png
+expect_same	original	true
+expect	error_count	0

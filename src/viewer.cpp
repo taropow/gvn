@@ -1,3 +1,4 @@
+#include "gvn/color_dialog.h"
 #include "gvn/loader.h"
 #include "gvn/archive.h"
 #include "gvn/renderer.h"
@@ -103,7 +104,7 @@ class App {
         std::function<void()> boundary_beep = [] { MessageBeep(MB_OK); };
         decltype(std::function{gvn::show_preferences}) preferences_ui = gvn::show_preferences;
         std::function<UINT(HWND, HMENU, POINT)> popup = [](HWND owner, HMENU menu, POINT point) {
-            return TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON, point.x, point.y, 0, owner, nullptr);
+            ui_theme_menu(menu);return TrackPopupMenu(menu, TPM_RETURNCMD | TPM_RIGHTBUTTON, point.x, point.y, 0, owner, nullptr);
         };
         std::function<void(const std::filesystem::path &)> file_drag = gvn::drag_file;
         decltype(std::function{gvn::delete_file_checked}) delete_file = gvn::delete_file_checked;
@@ -977,7 +978,7 @@ class App {
             info.nMax = std::max(0, static_cast<int>(std::ceil(content)) - 1);
             info.nPage = static_cast<UINT>(page);
             info.nPos = static_cast<int>(std::lround(-offset));
-            SetScrollInfo(control, SB_CTL, &info, TRUE);
+            ui_set_scroll_info(control,info);
         };
         if (bars.horizontal)
             range(canvas_horizontal, view.free_pan?view.x_range().second-view.x_range().first+view.width:view.canvas_w * view.scale, view.width, view.free_pan?view.pan_x-view.x_range().second:view.left());
@@ -2349,17 +2350,8 @@ class App {
         transfer_file(move, destination, static_cast<int>(slot));
     }
     void color() {
-        static COLORREF custom[16]{};
-        CHOOSECOLORW c{sizeof(c)};
-        c.hwndOwner = hwnd;
-        c.lpCustColors = custom;
-        c.rgbResult =
-            RGB(settings.background_first >> 16 & 255, settings.background_first >> 8 & 255,
-                settings.background_first & 255);
-        c.Flags = CC_FULLOPEN | CC_RGBINIT;
-        if (ChooseColorW(&c)) {
-            settings.background =
-                (GetRValue(c.rgbResult) << 16) | (GetGValue(c.rgbResult) << 8) | GetBValue(c.rgbResult);
+        if (const auto value=choose_color(hwnd,settings.background_first)) {
+            settings.background = *value;
             settings.background_first = settings.background;
             render_settings();
         }
@@ -3417,9 +3409,9 @@ class App {
                 add(recent, HistoryBase + static_cast<UINT>(i), settings.history[i]);
             POINT point{};
             GetCursorPos(&point);
-            const auto chosen =
+            ui_theme_menu(recent);const auto chosen =
                 TrackPopupMenu(recent, TPM_RETURNCMD | TPM_RIGHTBUTTON, point.x, point.y, 0, hwnd, nullptr);
-            DestroyMenu(recent);
+            ui_destroy_menu(recent);
             if (chosen)
                 command(chosen);
             break;
@@ -3544,7 +3536,7 @@ class App {
             selected = find(find, root);
         }
         const UINT chosen = selected ? dialogs.popup(hwnd, selected, point) : 0;
-        DestroyMenu(root);
+        ui_destroy_menu(root);
         if (chosen)
             command(chosen);
     }
@@ -4233,7 +4225,7 @@ class App {
             break;
         }
         case WM_INITMENUPOPUP:
-            update_wallpaper_menu(reinterpret_cast<HMENU>(w));
+            update_wallpaper_menu(reinterpret_cast<HMENU>(w));ui_theme_menu(reinterpret_cast<HMENU>(w));
             return 0;
         case WM_SETTINGCHANGE:
         case WM_THEMECHANGED:set_ui_theme(settings.ui_theme,settings.ui_density);apply_ui_theme(hwnd);layout();return 0;
@@ -4517,7 +4509,7 @@ class App {
             loader.reset();
             SetMenu(hwnd, nullptr);
             if (main_menu) {
-                DestroyMenu(main_menu);
+                ui_destroy_menu(main_menu);
                 main_menu = nullptr;
             }
             while (true) {

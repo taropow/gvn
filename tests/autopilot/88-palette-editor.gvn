@@ -43,7 +43,7 @@ wait_save
 expect_saved	pixels/applied.png
 command	Undo
 expect_image	${fixtures}/palette/png-4-alpha.png	0
-command	Undo
+command	Redo
 expect_image	${fixtures}/palette-dialog/applied.png	0
 menu	PaletteEdit
 pal_preview	false

@@ -2,6 +2,9 @@
 #include <commctrl.h>
 #include <windowsx.h>
 #include <dwmapi.h>
+#include <oleacc.h>
+#include <vector>
+#include <cwctype>
 #include <algorithm>
 #include <map>
 #include <string>
@@ -19,6 +22,7 @@ void label(HWND h,HDC dc,std::wstring text,RECT r,COLORREF c,UINT format=DT_LEFT
  auto font=reinterpret_cast<HFONT>(SendMessageW(h,WM_GETFONT,0,0));auto old=SelectObject(dc,font?font:GetStockObject(DEFAULT_GUI_FONT));SetBkMode(dc,TRANSPARENT);SetTextColor(dc,c);DrawTextW(dc,text.c_str(),int(text.size()),&r,format);SelectObject(dc,old);
 }
 std::wstring text(HWND h){int n=GetWindowTextLengthW(h);std::wstring s(size_t(n)+1,L'\0');GetWindowTextW(h,s.data(),n+1);s.resize(n);return s;}
+#include "ui_menu_theme.inc"
 bool paint_control(HWND h,HDC dc,const std::wstring &kind){
  RECT r{};GetClientRect(h,&r);const int px=std::max(1,MulDiv(1,GetDpiForWindow(h),96));
  if(named(kind,L"Button")){
@@ -67,6 +71,11 @@ bool paint_control(HWND h,HDC dc,const std::wstring &kind){
 LRESULT CALLBACK theme_proc(HWND h,UINT m,WPARAM w,LPARAM l,UINT_PTR,DWORD_PTR){
  if(m==WM_NCDESTROY){RemoveWindowSubclass(h,theme_proc,77);return DefSubclassProc(h,m,w,l);}
  if(colors.contrast)return DefSubclassProc(h,m,w,l);
+ if(m==WM_MEASUREITEM&&l){auto &draw=*reinterpret_cast<MEASUREITEMSTRUCT *>(l);if(draw.CtlType==ODT_MENU&&measure_menu(h,draw))return TRUE;}
+ if(m==WM_DRAWITEM&&l){const auto &draw=*reinterpret_cast<DRAWITEMSTRUCT *>(l);if(draw.CtlType==ODT_MENU&&draw_menu(h,draw))return TRUE;}
+ if(m==WM_MENUCHAR&&themed_menus.contains(reinterpret_cast<HMENU>(l)))return menu_char(w,reinterpret_cast<HMENU>(l));
+ if(m==WM_NCPAINT||m==WM_NCACTIVATE||m==WM_PRINT){const auto result=DefSubclassProc(h,m,w,l);menu_gaps(h,m==WM_PRINT?reinterpret_cast<HDC>(w):nullptr);return result;}
+ if((m==WM_LBUTTONDOWN||m==WM_LBUTTONUP||m==WM_MOUSEMOVE||m==WM_ENABLE)&&named(class_name(h),L"ScrollBar")){const auto result=DefSubclassProc(h,m,w,l);RedrawWindow(h,nullptr,nullptr,RDW_INVALIDATE|RDW_UPDATENOW);return result;}
  if(m==WM_CTLCOLORSTATIC||m==WM_CTLCOLORBTN||m==WM_CTLCOLOREDIT||m==WM_CTLCOLORLISTBOX||m==WM_CTLCOLORDLG){auto dc=reinterpret_cast<HDC>(w);SetTextColor(dc,IsWindowEnabled(reinterpret_cast<HWND>(l))?colors.text:colors.muted);const auto c=m==WM_CTLCOLOREDIT||m==WM_CTLCOLORLISTBOX?colors.input:colors.surface;SetBkColor(dc,c);return reinterpret_cast<LRESULT>(ui_brush(c));}
  if(m==WM_NOTIFY){auto header=reinterpret_cast<NMHDR *>(l);if(header&&header->code==NM_CUSTOMDRAW&&named(class_name(header->hwndFrom),TOOLBARCLASSNAMEW))return ui_toolbar_draw(l);}
  if(m==WM_PAINT||m==WM_PRINTCLIENT){const auto kind=class_name(h);const bool candidate=named(kind,L"Button")||named(kind,WC_TABCONTROLW)||named(kind,STATUSCLASSNAMEW)||named(kind,TRACKBAR_CLASSW)||named(kind,L"ScrollBar")||(named(kind,L"ComboBox")&&(GetWindowLongPtrW(h,GWL_STYLE)&3)==CBS_DROPDOWNLIST);
@@ -91,13 +100,20 @@ void set_ui_theme(int mode,int spacing){
  else if(dark)colors={RGB(34,36,40),RGB(42,45,50),RGB(236,239,244),RGB(169,176,188),RGB(65,70,80),RGB(111,174,255),RGB(48,65,87),RGB(28,30,34),true,false};
  else colors={RGB(246,247,249),RGB(255,255,255),RGB(35,39,46),RGB(104,112,124),RGB(216,220,226),RGB(30,104,210),RGB(227,238,253),RGB(255,255,255),false,false};
 }
+void ui_theme_menu(HMENU menu,bool bar){theme_menu(menu,bar);}
+void ui_destroy_menu(HMENU menu){if(menu){std::vector<HMENU> list;collect_menus(menu,list);DestroyMenu(menu);for(const auto handle:list)themed_menus.erase(handle);}}
+void ui_set_scroll_info(HWND h,const SCROLLINFO &info){
+ SCROLLINFO old{sizeof(old),SIF_ALL};GetScrollInfo(h,SB_CTL,&old);
+ const bool changed=((info.fMask&SIF_RANGE)&&(info.nMin!=old.nMin||info.nMax!=old.nMax))||((info.fMask&SIF_PAGE)&&info.nPage!=old.nPage)||((info.fMask&SIF_POS)&&info.nPos!=old.nPos);
+ SetScrollInfo(h,SB_CTL,&info,FALSE);if(changed)RedrawWindow(h,nullptr,nullptr,RDW_INVALIDATE|RDW_UPDATENOW);
+}
 void apply_ui_theme(HWND h,bool descendants){
  if(!h)return;DWORD_PTR value{};if(!GetWindowSubclass(h,theme_proc,77,&value))SetWindowSubclass(h,theme_proc,77,0);
  const auto dpi=GetDpiForWindow(h);const auto stamp=(generation<<16)|dpi;
  if(reinterpret_cast<UINT_PTR>(GetPropW(h,L"GVN.ThemeGeneration"))!=stamp){
   SetPropW(h,L"GVN.ThemeGeneration",reinterpret_cast<HANDLE>(UINT_PTR(stamp)));const auto kind=class_name(h);
   if(dpi){auto &font=resources.fonts[dpi];if(!font)font=CreateFontW(-MulDiv(12,dpi,96),0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,0,0,CLEARTYPE_QUALITY,DEFAULT_PITCH,L"Yu Gothic UI");SendMessageW(h,WM_SETFONT,reinterpret_cast<WPARAM>(font),FALSE);}
-  if(!(GetWindowLongPtrW(h,GWL_STYLE)&WS_CHILD)){BOOL dark=colors.dark&&!colors.contrast;DwmSetWindowAttribute(h,DWMWA_USE_IMMERSIVE_DARK_MODE,&dark,sizeof(dark));}
+  if(!(GetWindowLongPtrW(h,GWL_STYLE)&WS_CHILD)){BOOL dark=colors.dark&&!colors.contrast;DwmSetWindowAttribute(h,DWMWA_USE_IMMERSIVE_DARK_MODE,&dark,sizeof(dark));if(const auto menu=GetMenu(h)){ui_theme_menu(menu,true);DrawMenuBar(h);}}
   if(named(kind,WC_LISTVIEWW)){ListView_SetBkColor(h,colors.input);ListView_SetTextBkColor(h,colors.input);ListView_SetTextColor(h,colors.text);}
   InvalidateRect(h,nullptr,TRUE);
  }

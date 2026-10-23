@@ -481,8 +481,9 @@ void IconToolbar::create(HWND parent, bool playback,bool editing_tools) {
         cls.hCursor = LoadCursorW(nullptr, IDC_ARROW);
         cls.lpszClassName = tools?L"GVN.ToolsHost":L"GVN.ToolbarHost";
         RegisterClassW(&cls);
-        host = CreateWindowExW(0, cls.lpszClassName, L"", WS_CHILD | (tools?WS_VSCROLL:WS_VISIBLE) | WS_CLIPCHILDREN, 0, 0, 1, 1,
+        host = CreateWindowExW(0, cls.lpszClassName, L"", WS_CHILD | (tools?0:WS_VISIBLE) | WS_CLIPCHILDREN, 0, 0, 1, 1,
                                parent, nullptr, cls.hInstance, tools?this:nullptr);
+        if(tools){tools_scroll=CreateWindowExW(0,L"SCROLLBAR",L"",WS_CHILD|WS_TABSTOP|SBS_VERT,0,0,1,1,host,nullptr,cls.hInstance,nullptr);if(!tools_scroll)throw std::runtime_error("Cannot create tools scrollbar");}
         parent = host;
     }
     hwnd = CreateWindowExW(0, TOOLBARCLASSNAMEW, nullptr,
@@ -568,16 +569,17 @@ int IconToolbar::layout_tools(UINT new_dpi,int top,int height,bool visible){
     const int button=MulDiv(ui_button_size(large),dpi,96);
     tool_width=button+4+(tool_content>tool_height?GetSystemMetricsForDpi(SM_CXVSCROLL,new_dpi):0);
     tool_scroll=std::clamp(tool_scroll,0,std::max(0,tool_content-tool_height));
-    SCROLLINFO info{sizeof(info),SIF_RANGE|SIF_PAGE|SIF_POS,0,tool_content-1,UINT(tool_height),tool_scroll};SetScrollInfo(host,SB_VERT,&info,TRUE);
+    SCROLLINFO info{sizeof(info),SIF_RANGE|SIF_PAGE|SIF_POS,0,tool_content-1,UINT(tool_height),tool_scroll};ui_set_scroll_info(tools_scroll,info);
     MoveWindow(host,0,top,tool_width,tool_height,TRUE);MoveWindow(hwnd,1,-tool_scroll,button+2,tool_content,TRUE);
+    if(tool_content>tool_height){SetWindowPos(tools_scroll,HWND_TOP,button+4,0,tool_width-button-4,tool_height,SWP_NOACTIVATE|SWP_SHOWWINDOW);}else ShowWindow(tools_scroll,SW_HIDE);
     ShowWindow(host,SW_SHOWNA);ShowWindow(hwnd,SW_SHOWNA);return tool_width;
 }
 void IconToolbar::scroll_tools(UINT action,int delta){
     const int step=MulDiv(ui_button_size(large),dpi,96);int next=tool_scroll;
     switch(action){case SB_TOP:next=0;break;case SB_BOTTOM:next=tool_content;break;case SB_LINEUP:next-=step;break;case SB_LINEDOWN:next+=step;break;case SB_PAGEUP:next-=tool_height;break;case SB_PAGEDOWN:next+=tool_height;break;
-    case SB_THUMBTRACK:case SB_THUMBPOSITION:{SCROLLINFO info{sizeof(info),SIF_TRACKPOS};GetScrollInfo(host,SB_VERT,&info);next=info.nTrackPos;break;}
+    case SB_THUMBTRACK:case SB_THUMBPOSITION:{SCROLLINFO info{sizeof(info),SIF_TRACKPOS};GetScrollInfo(tools_scroll,SB_CTL,&info);next=info.nTrackPos;break;}
     case 100:next-=delta/WHEEL_DELTA*step*3;break;default:return;}
-    tool_scroll=std::clamp(next,0,std::max(0,tool_content-tool_height));SetScrollPos(host,SB_VERT,tool_scroll,TRUE);SetWindowPos(hwnd,nullptr,1,-tool_scroll,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE);
+    tool_scroll=std::clamp(next,0,std::max(0,tool_content-tool_height));SCROLLINFO info{sizeof(info),SIF_POS};info.nPos=tool_scroll;ui_set_scroll_info(tools_scroll,info);SetWindowPos(hwnd,nullptr,1,-tool_scroll,0,0,SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE);
 }
 int IconToolbar::measure_height(int width, UINT new_dpi) {
     if (!hwnd)
@@ -657,7 +659,7 @@ void IconToolbar::show_more(HWND owner) const{
     if(overflow_commands.empty())return;auto menu=CreatePopupMenu();
     for(auto id:overflow_commands){const auto state=SendMessageW(hwnd,TB_GETSTATE,id,0);const auto p=texts.find(id);const auto text=p==texts.end()?command_name(id):p->second.c_str();AppendMenuW(menu,MF_STRING|((state&TBSTATE_ENABLED)?0:MF_GRAYED)|((state&TBSTATE_CHECKED)?MF_CHECKED:0),id,text);}
     RECT button{};const auto index=SendMessageW(hwnd,TB_COMMANDTOINDEX,MoreCommands,0);SendMessageW(hwnd,TB_GETITEMRECT,index,reinterpret_cast<LPARAM>(&button));MapWindowPoints(hwnd,nullptr,reinterpret_cast<POINT *>(&button),2);
-    const auto id=TrackPopupMenu(menu,TPM_RETURNCMD|TPM_RIGHTBUTTON,button.left,button.bottom,0,owner,nullptr);DestroyMenu(menu);if(id)SendMessageW(owner,WM_COMMAND,id,0);
+    ui_theme_menu(menu);const auto id=TrackPopupMenu(menu,TPM_RETURNCMD|TPM_RIGHTBUTTON,button.left,button.bottom,0,owner,nullptr);ui_destroy_menu(menu);if(id)SendMessageW(owner,WM_COMMAND,id,0);
 }
 void IconToolbar::enable(UINT command, bool enabled) {
     const auto state=SendMessageW(hwnd,TB_GETSTATE,command,0);if(state<0||bool(state&TBSTATE_ENABLED)==enabled)return;

@@ -19,7 +19,7 @@ class IconToolbar {
     int tool_scroll{},tool_content{},tool_height{},tool_width{};
     bool large{}, built_large{}, centered{}, line{};
     bool floating_mode{},built_floating{};
-    HWND host{};
+    HWND host{},tools_scroll{};
     int bar_height{};
     int measured_width{-1},measured_height{},measured_extent{};
     std::map<UINT,std::wstring> texts;
@@ -36,6 +36,7 @@ class IconToolbar {
     void create(HWND parent, bool playback = false,bool editing_tools=false);
     int layout_tools(UINT dpi,int top,int height,bool visible);
     void scroll_tools(UINT action,int delta=0);
+    HWND scroll_window() const{return tools_scroll;}
     void use_overflow(bool value){if(overflow!=value){overflow=value;measured_width=-1;}}
     const std::vector<UINT> &hidden_commands() const{return overflow_commands;}
     void show_more(HWND owner) const;

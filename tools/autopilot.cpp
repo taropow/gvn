@@ -1,3 +1,5 @@
+#include <numbers>
+#include "gvn/color_dialog.h"
 // GVN-owned native UI autopilot. No global input injection or other application handles.
 #include "../src/viewer.cpp"
 #include "../tests/test_desktop.h"
@@ -227,7 +229,7 @@ void print_native_tree(HWND hwnd, HDC dc, const RECT &root) {
         print_native_tree(child, dc, root);
     RestoreDC(dc, saved);
 }
-void capture(HWND hwnd, const std::filesystem::path &path) {
+void capture(HWND hwnd, const std::filesystem::path &path,HWND popup_owner=nullptr) {
     own(hwnd);
     RedrawWindow(hwnd, nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
     RECT rc{};
@@ -252,6 +254,18 @@ void capture(HWND hwnd, const std::filesystem::path &path) {
     // PrintWindow can return a partially painted surface on a private station.
     // Always repaint the actual window/control tree, including visible native bars.
     print_native_tree(hwnd, dc, rc);
+    if(popup_owner){
+        // Private desktops may omit native popup pixels in PrintWindow. Use
+        // its real HMENU/item rectangles and the application's WM_DRAWITEM.
+        own(popup_owner);MENUBARINFO menu{sizeof(menu)};require(GetMenuBarInfo(hwnd,OBJID_CLIENT,0,&menu)&&menu.hMenu,"Native popup HMENU is unavailable");
+        RECT bounds{0,0,w,h};FillRect(dc,&bounds,ui_brush(ui_palette().surface));FrameRect(dc,&bounds,ui_brush(ui_palette().border));
+        for(int n=0;n<GetMenuItemCount(menu.hMenu);++n){RECT item{};require(GetMenuItemRect(nullptr,menu.hMenu,n,&item),"Native popup item rectangle is unavailable");OffsetRect(&item,-rc.left,-rc.top);
+            MENUITEMINFOW info{sizeof(info)};info.fMask=MIIM_DATA|MIIM_FTYPE;require(GetMenuItemInfoW(menu.hMenu,n,TRUE,&info)&&(info.fType&MFT_OWNERDRAW),"Popup item is not using the app theme");
+            DRAWITEMSTRUCT draw{};draw.CtlType=ODT_MENU;draw.itemData=info.dwItemData;draw.hDC=dc;draw.rcItem=item;const auto state=GetMenuState(menu.hMenu,n,MF_BYPOSITION);
+            if(state&(MF_GRAYED|MF_DISABLED))draw.itemState|=ODS_DISABLED;if(state&MF_CHECKED)draw.itemState|=ODS_CHECKED;if(state&MF_HILITE)draw.itemState|=ODS_SELECTED;
+            require(SendMessageW(popup_owner,WM_DRAWITEM,0,reinterpret_cast<LPARAM>(&draw)),"Popup did not render through its native owner");
+        }
+    }
     GdiFlush();
     const bool rendered = !untouched();
     Image image;
@@ -1287,8 +1301,8 @@ struct Autopilot {
             [](HWND window, LPARAM data) -> BOOL {
                 DWORD process{};
                 GetWindowThreadProcessId(window, &process);
-                if (process == GetCurrentProcessId() && GetDlgItem(window, 706) && GetDlgItem(window, 707) &&
-                    GetDlgItem(window, 708)) {
+                if (process == GetCurrentProcessId() && GetDlgItem(window, color_control::Red) && GetDlgItem(window, color_control::Green) &&
+                    GetDlgItem(window, color_control::Blue)) {
                     *reinterpret_cast<HWND *>(data) = window;
                     return FALSE;
                 }
@@ -1297,7 +1311,7 @@ struct Autopilot {
             reinterpret_cast<LPARAM>(&found));
         if (!found)
             dump_owned_windows();
-        require(found != nullptr, "Actual native color dialog is not open");
+        require(found != nullptr, "GVN color-circle dialog is not open");
         own(found);
         return found;
     }
@@ -1357,6 +1371,7 @@ struct Autopilot {
         return search.found;
     }
     void close_owned_modals() {
+        EndMenu(); // Only this private UI thread's native menu loop.
         if (open_gate)
             open_gate->release();
         if (preview_gate)
@@ -1392,11 +1407,11 @@ struct Autopilot {
         EnumThreadWindows(GetCurrentThreadId(),[](HWND window,LPARAM data)->BOOL{
             auto &s=*reinterpret_cast<Search*>(data);wchar_t cls[64]{};GetClassNameW(window,cls,64);
             if(s.owner&&GetWindow(window,GW_OWNER)==s.owner&&wcscmp(cls,L"#32770")==0&&
-               GetDlgItem(window,COLOR_RED)&&GetDlgItem(window,COLOR_GREEN)&&GetDlgItem(window,COLOR_BLUE)){
+               GetDlgItem(window,color_control::Red)&&GetDlgItem(window,color_control::Green)&&GetDlgItem(window,color_control::Blue)){
                 s.found=window;return FALSE;
             }return TRUE;
         },reinterpret_cast<LPARAM>(&search));
-        if(required)require(search.found!=nullptr,"Actual owned Windows color picker is not open");
+        if(required)require(search.found!=nullptr,"Owned color-circle picker is not open");
         if(search.found)own(search.found);return search.found;
     }
     HWND executable_picker_window(bool required = true) {
@@ -2202,7 +2217,7 @@ struct Autopilot {
             return;
         }
         if(s[0]=="editor_set"||s[0]=="editor_click"||s[0]=="editor_expect") {
-            const std::map<std::string,int> ids{{"Outline",editor_id::Outline},{"OutlineWidth",editor_id::OutlineWidth},{"Shadow",editor_id::Shadow},{"ShadowOffset",editor_id::ShadowOffset},{"ShadowBlur",editor_id::ShadowBlur},{"ShadowOpacity",editor_id::ShadowOpacity},{"Details",editor_id::Details},{"Width",editor_id::Width},{"Opacity",editor_id::Opacity},{"Font",editor_id::Font},{"TextSize",editor_id::TextSize},{"Text",editor_id::Text},
+            const std::map<std::string,int> ids{{"Color",editor_id::Color},{"OutlineColor",editor_id::OutlineColor},{"ShadowColor",editor_id::ShadowColor},{"Outline",editor_id::Outline},{"OutlineWidth",editor_id::OutlineWidth},{"Shadow",editor_id::Shadow},{"ShadowOffset",editor_id::ShadowOffset},{"ShadowBlur",editor_id::ShadowBlur},{"ShadowOpacity",editor_id::ShadowOpacity},{"Details",editor_id::Details},{"Width",editor_id::Width},{"Opacity",editor_id::Opacity},{"Font",editor_id::Font},{"TextSize",editor_id::TextSize},{"Text",editor_id::Text},
                 {"X",editor_id::X},{"Y",editor_id::Y},{"W",editor_id::W},{"H",editor_id::H},{"Angle",editor_id::Angle},{"Scale",editor_id::Scale},{"Anchor",editor_id::Anchor},
                 {"Apply",editor_id::Apply},{"Cancel",editor_id::Cancel},{"Name",editor_id::Name},{"Format",editor_id::Format}};
             const auto id=ids.at(s.at(1));const auto h=app.editor_chrome.control(id);own(h);
@@ -2258,7 +2273,7 @@ struct Autopilot {
             native_info=true;struct Reset {bool &value;~Reset(){value=false;}} reset{native_info};
             SendMessageW(app.hwnd,WM_COMMAND,Info,0);return;
         }
-        if (s.at(0).starts_with("resize_")||s.at(0).starts_with("canvas_")) {
+        if (s.at(0).starts_with("resize_")||(s.at(0).starts_with("canvas_")&&s.at(0)!="canvas_key")) {
             auto dialog=s[0].starts_with("canvas_")?canvas:resize;
             require(dialog && dialog->ready(), "Actual geometry dialog is not open");
             own(dialog->window());
@@ -2513,7 +2528,7 @@ struct Autopilot {
             else if(op=="pal_pick")click(id::Pick);
             else if(op=="pal_picker_rgb") {
                 const auto picker=palette_picker_window();require(!IsWindowEnabled(palette_editor->window()),"OS picker did not disable palette owner");
-                const int ids[]{COLOR_RED,COLOR_GREEN,COLOR_BLUE};
+                const int ids[]{color_control::Red,color_control::Green,color_control::Blue};
                 for(int n=0;n<3;++n){const auto h=GetDlgItem(picker,ids[n]);own(h);require(fully_visible(h)&&IsWindowEnabled(h),"OS RGB edit is clipped or disabled");
                     const auto value=std::stoul(s.at(n+1));require(value<=255,"Invalid OS RGB value");SetWindowTextW(h,std::to_wstring(value).c_str());}
                 for(int n=0;n<3;++n)require(GetDlgItemInt(picker,ids[n],nullptr,FALSE)==std::stoul(s.at(n+1)),"OS picker RGB text differs");
@@ -2845,10 +2860,30 @@ struct Autopilot {
             capture(boundary_window(), output_path(s.at(1)));
             return;
         }
+        if(op=="color_hsv"||op=="color_hex"){
+            const auto dialog=color_dialog();
+            if(op=="color_hex")SetWindowTextW(GetDlgItem(dialog,color_control::Hex),widen(s.at(1)).c_str());
+            else for(int n=0;n<3;++n)SetWindowTextW(GetDlgItem(dialog,color_control::Hue+n),widen(s.at(n+1)).c_str());
+            return;
+        }
+        if(op=="color_drag_hue"||op=="color_drag_sv"){
+            const auto wheel=GetDlgItem(color_dialog(),color_control::Wheel);own(wheel);RECT area{};GetClientRect(wheel,&area);const auto g=color_wheel_geometry(area.right,area.bottom);
+            const auto point=[&](double a,double b){if(op=="color_drag_hue"){const double angle=a*std::numbers::pi/180,r=(g.inner+g.outer)/2;return POINT{LONG(std::lround(g.x+std::cos(angle)*r)),LONG(std::lround(g.y+std::sin(angle)*r))};}return POINT{LONG(std::lround(g.square.left+a/100*(g.square.right-g.square.left-1))),LONG(std::lround(g.square.top+(1-b/100)*(g.square.bottom-g.square.top-1)))};};
+            const auto from=point(std::stod(s.at(1)),op=="color_drag_hue"?0:std::stod(s.at(2))),to=point(std::stod(s.at(op=="color_drag_hue"?2:3)),op=="color_drag_hue"?0:std::stod(s.at(4)));
+            SendMessageW(wheel,WM_LBUTTONDOWN,MK_LBUTTON,MAKELPARAM(from.x,from.y));SendMessageW(wheel,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(to.x,to.y));SendMessageW(wheel,WM_LBUTTONUP,0,MAKELPARAM(to.x,to.y));return;
+        }
+        if(op=="native_menu_open"){
+            const int index=std::stoi(s.at(1));const auto submenu=GetSubMenu(app.main_menu,index);require(submenu!=nullptr,"Native menu index is missing");RECT item{};require(GetMenuItemRect(app.hwnd,app.main_menu,index,&item),"Native menu bar is hidden");ui_theme_menu(submenu);
+            TrackPopupMenu(submenu,TPM_RETURNCMD|TPM_LEFTALIGN,item.left,item.bottom,0,app.hwnd,nullptr);return;
+        }
+        if(op=="native_menu_snapshot"||op=="native_menu_close"){
+            HWND popup{};EnumWindows([](HWND h,LPARAM data)->BOOL{DWORD pid{};GetWindowThreadProcessId(h,&pid);wchar_t cls[64]{};GetClassNameW(h,cls,64);if(pid==GetCurrentProcessId()&&wcscmp(cls,L"#32768")==0&&(GetWindowLongPtrW(h,GWL_STYLE)&WS_VISIBLE)){*reinterpret_cast<HWND *>(data)=h;return FALSE;}return TRUE;},reinterpret_cast<LPARAM>(&popup));
+            require(popup!=nullptr,"Owned native menu popup is not open");own(popup);if(op=="native_menu_close")EndMenu();else capture(popup,output_path(s.at(1)),app.hwnd);return;
+        }
         if (op == "color_set" || op == "color_expect") {
             const auto dialog = color_dialog();
             for (int index = 0; index < 3; ++index) {
-                const int id = 706 + index;
+                const int id = color_control::Red + index;
                 const auto edit = GetDlgItem(dialog, id);
                 own(edit);
                 require(fully_visible(edit), "Color component edit must be visible");

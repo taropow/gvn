@@ -1,3 +1,4 @@
+#include "gvn/color_dialog.h"
 #include "gvn/ui_theme.h"
 #include "gvn/resize_dialog.h"
 #include "gvn/display_quality.h"
@@ -78,7 +79,6 @@ struct ResizeDialog::Impl {
     bool initialized{},syncing{},valid_input{},modal{};
     std::optional<ResizeChoice> selected;
     std::optional<CanvasChoice> canvas;
-    COLORREF custom_colors[16]{};
     HWND control(int key) const{return GetDlgItem(hwnd,key);}
     void filter_controls() {
         for(const auto key:{id::Width,id::Height,id::WidthPercent,id::HeightPercent,id::Half,id::Double,id::KeepAspect,id::Smooth})EnableWindow(control(key),draft.resample);
@@ -326,9 +326,7 @@ struct ResizeDialog::Impl {
                 if(key==id::Transparent&&event==BN_CLICKED){canvas->transparent=SendMessageW(control(key),BM_GETCHECK,0,0)==BST_CHECKED;canvas_controls();check();return TRUE;}
                 if(key>=id::Red&&key<=id::Alpha&&event==EN_CHANGE&&!syncing){check();return TRUE;}
                 if(key==id::Color&&event==BN_CLICKED) {
-                    CHOOSECOLORW value{sizeof(value)};value.hwndOwner=hwnd;value.lpCustColors=custom_colors;
-                    value.rgbResult=RGB(canvas->color>>16&255,canvas->color>>8&255,canvas->color&255);value.Flags=CC_FULLOPEN|CC_RGBINIT;
-                    if(ChooseColorW(&value)){canvas->color=(GetRValue(value.rgbResult)<<16)|(GetGValue(value.rgbResult)<<8)|GetBValue(value.rgbResult);canvas_values();check();}return TRUE;
+                    if(const auto value=choose_color(hwnd,canvas->color)){canvas->color=*value;canvas_values();check();}return TRUE;
                 }
             }
             if(key==IDOK||key==IDCANCEL){finish(key==IDOK);return TRUE;}

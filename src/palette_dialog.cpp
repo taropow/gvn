@@ -1,3 +1,4 @@
+#include "gvn/color_dialog.h"
 #include "gvn/ui_theme.h"
 #include "gvn/palette_dialog.h"
 #include <commctrl.h>
@@ -18,10 +19,7 @@ int number(HWND field,int maximum) {
     if(value>maximum)throw std::out_of_range("Palette number out of range");return value;
 }
 std::optional<uint32_t> pick_color(HWND owner,uint32_t rgb) {
-    COLORREF custom[16]{};CHOOSECOLORW value{sizeof(value)};value.hwndOwner=owner;
-    value.rgbResult=RGB((rgb>>16)&255,(rgb>>8)&255,rgb&255);value.lpCustColors=custom;value.Flags=CC_FULLOPEN|CC_RGBINIT;
-    if(!ChooseColorW(&value))return {};
-    return (uint32_t(GetRValue(value.rgbResult))<<16)|(uint32_t(GetGValue(value.rgbResult))<<8)|GetBValue(value.rgbResult);
+    return choose_color(owner,rgb);
 }
 }
 struct PaletteDialog::Impl {

@@ -75,7 +75,7 @@
     }
     void related_settings(HWND anchor){
         auto menu=CreatePopupMenu();for(int page=0;page<int(Page::Count);++page)if(page!=selected&&(group_for(page)==group_for(selected)||page==int(Page::Keys)||page==int(Page::MouseCustom)))AppendMenuW(menu,MF_STRING,UINT(page+1),titles[page]);
-        RECT rect{};GetWindowRect(anchor,&rect);const auto value=TrackPopupMenu(menu,TPM_RETURNCMD|TPM_RIGHTBUTTON,rect.left,rect.bottom,0,hwnd,nullptr);DestroyMenu(menu);if(value)select(int(value)-1);
+        RECT rect{};GetWindowRect(anchor,&rect);ui_theme_menu(menu);const auto value=TrackPopupMenu(menu,TPM_RETURNCMD|TPM_RIGHTBUTTON,rect.left,rect.bottom,0,hwnd,nullptr);ui_destroy_menu(menu);if(value)select(int(value)-1);
     }
     static LRESULT CALLBACK search_proc(HWND h,UINT m,WPARAM w,LPARAM l,UINT_PTR,DWORD_PTR data){
         const auto self=reinterpret_cast<Impl *>(data);

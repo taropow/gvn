@@ -393,13 +393,13 @@
         add(m, Help, L"操作説明\tF1");
         add(m, About, L"バージョン情報…");
         submenu(root, m, L"その他");
-        return root;
+        ui_theme_menu(root,!popup);return root;
     }
     void refresh_menu() {
         auto next = menu();
         SetMenu(hwnd, (full ? settings.full_menu : settings.menu) ? next : nullptr);
         if (main_menu)
-            DestroyMenu(main_menu);
+            ui_destroy_menu(main_menu);
         main_menu = next;
         for (auto bar : {toolbar.hwnd, playback.toolbar.hwnd,editor_tools.hwnd})
             for (int i = 0; i < SendMessageW(bar, TB_BUTTONCOUNT, 0, 0); ++i) {

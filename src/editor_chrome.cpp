@@ -1,3 +1,4 @@
+#include "gvn/color_dialog.h"
 #include "gvn/editor_chrome.h"
 #include "gvn/ui.h"
 #include "gvn/ui_theme.h"
@@ -191,8 +192,7 @@ void EditorChrome::sync_effect_controls(){
 bool EditorChrome::notification(int id,int code){
     if(id==Details&&code==BN_CLICKED){details_open=SendMessageW(control(Details),BM_GETCHECK,0,0)==BST_CHECKED;return true;}
     if((id==Color||id==OutlineColor||id==ShadowColor)&&code==BN_CLICKED){auto &c=id==OutlineColor?outline_color:id==ShadowColor?shadow_color:color;
-        static COLORREF custom[16]{};CHOOSECOLORW choice{sizeof(choice)};choice.hwndOwner=owner;choice.rgbResult=RGB(c.r,c.g,c.b);choice.lpCustColors=custom;choice.Flags=CC_FULLOPEN|CC_RGBINIT;
-        if(ChooseColorW(&choice)){c={GetRValue(choice.rgbResult),GetGValue(choice.rgbResult),GetBValue(choice.rgbResult),255};InvalidateRect(control(id),nullptr,TRUE);}return true;}
+        if(const auto choice=choose_color(owner,(uint32_t(c.r)<<16)|(uint32_t(c.g)<<8)|c.b)){c={uint8_t(*choice>>16),uint8_t(*choice>>8),uint8_t(*choice),c.a};InvalidateRect(control(id),nullptr,TRUE);}return true;}
     if((id==Outline||id==Shadow)&&code==BN_CLICKED){sync_effect_controls();return true;}
     return false;
 }
