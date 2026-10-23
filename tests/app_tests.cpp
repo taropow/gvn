@@ -2024,7 +2024,7 @@ struct AppAudit {
         command(ToggleToolbar);
         CHECK(app.top == top);
         command(ToggleStatus);
-        CHECK(app.bottom == MulDiv(36,GetDpiForWindow(app.hwnd),96)); // Export panel remains when status is hidden.
+        CHECK(app.bottom == 0); // Export controls are embedded in the hidden status bar.
         command(ToggleStatus);
         CHECK(app.bottom == bottom);
     }
@@ -5309,7 +5309,7 @@ struct AppAudit {
         CHECK(client.right>=app.toolbar.ideal_width()&&app.view.height>=edited->height&&app.view.scale==1);
         next=app.settings;next.toolbar=false;next.status=false;app.apply_settings(next);
         command(DisplayWindowImage);
-        CHECK(app.top==0&&app.bottom==EditorChrome::bottom_height(GetDpiForWindow(app.hwnd))&&app.view.width>=edited->width&&app.view.height>=edited->height);
+        CHECK(app.top==0&&app.bottom==0&&app.view.width>=edited->width&&app.view.height>=edited->height);
         command(Copy);CHECK(paste_image(app.hwnd).frames[0].pixels==pixels);
         CHECK(app.image==edited&&app.undo_image==undo&&app.modified&&notices.empty());
     }
@@ -7307,4 +7307,5 @@ APP_TEST(annotation_effect_controls_and_multiple_undo_redo_are_transactional)
 APP_TEST(multiple_undo_save_retarget_and_document_boundaries)
 APP_TEST(skitch_crop_handles_numeric_bounds_buttons_cancel_apply_undo)
 APP_TEST(skitch_bottom_export_moves_status_icon_names_formats_and_ole_payload)
+APP_TEST(compact_editor_options_and_embedded_status_export)
 APP_TEST(timestamp_export_name_on_open_new_and_every_successful_paste_keeps_manual_edits)

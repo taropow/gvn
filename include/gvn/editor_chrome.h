@@ -28,13 +28,14 @@ class EditorChrome {
     void create(HWND,bool editing=true);
     void put(int,const std::wstring &);
     void position(HWND,int,int,int,int);
+    void sync_effect_controls();
   public:
     HWND top{},bottom{};
     ~EditorChrome();
     static int top_height(int width,UINT dpi,EditorPanel,bool applying);
-    static int bottom_height(UINT dpi){return MulDiv(36,dpi,96);}
+    static int status_height(UINT dpi,bool image){return MulDiv(image?30:22,dpi,96);}
     int layout_top(HWND,int width,int y,UINT,bool visible,EditorPanel,bool applying);
-    int layout_bottom(HWND,int width,int client_height,int occupied,UINT,bool visible,bool enabled);
+    void layout_status(HWND owner,HWND status,const RECT &,UINT,bool visible,bool enabled);
     HWND control(int id) const {const auto p=controls.find(id);return p==controls.end()?nullptr:p->second;}
     bool owns(HWND child) const;
     bool dragging() const {return drag_pending;}

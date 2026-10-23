@@ -20,6 +20,9 @@ paint_pixels	100	120	100	120
 expect	floating.active	true
 editor_layout
 snapshot	skitch-text-placement.png
+resize	1648	780
+editor_layout
+snapshot	skitch-text-effects-wide.png
 resize	520	780
 editor_layout
 snapshot	skitch-text-effects-narrow.png

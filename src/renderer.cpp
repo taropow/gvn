@@ -393,10 +393,11 @@ void Renderer::draw_editor_overlay(ID2D1RenderTarget *context,ID2D1SolidColorBru
         const auto stroke=[&](Pixel c,double pixels,double offset){
             drawing_brush->SetColor(D2D1::ColorF(c.r/255.f,c.g/255.f,c.b/255.f,c.a/255.f));
             const float width=float(pixels*view.scale),shift=float(offset*view.scale);
-            context->SetTransform(D2D1::Matrix3x2F::Translation(shift,shift));
+            D2D1_MATRIX_3X2_F original;context->GetTransform(&original);
+            context->SetTransform(D2D1::Matrix3x2F::Translation(shift,shift)*original);
             if(path)context->DrawGeometry(path.Get(),drawing_brush,width,style.Get());
             else context->FillEllipse(D2D1::Ellipse(screen(pen_points[0]),width/2,width/2),drawing_brush);
-            context->SetTransform(D2D1::Matrix3x2F::Identity());};
+            context->SetTransform(original);};
         const auto &e=pen_style.effects;const double outside=pen_style.width+(e.outline?2*e.outline_width:0);
         if(e.shadow){auto c=e.shadow_color;
             if(e.shadow_blur){c.a=uint8_t(c.a/6);for(int n=5;n>=0;--n)stroke(c,outside+n*e.shadow_blur*.4,e.shadow_offset);}

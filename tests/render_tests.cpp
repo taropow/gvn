@@ -904,3 +904,25 @@ TEST(lanczos_real_pixels_are_identical_for_fit_manual_and_selection_and_differ_f
     }
     SelectObject(dc,old);DeleteObject(bitmap);DeleteDC(dc);DestroyWindow(window);
 }
+
+TEST(pen_preview_matches_committed_position_with_sidebar_zoom_outline_and_shadow) {
+    gvn_test::BackgroundSurface surface(360,260);Renderer renderer;
+    renderer.down=renderer.up=DisplaySimple;
+    Image source;source.width=160;source.height=100;source.frames.push_back({std::vector<Pixel>(160*100,{255,255,255,255}),100});
+    const auto original=source.frames[0].pixels;
+    const std::vector<FloatPoint> points{{30,35},{80,35}};
+    const auto red_bounds=[&]{GdiFlush();RECT bounds{360,260,0,0};size_t count{};
+        for(int y=0;y<260;++y)for(int x=0;x<360;++x){const auto rgb=surface.color(x,y);
+            if((rgb>>16)>220&&((rgb>>8)&255)<60&&(rgb&255)<60){bounds.left=std::min(bounds.left,LONG(x));bounds.right=std::max(bounds.right,LONG(x));bounds.top=std::min(bounds.top,LONG(y));bounds.bottom=std::max(bounds.bottom,LONG(y));++count;}}
+        CHECK(count>20);return bounds;};
+    for(int sidebar:{28,60})for(double scale:{.75,1.,2.})for(bool effects:{false,true}){
+        View view;view.centered=false;view.resize(360-sidebar,240);view.set_image(160,100);view.scale=scale;view.manual=true;
+        renderer.viewport_left=sidebar;renderer.pen_style={8,{245,20,40,255},{}};
+        renderer.pen_style.effects.outline=renderer.pen_style.effects.shadow=effects;renderer.pen_points=points;renderer.invalidate();
+        CHECK(SUCCEEDED(renderer.print(surface.window,surface.dc,&source,0,view,20,nullptr)));const auto preview=red_bounds();
+        auto committed=draw_pen(source,points,renderer.pen_style);renderer.pen_points.clear();renderer.invalidate();
+        CHECK(SUCCEEDED(renderer.print(surface.window,surface.dc,&committed,0,view,20,nullptr)));const auto final=red_bounds();
+        CHECK(std::abs(preview.left-final.left)<=2&&std::abs(preview.right-final.right)<=2&&std::abs(preview.top-final.top)<=2&&std::abs(preview.bottom-final.bottom)<=2);
+        CHECK(source.frames[0].pixels==original);
+    }
+}

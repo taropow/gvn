@@ -122,6 +122,7 @@ class App {
     HWND status{}, slider{}, canvas_horizontal{}, canvas_vertical{}, canvas_corner{};
     CanvasScrollbars canvas_bars;
     int canvas_width{}, canvas_height{}, canvas_top{-1}, canvas_left{-1},canvas_thickness{};
+    int status_min_height{};
     bool canvas_tracking{};
     uint64_t overlay_scroll_until{};
     AnimationBar playback;
@@ -1101,8 +1102,8 @@ class App {
                     selection_tool==SelectionTool::Pen?EditorPanel::Pen:selection_tool==SelectionTool::Text?EditorPanel::Text:EditorPanel::None;
                 const int upper=(toolbar_shown?toolbar.measure_height(client_width,dpi):0)+
                     ((editor_mode||floating||cropping)?EditorChrome::top_height(client_width,dpi,panel,floating||cropping):0);
-                const int lower=(status_shown?MulDiv(22,dpi,96):0)+
-                    (image->animated()?playback.measure_height(client_width,dpi):0)+EditorChrome::bottom_height(dpi);
+                const int lower=(status_shown?measure_status_height(dpi,true):0)+
+                    (image->animated()?playback.measure_height(client_width,dpi):0);
                 const int horizontal=settings.scrollbars&&image_w>client_width?
                     GetSystemMetricsForDpi(SM_CYHSCROLL,dpi):0;
                 height=std::max(image_h+extra_y+upper+lower+horizontal,static_cast<int>(minimum.cy));
@@ -1147,7 +1148,7 @@ class App {
         toolbar.create(hwnd);
         editor_tools.create(hwnd,false,true);
         status =
-            CreateWindowExW(0, STATUSCLASSNAMEW, L"", WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP | SBARS_TOOLTIPS,
+            CreateWindowExW(0, STATUSCLASSNAMEW, L"", WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | SBARS_SIZEGRIP | SBARS_TOOLTIPS,
                             0, 0, 0, 0, hwnd, nullptr, nullptr, nullptr);
         playback.create(hwnd);
         slider = playback.slider;
@@ -1187,7 +1188,7 @@ class App {
         RECT area{};
         GetClientRect(hwnd, &area);
         const int edge = MulDiv(6, GetDpiForWindow(hwnd), 96);
-        const int extent = upper ? toolbar.height() : MulDiv(22, GetDpiForWindow(hwnd), 96);
+        const int extent = upper ? toolbar.height() : EditorChrome::status_height(GetDpiForWindow(hwnd),image!=nullptr);
         return upper ? bar_point.y < (previous ? extent + edge : edge)
                      : bar_point.y >= area.bottom - (previous ? extent + edge : edge);
     }
@@ -1233,6 +1234,18 @@ class App {
             watch_bar_controls(child);
         }
     }
+    int measure_status_height(UINT dpi,bool has_image) {
+        const int wanted=EditorChrome::status_height(dpi,has_image);if(!status)return wanted;
+        if(status_min_height!=wanted){
+            // Themed status padding and the native outer border have different sizes.
+            // Measure the actual control rather than subtracting its text-part padding.
+            SendMessageW(status,SB_SETMINHEIGHT,wanted,0);SendMessageW(status,WM_SIZE,0,0);
+            RECT bounds{};GetWindowRect(status,&bounds);const int actual=bounds.bottom-bounds.top;
+            if(actual!=wanted)SendMessageW(status,SB_SETMINHEIGHT,std::max(0,2*wanted-actual),0);
+            status_min_height=wanted;
+        }
+        SendMessageW(status,WM_SIZE,0,0);RECT bounds{};GetWindowRect(status,&bounds);return bounds.bottom-bounds.top;
+    }
     SIZE minimum_window_size(int outer_width) {
         const UINT dpi = GetDpiForWindow(hwnd);
         auto px = [&](int value) { return MulDiv(value, dpi ? dpi : 96, 96); };
@@ -1266,7 +1279,7 @@ class App {
         const int width = std::max(static_cast<int>(result.cx), outer_width) - extra_x;
         const int upper = settings.toolbar ? toolbar.measure_height(width, dpi) : 0;
         const int lower =
-            (settings.status ? px(22) : 0) + (animated ? playback.measure_height(width, dpi) : 0);
+            (settings.status ? measure_status_height(dpi,true) : 0) + (animated ? playback.measure_height(width, dpi) : 0);
         result.cy = std::max(
             result.cy,
             static_cast<LONG>(upper + lower + px(64) + extra_y +
@@ -1306,19 +1319,18 @@ class App {
         toolbar_shown = bar_visible(true);
         status_shown = bar_visible(false);
         top = toolbar.layout(rc.right, dpi, toolbar_shown);
-        const int status_height = status_shown ? MulDiv(22, dpi, 96) : 0;
+        ShowWindow(status,status_shown?SW_SHOW:SW_HIDE);
+        const int measured_status=measure_status_height(dpi,image!=nullptr);
+        const int status_height=status_shown?measured_status:0;
         const bool animated = image && image->animated();
         play_height = playback.layout(rc.right, rc.bottom, status_height, dpi, animated);
         bottom = status_height + play_height;
         const auto panel=cropping?EditorPanel::Crop:floating?(floating->text_annotation?EditorPanel::Text:EditorPanel::Transform):
             selection_tool==SelectionTool::Pen?EditorPanel::Pen:selection_tool==SelectionTool::Text?EditorPanel::Text:EditorPanel::None;
         top+=editor_chrome.layout_top(hwnd,rc.right,top,dpi,editor_mode||floating||cropping,panel,floating||cropping);
-        bottom+=editor_chrome.layout_bottom(hwnd,rc.right,rc.bottom,bottom,dpi,image&&(!full||editor_mode),image&&!loading&&!floating&&!cropping);
         editor_tools.configure(false,false,settings.toolbar_large);
         left=editor_tools.layout_tools(dpi,top,std::max(1L,rc.bottom-top-bottom),editor_mode);
         renderer.viewport_left=left;
-        ShowWindow(status, status_height ? SW_SHOW : SW_HIDE);
-        SendMessageW(status, WM_SIZE, 0, 0);
         layout_status_parts();
         sync_canvas_scrollbars();
         renderer.resize(rc.right, rc.bottom);
@@ -1329,12 +1341,18 @@ class App {
         SendMessageW(status, SB_SETTEXTW, part, reinterpret_cast<LPARAM>(text.c_str()));
     }
     void layout_status_parts() {
-        const auto dpi = GetDpiForWindow(status);
-        const int edges[]{MulDiv(184, dpi, 96), MulDiv(248, dpi, 96), MulDiv(319, dpi, 96),
-                          MulDiv(489, dpi, 96), -1};
-        const int empty[]{-1};
-        SendMessageW(status, SB_SETPARTS, image ? 5 : 1,
-                     reinterpret_cast<LPARAM>(image ? edges : empty));
+        const auto dpi=GetDpiForWindow(status);const auto px=[&](int n){return MulDiv(n,dpi,96);};
+        if(!image){const int edge=-1;SendMessageW(status,SB_SETPARTS,1,reinterpret_cast<LPARAM>(&edge));editor_chrome.layout_status(hwnd,status,{},dpi,false,false);return;}
+        RECT area{};GetClientRect(status,&area);const int right=std::max(1L,area.right-px(20));
+        const int export_width=std::min(right,std::clamp(int(right*.42),px(260),px(420))),information=std::max(0,right-export_width-px(6));
+        int edges[5]{};
+        if(information>=px(520)){edges[0]=px(160);edges[1]=px(210);edges[2]=px(270);edges[3]=px(410);}
+        else if(information>=px(280)){edges[0]=edges[1]=px(145);edges[2]=edges[3]=px(200);}
+        else if(information>=px(145)){edges[0]=edges[1]=information-px(45);edges[2]=edges[3]=information;}
+        else {edges[0]=edges[1]=edges[2]=edges[3]=information;}
+        edges[4]=information;SendMessageW(status,SB_SETPARTS,5,reinterpret_cast<LPARAM>(edges));
+        const RECT panel{right-export_width,px(2),right,area.bottom-px(2)};
+        editor_chrome.layout_status(hwnd,status,panel,dpi,status_shown,image&&!loading&&!floating&&!cropping);
     }
     void sync_canvas_scrollbars() {
         if (!canvas_horizontal)

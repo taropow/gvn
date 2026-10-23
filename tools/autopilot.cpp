@@ -1978,7 +1978,7 @@ struct Autopilot {
             RECT client{};
             GetClientRect(app.hwnd, &client);
             auto p = relative_rect(app.playback.hwnd, app.hwnd);
-            const int status = app.status_shown ? MulDiv(22, GetDpiForWindow(app.hwnd), 96) : 0;
+            const int status = app.status_shown ? int(relative_rect(app.status,app.hwnd).bottom-relative_rect(app.status,app.hwnd).top) : 0;
             return p.bottom == client.bottom - status && p.top >= app.top &&
                    std::abs(
                        (app.top + app.view.height + (app.canvas_bars.horizontal ? app.canvas_thickness : 0)) -

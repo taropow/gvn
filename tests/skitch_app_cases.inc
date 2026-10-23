@@ -70,7 +70,8 @@
         CHECK(SendMessageW(app.status,SB_GETICON,0,0)<=0&&skitch_visible(app.editor_chrome.bottom));
         auto drag=app.editor_chrome.control(editor_id::Drag);SetWindowTextW(app.editor_chrome.control(editor_id::Name),L"テスト画像");
         for(int logical:{960,520,360,120})for(UINT dpi:{96u,144u,192u}){
-            const int width=MulDiv(logical,dpi,96);CHECK(app.editor_chrome.layout_bottom(app.hwnd,width,900,24,dpi,true,true)==MulDiv(36,dpi,96));
+            const int width=MulDiv(logical,dpi,96);app.editor_chrome.layout_status(app.hwnd,app.status,{0,0,width,MulDiv(26,dpi,96)},dpi,true,true);
+            CHECK(GetParent(app.editor_chrome.bottom)==app.status);
             RECT previous{},panel{};GetClientRect(app.editor_chrome.bottom,&panel);
             for(int id:{editor_id::Name,editor_id::Format,editor_id::Drag}){RECT r{};GetWindowRect(app.editor_chrome.control(id),&r);MapWindowPoints(nullptr,app.editor_chrome.bottom,reinterpret_cast<POINT *>(&r),2);
                 CHECK(r.left>=previous.right&&r.top>=0&&r.right<=width&&r.bottom<=panel.bottom);CHECK(std::abs((r.top+r.bottom)-(previous.top+previous.bottom))<=MulDiv(4,dpi,96)||id==editor_id::Name);previous=r;}}
@@ -120,4 +121,38 @@
         const auto saved=app.image;const auto clipboard=load_image(fixture(L"page1.png"));copy_image(app.hwnd,clipboard,0);command(NewPaste);CHECK(app.requested.empty());
         command(Undo);CHECK(app.image==saved&&app.requested==target);command(Undo);CHECK(app.image->frames[0].pixels==second&&app.modified);
         command(Redo);CHECK(app.image==saved&&!app.modified);command(Redo);CHECK(app.image->frames[0].pixels==clipboard.frames[0].pixels&&app.requested.empty());
+    }
+
+    void compact_editor_options_and_embedded_status_export(){
+        ShowWindow(app.hwnd,SW_SHOWNOACTIVATE);app.settings.confirm_unsaved=false;
+        app.replace(new_image(320,200),false,true);
+        SetWindowTextW(app.editor_chrome.control(editor_id::Name),L"保存する画像");
+        SendMessageW(app.editor_chrome.control(editor_id::Format),CB_SETCURSEL,1,0);
+        const auto relative=[](HWND c,HWND parent){RECT b{};GetWindowRect(c,&b);MapWindowPoints(nullptr,parent,reinterpret_cast<POINT *>(&b),2);return b;};
+        for(int width:{1648,960,640,360}){
+            SetWindowPos(app.hwnd,nullptr,0,0,width,700,SWP_NOMOVE|SWP_NOZORDER);
+            const auto status=relative(app.status,app.hwnd),panel=relative(app.editor_chrome.bottom,app.status);
+            RECT client{};GetClientRect(app.status,&client);
+            CHECK(GetParent(app.editor_chrome.bottom)==app.status&&panel.left>=0&&panel.right<=client.right&&panel.bottom<=client.bottom);
+            CHECK(app.bottom==status.bottom-status.top&&app.play_height==0);
+            CHECK(status.bottom-status.top==EditorChrome::status_height(GetDpiForWindow(app.hwnd),true));
+            int parts[5]{};CHECK(SendMessageW(app.status,SB_GETPARTS,5,reinterpret_cast<LPARAM>(parts))==5&&parts[4]<=panel.left);
+            CHECK(app.editor_chrome.text(editor_id::Name)==L"保存する画像"&&SendMessageW(app.editor_chrome.control(editor_id::Format),CB_GETCURSEL,0,0)==1);
+        }
+        command(ToggleStatus);CHECK(!skitch_visible(app.editor_chrome.bottom)&&app.bottom==0);
+        command(ToggleStatus);CHECK(skitch_visible(app.editor_chrome.bottom)&&app.editor_chrome.text(editor_id::Name)==L"保存する画像");
+        for(auto mode:{EditorPanel::Pen,EditorPanel::Text})for(int width:{1648,960,520,360})for(UINT dpi:{96u,144u,192u}){
+            const int w=MulDiv(width,dpi,96),h=app.editor_chrome.layout_top(app.hwnd,w,0,dpi,true,mode,mode==EditorPanel::Text);
+            std::vector<RECT> boxes;
+            for(int id=editor_id::Color;id<editor_id::Last;++id)if(const auto c=app.editor_chrome.control(id);c&&GetParent(c)==app.editor_chrome.top&&(GetWindowLongPtrW(c,GWL_STYLE)&WS_VISIBLE)){
+                const auto box=relative(c,app.editor_chrome.top);CHECK(box.left>=0&&box.top>=0&&box.right<=w&&box.bottom<=h);
+                for(const auto &previous:boxes){RECT intersection{};CHECK(!IntersectRect(&intersection,&box,&previous));}boxes.push_back(box);
+            }
+            if(width==1648)CHECK(h<=MulDiv(mode==EditorPanel::Pen?40:80,dpi,96));
+        }
+        app.layout();command(ToolPen);
+        CHECK(!IsWindowEnabled(app.editor_chrome.control(editor_id::OutlineWidth))&&!IsWindowEnabled(app.editor_chrome.control(editor_id::ShadowBlur)));
+        SendMessageW(app.editor_chrome.control(editor_id::Outline),BM_CLICK,0,0);SendMessageW(app.editor_chrome.control(editor_id::Shadow),BM_CLICK,0,0);
+        CHECK(IsWindowEnabled(app.editor_chrome.control(editor_id::OutlineWidth))&&IsWindowEnabled(app.editor_chrome.control(editor_id::ShadowBlur)));
+        command(CloseImage);CHECK(!skitch_visible(app.editor_chrome.bottom)&&SendMessageW(app.status,SB_GETPARTS,0,0)==1);
     }
