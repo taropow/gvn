@@ -1651,70 +1651,11 @@ struct AppAudit {
         CHECK(read_file(first) == read_file(fixture(L"display-alpha.png")));
         CHECK(read_file(next) == read_file(fixture(L"alpha.png")));
     }
-    void status_icon_drag_exports_original_edited_clipboard_and_animation() {
-        app.settings.confirm_unsaved = false;
-        std::vector<std::filesystem::path> exported;
-        app.dialogs.file_drag = [&](const std::filesystem::path &path) {
-            CHECK(GetCapture() != app.status && !app.status_drag_pending && !app.player.playing);
-            CHECK(load_image(path).frames[0].pixels == app.image->frames.at(app.player.frame).pixels);
-            const auto object = file_data_object(path);
-            FORMATETC format{CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
-            CHECK(object->QueryGetData(&format) == S_OK);
-            exported.push_back(path);
-        };
-        const auto send = [&](UINT message, int x, int y, WPARAM flags = MK_LBUTTON) {
-            SendMessageW(app.status, message, flags, MAKELPARAM(x, y));
-        };
-        const auto drag = [&] {
-            send(WM_LBUTTONDOWN, 8, 8);
-            CHECK(app.status_drag_pending && GetCapture() == app.status);
-            send(WM_MOUSEMOVE, 50, -20);
-            CHECK(!app.status_drag_pending && GetCapture() != app.status);
-        };
-        CHECK(SendMessageW(app.status, SB_GETICON, 0, 0) != 0);
-        send(WM_LBUTTONDOWN, 8, 8);
-        send(WM_MOUSEMOVE, 50, -20);
-        CHECK(exported.empty());
-        const auto original = copy(L"alpha.png", L"original.png");
-        open(original);
-        send(WM_LBUTTONDOWN, 8, 8);
-        send(WM_MOUSEMOVE, 9, 8);
-        send(WM_LBUTTONUP, 9, 8, 0);
-        CHECK(exported.empty() && !app.status_drag_pending);
-        send(WM_LBUTTONDOWN, 80, 8);
-        send(WM_MOUSEMOVE, 120, 8);
-        send(WM_LBUTTONUP, 120, 8, 0);
-        CHECK(exported.empty());
-        drag();
-        CHECK(exported.size() == 1 && same_path(exported.back(), original));
-        command(Negative);
-        drag();
-        CHECK(exported.size() == 2 && !same_path(exported.back(), original));
-        CHECK(exported.back().extension() == L".png");
-        copy_image(app.hwnd, load_image(fixture(L"alpha.png")), 0);
-        command(NewPaste);
-        drag();
-        CHECK(exported.size() == 3 && app.image->path.empty());
-        open(fixture(L"disposal.gif"));
-        command(FrameNext);
-        app.player.playing = true;
-        drag();
-        CHECK(exported.size() == 4 && app.player.playing && exported.back().extension() == L".png");
-        send(WM_LBUTTONDOWN, 8, 8);
-        send(WM_CANCELMODE, 0, 0, 0);
-        CHECK(!app.status_drag_pending && GetCapture() != app.status);
-        send(WM_LBUTTONDOWN, 8, 8);
-        command(ToggleStatus);
-        CHECK(!app.status_drag_pending && GetCapture() != app.status);
-        command(ToggleStatus);
-        app.dialogs.file_drag = [](const auto &) { throw std::runtime_error("test export failure"); };
-        const auto before = notices.size();
-        drag();
-        CHECK(notices.size() == before + 1 && app.player.playing);
-        command(CloseImage);
-        CHECK(SendMessageW(app.status, SB_GETICON, 0, 0) ==
-              reinterpret_cast<LRESULT>(app.status_icons.disabled));
-        CHECK(read_file(original) == read_file(fixture(L"alpha.png")));
+    void bottom_export_drag_original_edited_clipboard_and_animation() {
+        skitch_bottom_export_moves_status_icon_names_formats_and_ole_payload();
+        app.settings.confirm_unsaved=false;open(fixture(L"disposal.gif"));command(FrameNext);app.player.playing=true;
+        app.dialogs.file_drag=[&](const auto &path){CHECK(!app.player.playing);CHECK(load_image(path).frames[0].pixels==app.image->frames[app.player.frame].pixels);std::filesystem::remove(path);};
+        app.begin_file_drag();CHECK(app.player.playing);
     }
     void bitfield_loading_toggle_reloads_cached_file_and_archive_but_preserves_edits_clipboard_and_alpha() {
         CHECK(Settings{}.bitfield_to24&&!LoadingOptions{}.bitfield_to24);app.settings.confirm_unsaved=false;app.settings.bitfield_to24=true;
@@ -2083,7 +2024,7 @@ struct AppAudit {
         command(ToggleToolbar);
         CHECK(app.top == top);
         command(ToggleStatus);
-        CHECK(app.bottom == 0);
+        CHECK(app.bottom == MulDiv(66,GetDpiForWindow(app.hwnd),96)); // Export panel remains when status is hidden.
         command(ToggleStatus);
         CHECK(app.bottom == bottom);
     }
@@ -5888,13 +5829,9 @@ void check_rotation_shell_file(const std::filesystem::path &path) {
     ReleaseStgMedium(&medium);
     CHECK(count == 1 && length && gvn::same_path(received, path));
 }
-void rotation_status_drag(gvn::AppAudit &audit) {
-    auto &app = audit.app;
-    SendMessageW(app.status, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(8, 8));
-    CHECK(app.status_drag_pending && GetCapture() == app.status);
-    SendMessageW(app.status, WM_MOUSEMOVE, MK_LBUTTON, MAKELPARAM(50, -20));
-    CHECK(!app.status_drag_pending && GetCapture() != app.status);
-}
+// Original-file drag is still available from the main toolbar/F6. The new
+// filename/format export panel has its own native-control and CF_HDROP coverage.
+void rotation_status_drag(gvn::AppAudit &audit) { audit.app.begin_file_drag(); }
 std::filesystem::path open_rotation_case(gvn::AppAudit &audit, const gvn_test::RotationFormatCase &item) {
     using namespace gvn;
     audit.command(ViewRotateNone);
@@ -7008,6 +6945,7 @@ void background_changes_preserve_image_animation_copy_save_and_ole() {
     }
 #include "selection_app_cases.inc"
 #include "editor_app_cases.inc"
+#include "skitch_app_cases.inc"
 };
 } // namespace gvn
 
@@ -7075,7 +7013,7 @@ APP_TEST(delete_confirm_modes_failure_advance_and_gap_rollback)
 APP_TEST(direct_delete_permanent_routing_confirmation_failure_and_document_guards)
 APP_TEST(viewer_defaults_skip_unsaved_prompt_and_zoom_wheel)
 APP_TEST(cache_policy_applies_without_replacing_image_and_close_releases_retained_files)
-APP_TEST(status_icon_drag_exports_original_edited_clipboard_and_animation)
+APP_TEST(bottom_export_drag_original_edited_clipboard_and_animation)
 APP_TEST(loading_options_reload_without_changing_clipboard_or_edited_images)
 APP_TEST(loading_animation_orientation_archive_and_attribute_settings)
 APP_TEST(navigation_and_sorting)
@@ -7363,3 +7301,6 @@ APP_TEST(editor_unifies_legacy_keys_mouse_tools_units_and_cancel)
 APP_TEST(editor_short_window_tools_scroll_and_animation_layout)
 
 APP_TEST(three_quality_choices_drive_actual_zoom_editor_fullscreen_without_changing_rgba)
+APP_TEST(skitch_pen_text_native_controls_alpha_apply_cancel_undo)
+APP_TEST(skitch_crop_handles_numeric_bounds_buttons_cancel_apply_undo)
+APP_TEST(skitch_bottom_export_moves_status_icon_names_formats_and_ole_payload)

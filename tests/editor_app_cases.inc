@@ -10,7 +10,7 @@
         command(ToggleEditor);CHECK(app.editor_mode&&app.left>0&&(GetWindowLongPtrW(app.editor_tools.bar_window(),GWL_STYLE)&WS_VISIBLE));
         CHECK(app.selection_active()&&app.selection_tool==App::SelectionTool::Rectangle);
         CHECK(SendMessageW(app.toolbar.hwnd,TB_ISBUTTONCHECKED,ToggleEditor,0));
-        const auto count=SendMessageW(app.editor_tools.hwnd,TB_BUTTONCOUNT,0,0);CHECK(count==23);
+        const auto count=SendMessageW(app.editor_tools.hwnd,TB_BUTTONCOUNT,0,0);CHECK(count==25);
         int column=-1,previous=-1;
         for(int n=0;n<count;++n){TBBUTTON button{};RECT bounds{};SendMessageW(app.editor_tools.hwnd,TB_GETBUTTON,n,reinterpret_cast<LPARAM>(&button));
             CHECK(SendMessageW(app.editor_tools.hwnd,TB_GETITEMRECT,n,reinterpret_cast<LPARAM>(&bounds)));

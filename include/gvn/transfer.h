@@ -1,6 +1,7 @@
 #pragma once
 #include "codecs.h"
 #include "selection_clipboard.h"
+#include "saving.h"
 #include <windows.h>
 #include <objidl.h>
 #include <wrl/client.h>
@@ -17,6 +18,7 @@ using ClipboardContent = std::variant<Image, std::filesystem::path>;
 ClipboardContent paste_clipboard(HWND owner);
 SelectionClipboard paste_selection_clipboard(HWND owner);
 std::filesystem::path drag_path(const Image &image, size_t frame, bool modified,const ImageMetadata *metadata=nullptr);
+std::filesystem::path export_drag_path(const Image &,size_t,const std::wstring &name,SaveFormat,const SaveOptions &,const ImageMetadata *metadata=nullptr);
 Microsoft::WRL::ComPtr<IDataObject> file_data_object(const std::filesystem::path &path);
 DWORD drag_file(const std::filesystem::path &path);
 } // namespace gvn

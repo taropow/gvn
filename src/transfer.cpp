@@ -349,6 +349,23 @@ std::filesystem::path drag_path(const Image &image, size_t frame, bool modified,
     save_image(image, frame, path,0.93f,true,metadata);
     return path;
 }
+std::filesystem::path export_drag_path(const Image &image,size_t frame,const std::wstring &name,SaveFormat format,const SaveOptions &options,const ImageMetadata *metadata){
+    std::wstring safe=name;
+    for(auto &c:safe)if(c<32||std::wstring_view(L"<>:\"/\\|?*").find(c)!=std::wstring_view::npos)c=L'_';
+    while(!safe.empty()&&(safe.back()==L'.'||safe.back()==L' '))safe.pop_back();
+    if(safe.empty())safe=L"画像";if(safe.size()>120)safe.resize(120);
+    auto base=safe.substr(0,safe.find(L'.'));std::transform(base.begin(),base.end(),base.begin(),[](wchar_t c){return wchar_t(towupper(c));});
+    if(base==L"CON"||base==L"PRN"||base==L"AUX"||base==L"NUL"||(base.size()==4&&(base.starts_with(L"COM")||base.starts_with(L"LPT"))&&base[3]>=L'1'&&base[3]<=L'9'))safe=L"_"+safe;
+    // Each export has its own directory; an application may open the dropped file later.
+    wchar_t temp[32768]{},guid_text[64]{};GUID guid{};
+    require(GetTempPathW(32768,temp)>0&&SUCCEEDED(CoCreateGuid(&guid)),"Cannot create drag export");StringFromGUID2(guid,guid_text,64);
+    const auto directory=std::filesystem::path(temp)/L"GVN"/L"drag"/guid_text;std::filesystem::create_directories(directory);
+    const auto ext=format==SaveFormat::Jpeg?L".jpg":format==SaveFormat::Bmp?L".bmp":format==SaveFormat::Gif?L".gif":L".png";
+    auto target=directory/(safe+ext);auto configured=options;
+    // PNG is the lossless alpha interchange choice, independent of the save dialog's matte settings.
+    if(format==SaveFormat::Png)configured.png.transparency=PngTransparency::Alpha;
+    save_image(image,frame,target,configured,false,metadata);return target;
+}
 ComPtr<IDataObject> file_data_object(const std::filesystem::path &path) {
     ComPtr<IShellItem> item;
     require(SUCCEEDED(SHCreateItemFromParsingName(std::filesystem::absolute(path).c_str(), nullptr,

@@ -29,6 +29,7 @@
 #include "gvn/brightness_dialog.h"
 #include "gvn/levels_dialog.h"
 #include "gvn/floating_selection.h"
+#include "gvn/editor_chrome.h"
 #include <windowsx.h>
 #include <commdlg.h>
 #include <pathcch.h>
@@ -119,24 +120,13 @@ class App {
         return point;
     }
     HWND status{}, slider{}, canvas_horizontal{}, canvas_vertical{}, canvas_corner{};
-    struct StatusIcons {
-        HICON active{}, disabled{};
-        UINT dpi{};
-        ~StatusIcons() {
-            if (active)
-                DestroyIcon(active);
-            if (disabled)
-                DestroyIcon(disabled);
-        }
-    } status_icons;
-    bool status_drag_pending{};
-    POINT status_drag_start{};
     CanvasScrollbars canvas_bars;
     int canvas_width{}, canvas_height{}, canvas_top{-1}, canvas_left{-1},canvas_thickness{};
     bool canvas_tracking{};
     uint64_t overlay_scroll_until{};
     AnimationBar playback;
     IconToolbar toolbar,editor_tools;
+    EditorChrome editor_chrome;
     ViewerIme ime;
     struct Editing {
         std::function<uint64_t()> physical_bytes = physical_memory_bytes;
@@ -389,7 +379,7 @@ class App {
     int wheel_vertical{}, wheel_horizontal{};
     std::array<unsigned, 2> wheel_context{UINT_MAX, UINT_MAX};
     SelectionRegion selection,selection_before_drag;
-    enum class SelectionTool { Rectangle,Freehand,Polygon,Move,Browse,Pan };
+    enum class SelectionTool { Rectangle,Freehand,Polygon,Move,Browse,Pan,Pen,Text,Crop };
     SelectionTool selection_tool{SelectionTool::Browse},previous_editor_tool{SelectionTool::Rectangle},selection_drag_tool{SelectionTool::Rectangle};
     bool selection_active() const { return selection_tool<=SelectionTool::Move; }
     SelectionCombine selection_combine{SelectionCombine::Replace};
@@ -403,10 +393,15 @@ class App {
         std::optional<SelectionOrigin> original_position;
         bool slideshow{},invalid_metadata{};
         SelectionRegion previous_selection;
+        bool text_annotation{};
     };
     std::optional<FloatingPaste> floating;
     std::optional<FloatingDrag> floating_drag;
     unsigned floating_drag_button{};
+    struct CropPreview {std::shared_ptr<Image> origin;FloatingBox box;SelectionRegion selection;Player player;double scale{1};};
+    std::optional<CropPreview> cropping;
+    std::optional<FloatingDrag> crop_drag;
+    std::optional<Player> pen_player;
     int left{},top{}, bottom{}, play_height{28};
     std::chrono::steady_clock::time_point last_tick;
 #ifdef GVN_APP_TESTS
@@ -439,6 +434,9 @@ class App {
     bool checked(UINT id) const {
         if(id==ToggleEditor)return editor_mode;
         if(id==ToolPan)return space_pan||(editor_mode&&selection_tool==SelectionTool::Pan);
+        if(id==ToolPen)return editor_mode&&selection_tool==SelectionTool::Pen;
+        if(id==ToolText)return editor_mode&&selection_tool==SelectionTool::Text;
+        if(id==ToolCrop)return cropping.has_value();
         if(id>=SelectRectangle&&id<=SelectMove)return selection_active()&&int(selection_tool)==int(id-SelectRectangle);
         if(id>=GridFree&&id<=Grid32){const int units[]{1,2,4,8,16,32};return !settings.selection_custom&&settings.grid==units[id-GridFree];}
         if(id==Grid)return settings.selection_custom||(settings.grid!=1&&settings.grid!=2&&settings.grid!=4&&settings.grid!=8&&settings.grid!=16&&settings.grid!=32);
@@ -674,6 +672,7 @@ class App {
         submenu(m, file_names, L"ファイル名をクリップボードへ");
         submenu(root, m, L"編集");
         m = CreatePopupMenu();
+        add(m,ToolPen,L"ペン");add(m,ToolText,L"文字入れ");add(m,ToolCrop,L"トリミング…");
         add(m, RotateRight, L"右90度回転\tR");
         add(m, RotateLeft, L"左90度回転\tShift+R");
         add(m, Rotate180, L"180度回転");
@@ -1099,7 +1098,6 @@ class App {
         canvas_corner =
             CreateWindowExW(0, L"STATIC", L"", WS_CHILD, 0, 0, 0, 0, hwnd, nullptr, nullptr, nullptr);
         watch_bar_controls(hwnd);
-        SetWindowSubclass(status, status_control_proc, 18, reinterpret_cast<DWORD_PTR>(this));
         loader = std::make_unique<Loader>(
             [this](Loaded value) {
                 auto result = std::make_unique<Loaded>(std::move(value));
@@ -1174,79 +1172,6 @@ class App {
             SetWindowSubclass(child, bar_control_proc, 17, reinterpret_cast<DWORD_PTR>(this));
             watch_bar_controls(child);
         }
-    }
-    bool status_icon_hit(POINT point) const {
-        RECT part{};
-        if (!SendMessageW(status, SB_GETRECT, 0, reinterpret_cast<LPARAM>(&part)))
-            return false;
-        part.right = std::min(part.right, part.left + MulDiv(24, GetDpiForWindow(status), 96));
-        return PtInRect(&part, point) != FALSE;
-    }
-    void cancel_status_drag() {
-        status_drag_pending = false;
-        if (GetCapture() == status)
-            ReleaseCapture();
-    }
-    static LRESULT CALLBACK status_control_proc(HWND child, UINT message, WPARAM w, LPARAM l, UINT_PTR,
-                                                DWORD_PTR data) {
-        auto self = reinterpret_cast<App *>(data);
-        try {
-            const POINT point{GET_X_LPARAM(l), GET_Y_LPARAM(l)};
-            if (message == WM_LBUTTONDOWN && self->image && self->status_icon_hit(point)) {
-                self->status_drag_start = point;
-                self->status_drag_pending = true;
-                SetCapture(child);
-                return 0;
-            }
-            if (message == WM_MOUSEMOVE && self->status_drag_pending) {
-                if (!(w & MK_LBUTTON) || !self->image) {
-                    self->cancel_status_drag();
-                    return 0;
-                }
-                const auto dpi = GetDpiForWindow(child);
-                if (std::abs(point.x - self->status_drag_start.x) >= GetSystemMetricsForDpi(SM_CXDRAG, dpi) ||
-                    std::abs(point.y - self->status_drag_start.y) >= GetSystemMetricsForDpi(SM_CYDRAG, dpi)) {
-                    self->cancel_status_drag();
-                    self->begin_file_drag();
-                }
-                return 0;
-            }
-            if (message == WM_LBUTTONUP || message == WM_CAPTURECHANGED || message == WM_CANCELMODE ||
-                (message == WM_SHOWWINDOW && !w))
-                self->cancel_status_drag();
-            if (message == WM_SETCURSOR && self->image && LOWORD(l) == HTCLIENT) {
-                auto cursor = self->cursor_screen();
-                ScreenToClient(child, &cursor);
-                if (self->status_icon_hit(cursor)) {
-                    SetCursor(LoadCursorW(nullptr, IDC_HAND));
-                    return TRUE;
-                }
-            }
-        } catch (const std::exception &e) {
-            self->cancel_status_drag();
-            self->report_exception(widen(e.what()));
-            return 0;
-        }
-        return DefSubclassProc(child, message, w, l);
-    }
-    void sync_status_icon(UINT dpi) {
-        if (status_icons.dpi != dpi) {
-            const auto active = command_icon(ArmDrag, MulDiv(16, dpi, 96));
-            const auto disabled = command_icon(ArmDrag, MulDiv(16, dpi, 96), true);
-            SendMessageW(status, SB_SETICON, 0, reinterpret_cast<LPARAM>(image ? active : disabled));
-            if (status_icons.active)
-                DestroyIcon(status_icons.active);
-            if (status_icons.disabled)
-                DestroyIcon(status_icons.disabled);
-            status_icons.active = active;
-            status_icons.disabled = disabled;
-            status_icons.dpi = dpi;
-        } else
-            SendMessageW(status, SB_SETICON, 0,
-                         reinterpret_cast<LPARAM>(image ? status_icons.active : status_icons.disabled));
-        SendMessageW(status, SB_SETTIPTEXTW, 0,
-                     reinterpret_cast<LPARAM>(image ? L"アイコンをドラッグして画像ファイルを渡す"
-                                                    : L"画像を開くとファイルドラッグできます"));
     }
     SIZE minimum_window_size(int outer_width) {
         const UINT dpi = GetDpiForWindow(hwnd);
@@ -1325,21 +1250,22 @@ class App {
         const bool animated = image && image->animated();
         play_height = playback.layout(rc.right, rc.bottom, status_height, dpi, animated);
         bottom = status_height + play_height;
+        const auto panel=cropping?EditorPanel::Crop:floating?(floating->text_annotation?EditorPanel::Text:EditorPanel::Transform):
+            selection_tool==SelectionTool::Pen?EditorPanel::Pen:selection_tool==SelectionTool::Text?EditorPanel::Text:EditorPanel::None;
+        top+=editor_chrome.layout_top(hwnd,rc.right,top,dpi,editor_mode||floating||cropping,panel,floating||cropping);
+        bottom+=editor_chrome.layout_bottom(hwnd,rc.right,rc.bottom,bottom,dpi,image&&(!full||editor_mode),image&&!loading&&!floating&&!cropping);
         editor_tools.configure(false,false,settings.toolbar_large);
         left=editor_tools.layout_tools(dpi,top,std::max(1L,rc.bottom-top-bottom),editor_mode);
         renderer.viewport_left=left;
         ShowWindow(status, status_height ? SW_SHOW : SW_HIDE);
         SendMessageW(status, WM_SIZE, 0, 0);
         layout_status_parts();
-        sync_status_icon(dpi);
         sync_canvas_scrollbars();
         renderer.resize(rc.right, rc.bottom);
         ime.apply(hwnd, settings.disable_ime);
         InvalidateRect(hwnd, nullptr, FALSE);
     }
     void status_text(int part, const std::wstring &text) {
-        if (part == 0)
-            sync_status_icon(GetDpiForWindow(status));
         SendMessageW(status, SB_SETTEXTW, part, reinterpret_cast<LPARAM>(text.c_str()));
     }
     void layout_status_parts() {
@@ -1515,11 +1441,14 @@ class App {
         toolbar.check(ToggleEditor,editor_mode);
         toolbar.text(ToggleEditor,editor_mode?L"画像編集モードを終了":L"画像編集モードに切り替え");
         if(editor_mode){
-            for(UINT id:{SelectRectangle,SelectFreehand,SelectPolygon,SelectMove,ToolPan})editor_tools.check(id,checked(id));
-            for(UINT id:{SelectRectangle,SelectFreehand,SelectPolygon,SelectAll,InvertSelection,Crop,Resize,Canvas,RotateRight,FlipH,FlipV,Brightness,ColorAdjust,Levels})editor_tools.enable(id,image&&!floating&&!loading);
+            for(UINT id:{SelectRectangle,SelectFreehand,SelectPolygon,SelectMove,ToolPan,ToolPen,ToolText,ToolCrop})editor_tools.check(id,checked(id));
+            for(UINT id:{SelectRectangle,SelectFreehand,SelectPolygon,SelectAll,InvertSelection,ToolCrop,ToolPen,ToolText,Resize,Canvas,RotateRight,FlipH,FlipV,Brightness,ColorAdjust,Levels})editor_tools.enable(id,image&&!floating&&!loading);
             for(UINT id:{SelectMove,DeleteSelection,ClearSelection})editor_tools.enable(id,image&&!selection.empty()&&!floating&&!loading);
             editor_tools.enable(PasteSelection,!loading&&!floating);
         }
+        if(cropping)editor_chrome.bounds(cropping->box,cropping->scale);
+        else if(floating&&!floating->text_annotation)editor_chrome.bounds(floating->box);
+        if(image)editor_chrome.export_name(image->path.empty()?L"画像":image->path.filename().wstring());
         if(floating){
             for(UINT id:{Save,Copy,ArmDrag,FileDelete,Previous,Next,Undo})toolbar.enable(id,false);
             std::wostringstream hint;hint<<L"仮置き：ドラッグで移動／ハンドルで拡縮／枠外で回転  Enter:確定  Esc:中止  ";
@@ -1956,6 +1885,7 @@ class App {
     }
     void replace(std::shared_ptr<Image> next_image, bool dirty = true, bool new_document = false) {
         if(!next_image)throw std::invalid_argument("Empty edited image");
+        if(cropping)cancel_crop();
         if(floating)cancel_floating();
         Player next_player;
         next_player.reset(*next_image);
@@ -2026,6 +1956,7 @@ class App {
     size_t presented_frame() const {return previewing_mask()?0:player.frame;}
     HRESULT render_scene(HDC dc=nullptr) {
         renderer.selection_region=&selection;
+        renderer.crop_box=cropping?std::optional<FloatingBox>(cropping->box):std::nullopt;
         renderer.set_floating(floating?floating->source:nullptr,floating?floating->box:FloatingBox{});
         const auto previous=renderer.dragging_low;renderer.dragging_low=previous||previewing_mask();
         struct Restore {bool &value;bool previous;~Restore(){value=previous;}} restore{renderer.dragging_low,previous};
@@ -2034,6 +1965,7 @@ class App {
                  :renderer.draw(hwnd,presented_image(),frame,view,top,bottom,floating?nullptr:&selection);
     }
     void begin_floating() {
+        if(cropping)cancel_crop();
         if(loading)throw std::runtime_error("Wait for the current image to finish loading");
         auto content=paste_selection_clipboard(hwnd);
         auto source=std::make_shared<Image>(still_frame(content.image,0,false));
@@ -2114,16 +2046,16 @@ class App {
     }
     void set_edit_mode(bool enabled) {
         if(editor_mode==enabled)return;
-        cancel_pointer();if(floating)cancel_floating();
+        cancel_pointer();if(floating)cancel_floating();if(cropping)cancel_crop();
         if(!enabled){previous_editor_tool=selection_tool;selection_tool=SelectionTool::Browse;}
         else selection_tool=previous_editor_tool;
         editor_mode=enabled;drag_armed=false;refresh_menu();layout();update();
     }
     void choose_tool(SelectionTool tool) {
-        cancel_pointer();if(floating)cancel_floating();
+        cancel_pointer();if(floating)cancel_floating();if(cropping)cancel_crop();
         set_edit_mode(true);selection_tool=previous_editor_tool=tool;
         if(tool==SelectionTool::Move)move_selection();
-        refresh_menu();update();
+        refresh_menu();layout();update();
     }
     POINT canvas_point(POINT p) const {p.x-=left;return p;}
     POINT client_point(POINT p) const {p.x+=left;return p;}
@@ -2937,7 +2869,13 @@ class App {
         });
         if(automatic!=settings.info_auto_colors){settings.info_auto_colors=automatic;settings.save(config);}
     }
+#include "viewer_editor.inc"
     void command(UINT id) {
+        if(id==ToolPen||id==ToolText){choose_tool(id==ToolPen?SelectionTool::Pen:SelectionTool::Text);return;}
+        if(id==ToolCrop){begin_crop();return;}
+        if(cropping){if(id==CommitSelection){commit_crop();return;}if(id==CancelSelection||id==Undo||id==ClearSelection){cancel_crop();return;}
+            const bool viewing=(id>=ZoomIn&&id<=Nearest)||(id>=ScrollUp&&id<=ScrollCenter)||id==ToggleMenu||id==ToggleToolbar||id==ToggleStatus;
+            if(!viewing&&id!=ToggleEditor)cancel_crop();}
         if(id==ToggleEditor){set_edit_mode(!editor_mode);return;}
         if(floating){
             if(id==CommitSelection){commit_floating();return;}
@@ -4136,9 +4074,11 @@ class App {
         update();
     }
     void cancel_pointer() {
+        crop_drag.reset();
+        if(pen_player){player=std::move(*pen_player);pen_player.reset();renderer.pen_points.clear();}
         floating_drag.reset();
         cancel_selection_path();
-        cancel_status_drag();
+        editor_chrome.cancel_drag();
         for (auto &press : mouse_presses)
             press = {};
         mouse_buttons = active_drag_button = active_drag_action = 0;
@@ -4197,6 +4137,11 @@ class App {
     void pointer_down(unsigned button, POINT point, WPARAM flags, bool double_click = false) {
         if (point.y < top || point.y >= top + view.height||point.x<0||point.x>=view.width)
             return;
+        if(!space_pan&&image&&button==0&&editor_mode){
+            if(cropping){SetFocus(hwnd);const auto p=floating_point(point);crop_drag=FloatingDrag{cropping->box,p,floating_hit(cropping->box,p,8./view.scale)};SetCapture(hwnd);return;}
+            if(selection_tool==SelectionTool::Pen&&!floating){start_pen(point);return;}
+            if(selection_tool==SelectionTool::Text&&!floating){start_text(point);return;}
+        }
         if(floating&&!space_pan){
             if(button==0&&point.x>=0&&point.x<view.width){SetFocus(hwnd);const auto p=floating_point(point);
                 floating_drag_button=button;floating_drag=FloatingDrag{floating->box,p,floating_hit(floating->box,p,7./view.scale)};SetCapture(hwnd);}
@@ -4242,6 +4187,8 @@ class App {
             SetCapture(hwnd);
     }
     void pointer_up(unsigned button, POINT point) {
+        if(button==0&&pen_player){finish_pen(point);return;}
+        if(button==0&&crop_drag){cropping->box=crop_drag->moved(floating_point(point),(GetKeyState(VK_SHIFT)&0x8000)!=0);crop_drag.reset();if(GetCapture()==hwnd)ReleaseCapture();update();return;}
         if(floating&&!space_pan){
             if(button==floating_drag_button&&floating_drag){floating->box=floating_drag->moved(floating_point(point),(GetKeyState(VK_SHIFT)&0x8000)!=0);
                 floating_drag.reset();if(GetCapture()==hwnd)ReleaseCapture();update();}
@@ -4328,6 +4275,9 @@ class App {
         scroll(x, y);
     }
     void pointer_move(POINT point, WPARAM flags) {
+        if(pen_player){if(flags&MK_LBUTTON){const auto p=floating_point(point);auto &points=renderer.pen_points;
+            if(points.size()<65536&&std::hypot(p.x-points.back().x,p.y-points.back().y)>=.25){points.push_back(p);InvalidateRect(hwnd,nullptr,FALSE);}}return;}
+        if(crop_drag&&cropping){if(flags&MK_LBUTTON){cropping->box=crop_drag->moved(floating_point(point),(flags&MK_SHIFT)!=0);update();}return;}
         auto &pending=mouse_presses[0];
         if(pending.down&&pending.selection_move_pending){
             const auto threshold=MulDiv(settings.mouse.drag_threshold,GetDpiForWindow(hwnd),96);
@@ -4588,6 +4538,17 @@ class App {
         update();
     }
     bool route_key(const MSG &message) {
+        if(editor_chrome.owns(message.hwnd)){
+            if(message.message==WM_KEYDOWN&&message.wParam==VK_ESCAPE){command(CancelSelection);SetFocus(hwnd);return true;}
+            if(message.message==WM_KEYDOWN&&message.wParam==VK_TAB){const auto host=IsChild(editor_chrome.top,message.hwnd)?editor_chrome.top:editor_chrome.bottom;
+                SetFocus(GetNextDlgTabItem(host,message.hwnd,(GetKeyState(VK_SHIFT)&0x8000)!=0));return true;}
+            if(message.message==WM_KEYDOWN&&message.wParam==VK_RETURN&&GetDlgCtrlID(message.hwnd)!=editor_id::Text){
+                const int id=GetDlgCtrlID(message.hwnd);
+                if(id>=editor_id::X&&id<=editor_id::Scale)
+                    SendMessageW(editor_chrome.top,WM_COMMAND,MAKEWPARAM(id,EN_KILLFOCUS),reinterpret_cast<LPARAM>(message.hwnd));
+                SetFocus(hwnd);return true;}
+            return false;
+        }
         if ((message.message != WM_KEYDOWN && message.message != WM_SYSKEYDOWN &&
              !((message.message==WM_KEYUP||message.message==WM_SYSKEYUP)&&message.wParam==VK_SPACE&&space_pan)) ||
             !IsChild(hwnd, message.hwnd))
@@ -4752,6 +4713,7 @@ class App {
             return 0;
         case WM_COMMAND: {
             UINT id = LOWORD(w);
+            if(id>=editor_id::Color&&id<editor_id::Last){editor_notification(id,HIWORD(w));return 0;}
             if (reinterpret_cast<HWND>(l) == toolbar.hwnd && comic && settings.comic_rtl &&
                 settings.comic_toolbar_reverse && (id == Previous || id == Next))
                 id = id == Previous ? Next : Previous;
@@ -4965,6 +4927,7 @@ class App {
             }
             if(polygon_drawing&&w==VK_RETURN){finish_selection_path();return 0;}
             if((polygon_drawing||selecting)&&w==VK_ESCAPE){cancel_selection_path();cancel_pointer();update();return 0;}
+            if(cropping){if(w==VK_RETURN){commit_crop();return 0;}if(w==VK_ESCAPE){cancel_crop();return 0;}}
             if(floating){
                 if(w==VK_RETURN){commit_floating();return 0;}
                 if(w==VK_ESCAPE){cancel_floating();return 0;}

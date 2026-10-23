@@ -3,6 +3,8 @@
 #include "resample.h"
 #include "floating_selection.h"
 #include "selection_region.h"
+#include "annotation.h"
+#include <optional>
 #include <windows.h>
 #include <d2d1.h>
 #include <dwrite.h>
@@ -42,6 +44,7 @@ class Renderer {
     void draw_overlay(ID2D1RenderTarget *, ID2D1SolidColorBrush *, const View &, int top);
     void draw_floating(ID2D1RenderTarget *,ID2D1SolidColorBrush *,const View &,int,const D2D1_RECT_F &);
     void draw_selection_lines(ID2D1RenderTarget *,ID2D1SolidColorBrush *,std::span<const SelectionLine>,const View &,int);
+    void draw_editor_overlay(ID2D1RenderTarget *,ID2D1SolidColorBrush *,const View &,int,const D2D1_RECT_F &);
     const Image *floating_prepared{};
     std::vector<uint8_t> floating_pixels;
     uint32_t floating_width{},floating_height{};
@@ -80,6 +83,9 @@ class Renderer {
     std::vector<FloatPoint> selection_path;
     int viewport_left{};
     unsigned ants_phase{};
+    std::optional<FloatingBox> crop_box;
+    std::vector<FloatPoint> pen_points;
+    PenStyle pen_style;
     void set_floating(std::shared_ptr<const Image> source,FloatingBox box={}) {
         if(floating_source!=source){floating_prepared=nullptr;floating_pixels.clear();floating_bitmap.Reset();}
         floating_source=std::move(source);floating_box=box;

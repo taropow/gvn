@@ -31,8 +31,8 @@ const wchar_t *command_label(UINT id) {
     case Paste:
         return L"貼り付け (Ctrl+V)";
     case PasteSelection:return L"選択範囲でペースト";
-    case CommitSelection:return L"確定";
-    case CancelSelection:return L"中止";
+    case CommitSelection:return L"適用";
+    case CancelSelection:return L"キャンセル";
     case TransformSelection:return L"位置・サイズ・角度";
     case Undo:
         return L"元に戻す (Ctrl+Z)";
@@ -166,6 +166,12 @@ static HBITMAP icon_bitmap(UINT id, int size) {
     constexpr COLORREF blue = RGB(32, 123, 206), green = RGB(47, 151, 61), red = RGB(219, 63, 61),
                        paper = RGB(249, 252, 255);
     switch (id) {
+    case ToolPen:
+        line(4,16,15,4,red,4);circle(3,14,7,18,red,red);break;
+    case ToolText:
+        line(3,4,17,4,blue,2);line(10,4,10,17,blue,2);line(6,17,14,17,blue,2);break;
+    case ToolCrop:
+        line(5,2,5,15,blue,2);line(5,15,18,15,blue,2);line(2,5,15,5,blue,2);line(15,5,15,18,blue,2);break;
     case ToggleEditor:
         rectangle(2,3,16,17,paper);line(4,15,15,4,blue,3);shape({{3,17},{4,12},{8,16}},RGB(245,181,63),RGB(122,87,25));break;
     case SelectRectangle:case SelectAll:case ClearSelection:case InvertSelection:
@@ -384,8 +390,8 @@ static constexpr UINT buttons[]{
     Open, Save,         FileDelete,  0, Copy,      Paste, ArmDrag, Undo,    0,        Info,   Previous,
     Next, ParentFolder, ChildFolder, 0, Slideshow, 0,     ZoomIn,  ZoomOut, FitImage, Actual, Fullscreen,
     0,    ToggleEditor, Preferences,  Help};
-static constexpr UINT tool_buttons[]{ToolPan,SelectMove,SelectRectangle,SelectFreehand,SelectPolygon,0,
-    PasteSelection,Crop,Resize,Canvas,0,RotateRight,FlipH,FlipV,0,Brightness,ColorAdjust,Levels,0,
+static constexpr UINT tool_buttons[]{ToolPan,ToolPen,ToolText,SelectMove,SelectRectangle,SelectFreehand,SelectPolygon,0,
+    PasteSelection,ToolCrop,Resize,Canvas,0,RotateRight,FlipH,FlipV,0,Brightness,ColorAdjust,Levels,0,
     SelectAll,InvertSelection,ClearSelection,DeleteSelection};
 static constexpr UINT player_buttons[]{FirstFrame, FramePrevious, Play, StopAnimation, FrameNext, LastFrame,
                                        0,          Loop,          0,    Copy,          ArmDrag};
@@ -510,7 +516,7 @@ void IconToolbar::rebuild() {
     std::vector<UINT> items;
     if(tools)items.assign(std::begin(tool_buttons),std::end(tool_buttons));
     else if(player)items.assign(std::begin(player_buttons),std::end(player_buttons));
-    else {items.assign(std::begin(buttons),std::end(buttons));if(floating_mode)items.insert(items.end(),{0,CommitSelection,CancelSelection,TransformSelection});}
+    else {items.assign(std::begin(buttons),std::end(buttons));if(floating_mode)items.insert(items.end(),{0,TransformSelection});}
     for (UINT id : items) {
         TBBUTTON item{};
         if (!id) {
@@ -524,7 +530,7 @@ void IconToolbar::rebuild() {
             DeleteObject(bitmap);
             item.idCommand = id;
             item.fsState = saved.contains(id) ? saved[id].state : TBSTATE_ENABLED;
-            item.fsStyle = (id == Loop || id == Slideshow || id==ToggleEditor || (tools&&(id==ToolPan||(id>=SelectRectangle&&id<=SelectMove)))) ? BTNS_CHECK : BTNS_BUTTON;
+            item.fsStyle = (id == Loop || id == Slideshow || id==ToggleEditor || (tools&&(id==ToolPan||id==ToolPen||id==ToolText||id==ToolCrop||(id>=SelectRectangle&&id<=SelectMove)))) ? BTNS_CHECK : BTNS_BUTTON;
             if(id==CommitSelection||id==CancelSelection||id==TransformSelection)item.fsStyle|=BTNS_AUTOSIZE|BTNS_SHOWTEXT;
             item.iString =
                 reinterpret_cast<INT_PTR>(saved.contains(id) ? saved[id].text.c_str() : command_label(id));

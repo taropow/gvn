@@ -148,6 +148,7 @@ const std::vector<CommandInfo> &command_catalog() {
             {Grid16,L"矩形選択の単位：16 x 16"},
             {Grid32,L"矩形選択の単位：32 x 32"},
             {ToggleMenu, L"メニューバー"},
+            {ToolPen,L"ペン"},{ToolText,L"文字入れ"},{ToolCrop,L"トリミング"},
             {StopAnimation, L"停止して先頭へ"},
             {FirstFrame, L"先頭フレーム"},
             {LastFrame, L"末尾フレーム"},

@@ -1,0 +1,55 @@
+# Native private-desktop annotation, crop, placement buttons and export controls.
+resize	960	780
+open	${fixtures}/display-alpha.png
+wait
+command	ToolPen
+command	Actual
+editor_set	Width	12
+editor_set	Opacity	70
+editor_layout
+paint_pixels	80	90	260	210
+expect	modified	true
+snapshot	skitch-pen.png
+command	ToolText
+editor_set	Text	日本語の文字入れ\nGVN メモ
+editor_set	TextSize	30
+editor_layout
+paint_pixels	100	120	100	120
+expect	floating.active	true
+editor_layout
+snapshot	skitch-text-placement.png
+editor_click	Apply
+expect	floating.active	false
+command	ToolCrop
+editor_set	W	300
+editor_set	H	220
+editor_set	X	70
+editor_set	Y	60
+editor_layout
+snapshot	skitch-crop.png
+editor_click	Cancel
+expect	crop.active	false
+command	ToolCrop
+resize	520	660
+editor_layout
+snapshot	skitch-crop-narrow.png
+editor_click	Cancel
+resize	960	780
+command	SelectRectangle
+command	Actual
+select_pixels	90	80	280	220
+command	SelectMove
+expect	floating.active	true
+editor_layout
+snapshot	skitch-transform-buttons.png
+editor_click	Cancel
+command	ToggleEditor
+editor_set	Name	GVNメモ
+editor_set	Format	0
+export_mouse	down	8	8
+export_mouse	move	80	-20
+expect	export_count	1
+expect	export.drag_pending	false
+expect	status.drag_icon	false
+snapshot	skitch-drag-export.png
+expect	error_count	0

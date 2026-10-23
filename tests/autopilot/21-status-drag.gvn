@@ -1,50 +1,44 @@
-expect	status.drag_icon	true
-status_mouse	down	8	8
-status_mouse	move	80	-20
+expect	status.drag_icon	false
 expect	export_count	0
 copy_fixture	alpha.png	pages/original.png
 open	${output}/pages/original.png
 wait
-status_mouse	down	8	8
-expect	status.drag_pending	true
-status_mouse	move	9	8
-status_mouse	up	9	8
+export_mouse	down	8	8
+expect	export.drag_pending	true
+export_mouse	move	9	8
+export_mouse	up	9	8
 expect	export_count	0
-status_mouse	down	80	8
-status_mouse	move	120	8
-status_mouse	up	120	8
-expect	export_count	0
-status_mouse	down	8	8
-status_mouse	move	80	-20
+export_mouse	down	8	8
+export_mouse	move	80	-20
 expect	export_count	1
-expect	export_temporary	false
-expect	status.drag_pending	false
+expect	export_temporary	true
+expect	export.drag_pending	false
 command	Negative
-status_mouse	down	8	8
-status_mouse	move	80	-20
+export_mouse	down	8	8
+export_mouse	move	80	-20
 expect	export_count	2
 expect	export_temporary	true
 pixel_copy
 command	NewPaste
-status_mouse	down	8	8
-status_mouse	move	80	-20
+export_mouse	down	8	8
+export_mouse	move	80	-20
 expect	export_count	3
 expect	export_temporary	true
 snapshot	clipboard-drag-icon.png
 open	${fixtures}/disposal.gif
 wait
 player	FrameNext
-status_mouse	down	8	8
-status_mouse	move	80	-20
+export_mouse	down	8	8
+export_mouse	move	80	-20
 expect	export_count	4
 expect	export_temporary	true
-status_mouse	down	8	8
-status_mouse	cancel	0	0
-expect	status.drag_pending	false
-status_mouse	down	8	8
-command	ToggleStatus
-expect	status.drag_pending	false
-command	ToggleStatus
+export_mouse	down	8	8
+export_mouse	cancel	0	0
+expect	export.drag_pending	false
+export_mouse	down	8	8
+command	ToggleEditor
+expect	export.drag_pending	false
+command	ToggleEditor
 snapshot	animation-drag-icon.png
 command	CloseImage
 expect_empty_checker

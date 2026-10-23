@@ -368,7 +368,7 @@ const std::map<std::string, UINT> command_ids{
     C(Resize),
     C(Canvas),
     C(NewImage),
-    C(ToggleEditor),C(ToolPan),C(SelectRectangle),C(SelectFreehand),C(SelectPolygon),C(SelectMove),
+    C(ToggleEditor),C(ToolPan),C(ToolPen),C(ToolText),C(ToolCrop),C(SelectRectangle),C(SelectFreehand),C(SelectPolygon),C(SelectMove),
     C(PasteSelection),C(CommitSelection),C(CancelSelection),C(TransformSelection),C(InvertSelection),C(DeleteSelection),
     C(SelectMode),
     C(Preferences),
@@ -829,6 +829,7 @@ struct Autopilot {
     inline static Autopilot *current{};
     UINT_PTR timer{};
     unsigned scripted_buttons{}, popup_count{}, export_count{};
+    bool export_panel_drag{};
     UINT popup_choice{};
     WallpaperSnapshot wallpaper_state;
     size_t wallpaper_apply_calls{}, wallpaper_captures{};
@@ -1188,7 +1189,7 @@ struct Autopilot {
             ReleaseStgMedium(&medium);
             require(count == 1 && same_path(received, path), "Drag object contains a different file");
             const auto read = load_image(path);
-            const bool original = !app.modified && !app.image->animated() &&
+            const bool original = !export_panel_drag && !app.modified && !app.image->animated() &&
                                   app.image->format != L"見開き" && !app.image->path.empty() &&
                                   std::filesystem::is_regular_file(app.image->path);
             if (original) {
@@ -1643,10 +1644,14 @@ struct Autopilot {
             return app.slideshow;
         if (name == "transfer_open")
             return file_transfer && IsWindow(file_transfer->window());
-        if (name == "status.drag_pending")
-            return app.status_drag_pending;
+        if (name == "export.drag_pending")return app.editor_chrome.dragging();
+        if (name == "crop.active")return app.cropping.has_value();
+        if (name == "crop.width")return app.cropping?app.cropping->box.width:0;
+        if (name == "crop.height")return app.cropping?app.cropping->box.height:0;
+        if (name == "pen.active")return app.pen_player.has_value();
+        if (name == "floating.active")return app.floating.has_value();
         if (name == "status.drag_icon")
-            return SendMessageW(app.status, SB_GETICON, 0, 0) != 0;
+            return SendMessageW(app.status, SB_GETICON, 0, 0) > 0;
         if (name == "settings.confirm_unsaved")
             return app.settings.confirm_unsaved;
 #define FILE_OPTION(field)                                                                                   \
@@ -2165,6 +2170,31 @@ struct Autopilot {
                 else throw std::runtime_error("Unknown grid operation");
             }
             return;
+        }
+        if(s[0]=="editor_set"||s[0]=="editor_click"||s[0]=="editor_expect") {
+            const std::map<std::string,int> ids{{"Width",editor_id::Width},{"Opacity",editor_id::Opacity},{"Font",editor_id::Font},{"TextSize",editor_id::TextSize},{"Text",editor_id::Text},
+                {"X",editor_id::X},{"Y",editor_id::Y},{"W",editor_id::W},{"H",editor_id::H},{"Angle",editor_id::Angle},{"Scale",editor_id::Scale},{"Anchor",editor_id::Anchor},
+                {"Apply",editor_id::Apply},{"Cancel",editor_id::Cancel},{"Name",editor_id::Name},{"Format",editor_id::Format}};
+            const auto id=ids.at(s.at(1));const auto h=app.editor_chrome.control(id);own(h);
+            if(s[0]=="editor_click")SendMessageW(h,BM_CLICK,0,0);
+            else if(s[0]=="editor_expect")require(window_text(h)==widen(s.at(2)),"Editor field differs");
+            else {if(id==editor_id::Anchor||id==editor_id::Format){SendMessageW(h,CB_SETCURSEL,std::stoi(s.at(2)),0);SendMessageW(GetParent(h),WM_COMMAND,MAKEWPARAM(id,CBN_SELCHANGE),reinterpret_cast<LPARAM>(h));}
+                else {auto value=widen(s.at(2));for(size_t at=0;(at=value.find(L"\\n",at))!=std::wstring::npos;at+=2)value.replace(at,2,L"\r\n");
+                    SetWindowTextW(h,value.c_str());if(id!=editor_id::Name&&id!=editor_id::Text)SendMessageW(GetParent(h),WM_COMMAND,MAKEWPARAM(id,EN_KILLFOCUS),reinterpret_cast<LPARAM>(h));}}
+            return;
+        }
+        if(s[0]=="editor_layout") {
+            const auto host=app.editor_chrome.top;own(host);RECT area{};GetClientRect(host,&area);std::vector<RECT> occupied;
+            for(auto h=GetWindow(host,GW_CHILD);h;h=GetWindow(h,GW_HWNDNEXT))if(locally_visible(h)){
+                RECT bounds{};GetWindowRect(h,&bounds);MapWindowPoints(nullptr,host,reinterpret_cast<POINT *>(&bounds),2);
+                require(bounds.left>=0&&bounds.top>=0&&bounds.right<=area.right&&bounds.bottom<=area.bottom,"Editor control extends outside its panel");
+                for(const auto &other:occupied){RECT overlap{};require(!IntersectRect(&overlap,&bounds,&other),"Editor controls overlap");}occupied.push_back(bounds);
+            }return;
+        }
+        if(s[0]=="paint_pixels") {
+            const auto at=[&](int x,int y){return POINT{LONG(app.left+std::floor(app.view.left())+x*app.view.scale),LONG(app.top+std::floor(app.view.top())+y*app.view.scale)};};
+            const auto a=at(std::stoi(s.at(1)),std::stoi(s.at(2))),b=at(std::stoi(s.at(3)),std::stoi(s.at(4)));
+            own(app.hwnd);SendMessageW(app.hwnd,WM_LBUTTONDOWN,MK_LBUTTON,MAKELPARAM(a.x,a.y));SendMessageW(app.hwnd,WM_MOUSEMOVE,MK_LBUTTON,MAKELPARAM(b.x,b.y));SendMessageW(app.hwnd,WM_LBUTTONUP,0,MAKELPARAM(b.x,b.y));return;
         }
         if(s[0]=="select_pixels") {
             require(app.image&&app.selection_active()&&app.view.scale>=1,"Pixel selection needs an image, selection mode and Actual scale or higher");
@@ -3544,14 +3574,16 @@ struct Autopilot {
                                     static_cast<uint8_t>(std::stoul(s.at(5))),
                                     static_cast<uint8_t>(std::stoul(s.at(6)))},
                     "Image RGBA differs from expected pixel");
-        } else if (op == "status_mouse") {
-            own(app.status);
+        } else if (op == "export_mouse") {
+            const auto child=app.editor_chrome.control(editor_id::Drag);own(child);
             const auto message = s.at(1) == "down"     ? WM_LBUTTONDOWN
                                  : s.at(1) == "move"   ? WM_MOUSEMOVE
                                  : s.at(1) == "cancel" ? WM_CANCELMODE
                                                        : WM_LBUTTONUP;
             const auto flags = message == WM_LBUTTONDOWN || message == WM_MOUSEMOVE ? MK_LBUTTON : 0;
-            SendMessageW(app.status, message, flags, MAKELPARAM(std::stoi(s.at(2)), std::stoi(s.at(3))));
+            export_panel_drag=true;
+            SendMessageW(child, message, flags, MAKELPARAM(std::stoi(s.at(2)), std::stoi(s.at(3))));
+            export_panel_drag=false;
         } else if (op == "persisted") {
             Settings saved;
             saved.load(app.config);

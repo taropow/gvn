@@ -14,8 +14,8 @@ command	SaveAs
 save_accept
 wait_save
 expect_saved	pixels/fl-negative.png
-status_mouse	down	8	8
-status_mouse	move	80	-20
+export_mouse	down	8	8
+export_mouse	move	80	-20
 expect	export_count	1
 expect	export_temporary	true
 snapshot	fl-negative.png

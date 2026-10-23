@@ -364,12 +364,42 @@ HRESULT Renderer::scene(ID2D1RenderTarget *context, ID2D1Bitmap *pixels, ID2D1Bi
             for(size_t n=1;n<selection_path.size();++n)lines.push_back({selection_path[n-1],selection_path[n]});
             draw_selection_lines(context,drawing_brush,lines,view,top);}
         if(floating_source)draw_floating(context,drawing_brush,view,top,destination);
+        draw_editor_overlay(context,drawing_brush,view,top,destination);
     }
     if (image && overlay_visible && !overlay.text.empty())
         draw_overlay(context, drawing_brush, view, top);
     context->PopAxisAlignedClip();
     context->SetTransform(D2D1::Matrix3x2F::Identity());
     return context->EndDraw();
+}
+void Renderer::draw_editor_overlay(ID2D1RenderTarget *context,ID2D1SolidColorBrush *drawing_brush,const View &view,int top,const D2D1_RECT_F &canvas){
+    const bool actual=std::abs(view.scale-1)<1e-9;
+    const double left=actual?std::floor(view.left()):view.left(),y=actual?std::floor(view.top()):view.top();
+    const auto screen=[&](FloatPoint p){return D2D1::Point2F(float(left+p.x*view.scale),float(top+y+p.y*view.scale));};
+    Microsoft::WRL::ComPtr<ID2D1Factory> owner;context->GetFactory(&owner);
+    if(!pen_points.empty()){
+        context->PushAxisAlignedClip(canvas,D2D1_ANTIALIAS_MODE_ALIASED);
+        const auto c=pen_style.color;drawing_brush->SetColor(D2D1::ColorF(c.r/255.f,c.g/255.f,c.b/255.f,c.a/255.f));
+        const float width=float(pen_style.width*view.scale);
+        if(pen_points.size()==1)context->FillEllipse(D2D1::Ellipse(screen(pen_points[0]),width/2,width/2),drawing_brush);
+        else {ComPtr<ID2D1PathGeometry> path;ComPtr<ID2D1GeometrySink> sink;ComPtr<ID2D1StrokeStyle> style;
+            verify(owner->CreatePathGeometry(&path));verify(path->Open(&sink));sink->BeginFigure(screen(pen_points[0]),D2D1_FIGURE_BEGIN_HOLLOW);
+            for(size_t n=1;n<pen_points.size();++n)sink->AddLine(screen(pen_points[n]));sink->EndFigure(D2D1_FIGURE_END_OPEN);verify(sink->Close());
+            auto props=D2D1::StrokeStyleProperties();props.startCap=props.endCap=props.dashCap=D2D1_CAP_STYLE_ROUND;props.lineJoin=D2D1_LINE_JOIN_ROUND;
+            verify(owner->CreateStrokeStyle(props,nullptr,0,&style));context->DrawGeometry(path.Get(),drawing_brush,width,style.Get());}
+        context->PopAxisAlignedClip();
+    }
+    if(crop_box){
+        const auto handles=crop_box->handles();ComPtr<ID2D1PathGeometry> path;ComPtr<ID2D1GeometrySink> sink;
+        verify(owner->CreatePathGeometry(&path));verify(path->Open(&sink));sink->SetFillMode(D2D1_FILL_MODE_ALTERNATE);
+        sink->BeginFigure(D2D1::Point2F(canvas.left,canvas.top),D2D1_FIGURE_BEGIN_FILLED);
+        sink->AddLine(D2D1::Point2F(canvas.right,canvas.top));sink->AddLine(D2D1::Point2F(canvas.right,canvas.bottom));sink->AddLine(D2D1::Point2F(canvas.left,canvas.bottom));sink->EndFigure(D2D1_FIGURE_END_CLOSED);
+        sink->BeginFigure(screen(handles[0]),D2D1_FIGURE_BEGIN_FILLED);for(int n:{2,4,6})sink->AddLine(screen(handles[n]));sink->EndFigure(D2D1_FIGURE_END_CLOSED);verify(sink->Close());
+        drawing_brush->SetColor(D2D1::ColorF(0.f,0.f,0.f,.58f));context->PushAxisAlignedClip(canvas,D2D1_ANTIALIAS_MODE_ALIASED);context->FillGeometry(path.Get(),drawing_brush);context->PopAxisAlignedClip();
+        drawing_brush->SetColor(D2D1::ColorF(1.f,1.f,1.f));
+        for(int n=0;n<4;++n)context->DrawLine(screen(handles[n*2]),screen(handles[(n*2+2)%8]),drawing_brush,1);
+        for(auto p:handles){const auto at=screen(p);context->FillRectangle(D2D1::RectF(at.x-4,at.y-4,at.x+4,at.y+4),drawing_brush);}
+    }
 }
 void Renderer::draw_selection_lines(ID2D1RenderTarget *context,ID2D1SolidColorBrush *drawing_brush,std::span<const SelectionLine> lines,const View &view,int top){
     const auto previous=context->GetAntialiasMode();context->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
