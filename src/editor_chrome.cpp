@@ -26,7 +26,7 @@ void EditorChrome::create(HWND parent,bool editing){
         auto child=CreateWindowExW(wcscmp(kind,L"EDIT")==0?WS_EX_CLIENTEDGE:0,kind,value,WS_CHILD|WS_TABSTOP|style,0,0,1,1,host,reinterpret_cast<HMENU>(INT_PTR(id)),cls.hInstance,nullptr);
         controls[id]=child;if(font)SendMessageW(child,WM_SETFONT,reinterpret_cast<WPARAM>(font),FALSE);return child;};
     if(!control(Name)){
-        add(Name,L"EDIT",L"画像",ES_AUTOHSCROLL,bottom);SendMessageW(control(Name),EM_SETLIMITTEXT,120,0);
+        add(Name,L"EDIT",export_default.empty()?L"画像":export_default.c_str(),ES_AUTOHSCROLL,bottom);SendMessageW(control(Name),EM_SETLIMITTEXT,120,0);
         add(Format,L"COMBOBOX",L"",CBS_DROPDOWNLIST|CBS_OWNERDRAWFIXED|CBS_HASSTRINGS|WS_VSCROLL,bottom);
         for(auto label:{L".png",L".jpg",L".bmp",L".gif"})SendMessageW(control(Format),CB_ADDSTRING,0,reinterpret_cast<LPARAM>(label));
         SendMessageW(control(Format),CB_SETCURSEL,0,0);
@@ -153,8 +153,13 @@ FloatingBox EditorChrome::edited_bounds(const FloatingBox &initial) const {
     if(std::abs(number(Y,-1e7,1e7)-(initial.cy-initial.height/2))>.011)box.cy=number(Y,-1e7,1e7)+box.height/2;
     return box;
 }
-void EditorChrome::export_name(const std::wstring &source){if(!bottom||export_source==source)return;export_source=source;filling=true;
-    auto name=std::filesystem::path(source).stem().wstring();put(Name,name.empty()?L"画像":name);filling=false;}
+std::wstring EditorChrome::timestamp_name(const SYSTEMTIME &when){
+    wchar_t name[40]{};swprintf_s(name,L"image%04u%02u%02u_%02u%02u%02u",unsigned(when.wYear),unsigned(when.wMonth),unsigned(when.wDay),unsigned(when.wHour),unsigned(when.wMinute),unsigned(when.wSecond));return name;
+}
+void EditorChrome::reset_export_name(){
+    SYSTEMTIME now{};GetLocalTime(&now);export_default=timestamp_name(now);
+    if(control(Name)){filling=true;put(Name,export_default);filling=false;}
+}
 SaveFormat EditorChrome::export_format() const {const auto value=SendMessageW(control(Format),CB_GETCURSEL,0,0);return value==1?SaveFormat::Jpeg:value==2?SaveFormat::Bmp:value==3?SaveFormat::Gif:SaveFormat::Png;}
 void EditorChrome::error(const std::wstring &value){if(!top)return;put(Error,value);if(!value.empty()){RECT r{};GetClientRect(top,&r);SetWindowPos(control(Error),HWND_TOP,4,r.bottom-18,r.right-8,18,SWP_NOACTIVATE|SWP_SHOWWINDOW);}else ShowWindow(control(Error),SW_HIDE);}
 } // namespace gvn

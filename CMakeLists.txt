@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(GVN VERSION 0.64.0 LANGUAGES C CXX RC)
+project(GVN VERSION 0.64.1 LANGUAGES C CXX RC)
 configure_file(include/gvn/version.h.in generated/gvn/version.h @ONLY)
 configure_file(src/gvn_version.rc.in gvn_version.rc @ONLY)
 set(CMAKE_CXX_STANDARD 20)

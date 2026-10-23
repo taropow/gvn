@@ -1448,7 +1448,6 @@ class App {
         }
         if(cropping)editor_chrome.bounds(cropping->box,cropping->scale);
         else if(floating&&!floating->text_annotation)editor_chrome.bounds(floating->box);
-        if(image)editor_chrome.export_name(image->path.empty()?L"画像":image->path.filename().wstring());
         if(floating){
             for(UINT id:{Save,Copy,ArmDrag,FileDelete,Previous,Next,Undo})toolbar.enable(id,false);
             std::wostringstream hint;hint<<L"仮置き：ドラッグで移動／ハンドルで拡縮／枠外で回転  Enter:確定  Esc:中止  ";
@@ -1673,6 +1672,7 @@ class App {
         commit_open_history();
         removed_current = false;
         image = std::move(result->image);
+        editor_chrome.reset_export_name();
         image_metadata.reset();undo_metadata.reset();
         modified = false;
         undo_image.reset();
@@ -1907,6 +1907,7 @@ class App {
         if (new_document)
             removed_current = false;
         image = std::move(next_image);
+        if(new_document)editor_chrome.reset_export_name();
         image_metadata.reset();
         modified = dirty;
         selection = {};
@@ -3343,7 +3344,9 @@ class App {
                 const auto rect = selection.empty() ? Rect{0, 0, static_cast<int>(image->width),
                                                            static_cast<int>(image->height)}
                                                     : selection;
+                const auto before=image;
                 edit([&](const Image &source) { return paste_region(source, pasted, rect); });
+                if(image!=before)editor_chrome.reset_export_name();
                 break;
             }
             if (discard()) {

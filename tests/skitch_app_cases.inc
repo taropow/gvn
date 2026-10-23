@@ -1,4 +1,18 @@
     bool skitch_visible(HWND child){if(!child)return false;for(;;){if(!(GetWindowLongPtrW(child,GWL_STYLE)&WS_VISIBLE))return false;if(child==app.hwnd)return true;child=GetParent(child);if(!child)return false;}}
+    void timestamp_export_name_on_open_new_and_every_successful_paste_keeps_manual_edits() {
+        const SYSTEMTIME known{2026,10,5,23,0,4,9,0};CHECK(EditorChrome::timestamp_name(known)==L"image20261023_000409");
+        app.settings.confirm_unsaved=false;open(fixture(L"display-alpha.png"));
+        auto field=app.editor_chrome.control(editor_id::Name);CHECK(field);
+        const auto valid=[&]{const auto name=app.editor_chrome.text(editor_id::Name);CHECK(name.size()==20&&name.starts_with(L"image")&&name[13]==L'_');
+            for(size_t n=5;n<name.size();++n)if(n!=13)CHECK(name[n]>=L'0'&&name[n]<=L'9');
+            SYSTEMTIME now{};GetLocalTime(&now);CHECK(name.substr(0,13)==EditorChrome::timestamp_name(now).substr(0,13));};
+        valid();SetWindowTextW(field,L"custom-name");command(ZoomIn);command(Negative);CHECK(app.editor_chrome.text(editor_id::Name)==L"custom-name");
+        command(Undo);CHECK(app.editor_chrome.text(editor_id::Name)==L"custom-name");open(fixture(L"display-alpha.png"));valid();
+        const auto pasted=load_image(fixture(L"alpha.png"));copy_image(app.hwnd,pasted,0);command(NewPaste);valid();
+        SetWindowTextW(field,L"clipboard-first");command(NewPaste);valid();CHECK(app.image->frames[0].pixels==pasted.frames[0].pixels);
+        SetWindowTextW(field,L"existing-canvas");app.settings.paste_new=false;command(Paste);valid();
+        CHECK(app.image->path.empty());SetWindowTextW(field,L"keep-on-edit");command(FitImage);command(ToolPen);command(ToggleEditor);CHECK(app.editor_chrome.text(editor_id::Name)==L"keep-on-edit");
+    }
     void skitch_pen_text_native_controls_alpha_apply_cancel_undo() {
         ShowWindow(app.hwnd,SW_SHOWNOACTIVATE);app.settings.confirm_unsaved=false;
         app.replace(new_image(320,200),false,true);const auto original=app.image;

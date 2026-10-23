@@ -17,7 +17,7 @@ class EditorChrome {
     std::map<int,HWND> controls;
     std::map<int,HWND> labels;
     EditorPanel panel{EditorPanel::None};
-    std::wstring export_source;
+    std::wstring export_default;
     Pixel color{245,30,84,255};
     static LRESULT CALLBACK procedure(HWND,UINT,WPARAM,LPARAM);
     static LRESULT CALLBACK drag_procedure(HWND,UINT,WPARAM,LPARAM,UINT_PTR,DWORD_PTR);
@@ -40,7 +40,8 @@ class EditorChrome {
     void bounds(const FloatingBox &,double scale=1);
     FloatingBox edited_bounds(const FloatingBox &) const;
     double output_scale() const {return number(editor_id::Scale,1,10000)/100.;}
-    void export_name(const std::wstring &source);
+    static std::wstring timestamp_name(const SYSTEMTIME &);
+    void reset_export_name();
     SaveFormat export_format() const;
     void error(const std::wstring &);
 };
