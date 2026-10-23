@@ -12,7 +12,7 @@ namespace gvn {
 // Packed DIB payloads use straight alpha. PNG remains the preferred interchange.
 std::vector<uint8_t> make_dibv5(const Image &image, size_t frame);
 Image read_dib(std::span<const uint8_t> data);
-void copy_image(HWND owner, const Image &image, size_t frame,std::optional<SelectionOrigin> origin=std::nullopt);
+void copy_image(HWND owner, const Image &image, size_t frame,std::optional<SelectionOrigin> origin=std::nullopt,const ImageMetadata *metadata=nullptr);
 Image paste_image(HWND owner);
 // Pixel data retains alpha; file references go through the viewer's normal open path.
 using ClipboardContent = std::variant<Image, std::filesystem::path>;

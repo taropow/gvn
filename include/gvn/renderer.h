@@ -24,6 +24,8 @@ struct DrawMetrics {
 };
 enum class RenderBackend { Automatic, Software, SystemDefault };
 class Renderer {
+    friend struct RendererAudit;
+    bool surface_valid{};
     RenderBackend applied_backend{RenderBackend::Automatic};
     D2D1_RENDER_TARGET_TYPE active_type{D2D1_RENDER_TARGET_TYPE_DEFAULT};
     Microsoft::WRL::ComPtr<ID2D1Factory> factory;
@@ -67,7 +69,9 @@ class Renderer {
     HRESULT scene(ID2D1RenderTarget *context, ID2D1Bitmap *pixels, ID2D1BitmapBrush *pattern,
                   ID2D1BitmapBrush *viewport_pattern,
                   ID2D1SolidColorBrush *drawing_brush, const Image *image, const View &view, int top,
-                  const Rect *selection);
+                  const Rect *selection, std::span<const RECT> damage = {});
+    void scene_content(ID2D1RenderTarget *, ID2D1Bitmap *, ID2D1BitmapBrush *, ID2D1BitmapBrush *,
+                       ID2D1SolidColorBrush *, const Image *, const View &, int, const Rect *);
 
   public:
     // Optional diagnostics; ordinary painting does not query the clock.
@@ -93,6 +97,8 @@ class Renderer {
     bool overlay_visible{};
     Rect overlay_rect;
     size_t overlay_layout_builds{};
+    uint64_t last_damage_pixels{};
+    size_t last_damage_regions{};
     size_t sample_builds{}; // Diagnostics; includes only actual tile reconstructions.
     bool overlay_uses_gdi() const { return overlay_native_font; }
     size_t overlay_mask_bytes() const { return overlay_mask.size() * sizeof(uint32_t); }
@@ -123,6 +129,7 @@ class Renderer {
         background_checker.Reset();
     }
     void reset_background() {
+        surface_valid = false;
         reset_patterns();
         target.Reset();
         bitmap.Reset();
@@ -135,11 +142,12 @@ class Renderer {
         uploaded_frame = SIZE_MAX;
     }
     HRESULT draw(HWND hwnd, const Image *image, size_t frame, const View &view, int top, int bottom,
-                 const Rect *selection = nullptr);
+                 const Rect *selection = nullptr, std::span<const RECT> damage = {});
     void resize(UINT width, UINT height);
     HRESULT print(HWND hwnd, HDC dc, const Image *image, size_t frame, const View &view, int top,
                   const Rect *selection);
     void invalidate() {
+        surface_valid = false;
         uploaded = nullptr;
         uploaded_frame = SIZE_MAX;
         prepared = sampled = nullptr;

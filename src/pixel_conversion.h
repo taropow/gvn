@@ -6,6 +6,20 @@
 #endif
 
 namespace gvn::detail {
+inline void swizzle_rgba(const uint8_t *source,uint8_t *output,size_t count) {
+    size_t i=0;
+#if defined(_M_X64) || defined(__SSE2__)
+    const auto rb=_mm_set1_epi32(0x00ff00ff),ga=_mm_set1_epi32(static_cast<int>(0xff00ff00u));
+    for(;i+4<=count;i+=4){
+        const auto value=_mm_loadu_si128(reinterpret_cast<const __m128i *>(source+i*4));
+        const auto pair=_mm_and_si128(value,rb);
+        const auto reversed=_mm_or_si128(_mm_srli_epi32(pair,16),_mm_slli_epi32(pair,16));
+        _mm_storeu_si128(reinterpret_cast<__m128i *>(output+i*4),_mm_or_si128(reversed,_mm_and_si128(value,ga)));
+    }
+#endif
+    for(;i<count;++i){const auto r=source[i*4],g=source[i*4+1],b=source[i*4+2],a=source[i*4+3];
+        output[i*4]=b;output[i*4+1]=g;output[i*4+2]=r;output[i*4+3]=a;}
+}
 inline void premultiply_rgba(const uint8_t *source, uint8_t *output, size_t count) {
     size_t i{};
 #if defined(_M_X64) || defined(__SSE2__)

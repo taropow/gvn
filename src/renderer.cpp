@@ -131,9 +131,11 @@ void Renderer::ensure(HWND hwnd) {
         verify(factory->CreateHwndRenderTarget(
             D2D1::RenderTargetProperties(active_type),
             D2D1::HwndRenderTargetProperties(
-                hwnd, D2D1::SizeU(std::max(1L, client.right), std::max(1L, client.bottom))),
+                hwnd, D2D1::SizeU(std::max(1L, client.right), std::max(1L, client.bottom)),
+                D2D1_PRESENT_OPTIONS_RETAIN_CONTENTS),
             &target));
     }
+    surface_valid = false;
     target->SetDpi(96, 96);
     {
         DrawTimer timer(trace ? &trace->brush_ms : nullptr);
@@ -288,10 +290,10 @@ ComPtr<ID2D1Bitmap> Renderer::tile_bitmap(ID2D1RenderTarget *context) {
 }
 void Renderer::resize(UINT width, UINT height) {
     if (target){const auto before=target->GetPixelSize(),next=D2D1::SizeU(std::max(1u,width),std::max(1u,height));
-        if(before.width!=next.width||before.height!=next.height)target->Resize(next);}
+        if(before.width!=next.width||before.height!=next.height){surface_valid=false;if(FAILED(target->Resize(next)))reset_background();}}
 }
 HRESULT Renderer::draw(HWND hwnd, const Image *image, size_t frame, const View &view, int top, int bottom,
-                       const Rect *selection) {
+                       const Rect *selection, std::span<const RECT> damage) {
     ensure(hwnd);
     bool filtered{};
     {
@@ -335,17 +337,36 @@ HRESULT Renderer::draw(HWND hwnd, const Image *image, size_t frame, const View &
     }
     DrawTimer timer(trace ? &trace->scene_ms : nullptr);
     const HRESULT result = scene(target.Get(), filtered ? sampled_bitmap.Get() : bitmap.Get(), checker.Get(),
-                                 background_checker.Get(), brush.Get(), image, view, top, selection);
+                                 background_checker.Get(), brush.Get(), image, view, top, selection, surface_valid ? damage : std::span<const RECT>{});
+    surface_valid = SUCCEEDED(result);
     if (result == D2DERR_RECREATE_TARGET)
         reset_background();
     (void)bottom;
     return result;
 }
 HRESULT Renderer::scene(ID2D1RenderTarget *context, ID2D1Bitmap *pixels, ID2D1BitmapBrush *pattern,
+                         ID2D1BitmapBrush *viewport_pattern, ID2D1SolidColorBrush *drawing_brush,
+                         const Image *image, const View &view, int top, const Rect *selection,
+                         std::span<const RECT> damage) {
+    context->BeginDraw();
+    last_damage_pixels = 0; last_damage_regions = damage.empty() ? 1 : damage.size();
+    if (damage.empty()) {
+        const auto size = context->GetPixelSize();
+        last_damage_pixels = uint64_t(size.width) * size.height;
+        scene_content(context,pixels,pattern,viewport_pattern,drawing_brush,image,view,top,selection);
+    } else for (const auto &rect : damage) {
+        if (rect.right <= rect.left || rect.bottom <= rect.top) continue;
+        last_damage_pixels += uint64_t(rect.right-rect.left)*(rect.bottom-rect.top);
+        context->PushAxisAlignedClip(D2D1::RectF(float(rect.left),float(rect.top),float(rect.right),float(rect.bottom)),D2D1_ANTIALIAS_MODE_ALIASED);
+        scene_content(context,pixels,pattern,viewport_pattern,drawing_brush,image,view,top,selection);
+        context->PopAxisAlignedClip();
+    }
+    return context->EndDraw();
+}
+void Renderer::scene_content(ID2D1RenderTarget *context, ID2D1Bitmap *pixels, ID2D1BitmapBrush *pattern,
                         ID2D1BitmapBrush *viewport_pattern,
                         ID2D1SolidColorBrush *drawing_brush, const Image *image, const View &view, int top,
                         const Rect *selection) {
-    context->BeginDraw();
     overlay_rect = {};
     context->Clear(D2D1::ColorF(background));
     context->SetTransform(D2D1::Matrix3x2F::Translation(float(viewport_left),0));
@@ -408,7 +429,6 @@ HRESULT Renderer::scene(ID2D1RenderTarget *context, ID2D1Bitmap *pixels, ID2D1Bi
         draw_overlay(context, drawing_brush, view, top);
     context->PopAxisAlignedClip();
     context->SetTransform(D2D1::Matrix3x2F::Identity());
-    return context->EndDraw();
 }
 void Renderer::draw_editor_overlay(ID2D1RenderTarget *context,ID2D1SolidColorBrush *drawing_brush,const View &view,int top,const D2D1_RECT_F &canvas){
     const ViewportTransform transform(view,0,top);

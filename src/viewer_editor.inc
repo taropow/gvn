@@ -54,8 +54,8 @@
     }
     void export_drag() {
         if(!image||loading||floating||cropping)return;
-        const auto source=image;const auto metadata=current_metadata();
-        const auto path=export_drag_path(*source,player.frame,editor_chrome.text(editor_id::Name),editor_chrome.export_format(),settings.saving,&metadata);
+        const auto source=image;
+        const auto path=prepared_export_path(true);
         const auto was_playing=player.playing;cancel_pointer();player.playing=false;update();
         try{dialogs.file_drag(path);}catch(...){if(image==source)player.playing=was_playing;update();throw;}
         if(image==source)player.playing=was_playing;update();

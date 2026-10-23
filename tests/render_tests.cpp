@@ -1077,3 +1077,50 @@ TEST(panning_reuses_bounded_tiles_and_matches_uncached_pixels_with_fractional_zo
         }
     CHECK(image.frames[0].pixels == original);
 }
+
+namespace gvn {
+struct RendererAudit {
+    static void partial_pixels() {
+        gvn_test::BackgroundSurface surface(360,260);
+        auto image=new_image(300,200);for(size_t n=0;n<image.frames[0].pixels.size();++n)
+            image.frames[0].pixels[n]={uint8_t(n*19),uint8_t(n*37),uint8_t(n*53),uint8_t(n)};
+        Renderer renderer,fresh;renderer.viewport_left=fresh.viewport_left=28;
+        renderer.ensure(surface.window);
+        Microsoft::WRL::ComPtr<ID2D1DCRenderTarget> target;
+        const auto properties=D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_SOFTWARE,
+            D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,D2D1_ALPHA_MODE_IGNORE),96,96,D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE);
+        CHECK(SUCCEEDED(renderer.factory->CreateDCRenderTarget(&properties,&target)));
+        RECT client{0,0,360,260};CHECK(SUCCEEDED(target->BindDC(surface.dc,&client)));
+        std::vector<uint8_t> bgra(image.frames[0].pixels.size()*4);
+        detail::premultiply_rgba(reinterpret_cast<const uint8_t *>(image.frames[0].pixels.data()),bgra.data(),image.frames[0].pixels.size());
+        Microsoft::WRL::ComPtr<ID2D1Bitmap> pixels;CHECK(SUCCEEDED(target->CreateBitmap(D2D1::SizeU(300,200),bgra.data(),1200,
+            D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM,D2D1_ALPHA_MODE_PREMULTIPLIED)),&pixels)));
+        auto checker=renderer.checker_for(target.Get(),false),background=renderer.checker_for(target.Get(),true);
+        Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> brush;CHECK(SUCCEEDED(target->CreateSolidColorBrush(D2D1::ColorF(0),&brush)));
+        View view;view.resize(332,240);view.set_image(300,200);view.manual=true;view.centered=false;view.scale=1;
+        Rect selection{50,40,180,120};
+        CHECK(SUCCEEDED(renderer.scene(target.Get(),pixels.Get(),checker.Get(),background.Get(),brush.Get(),&image,view,20,&selection)));
+        const RECT damage[]{{75,57,261,63},{75,177,261,183},{75,63,81,177},{255,63,261,177}};
+        std::vector<uint32_t> expected(360*260);
+        for(unsigned phase=1;phase<8;++phase){
+            renderer.ants_phase=fresh.ants_phase=phase;
+            CHECK(SUCCEEDED(renderer.scene(target.Get(),pixels.Get(),checker.Get(),background.Get(),brush.Get(),&image,view,20,&selection,damage)));
+            GdiFlush();std::copy_n(static_cast<const uint32_t *>(surface.pixels),expected.size(),expected.begin());
+            CHECK(renderer.last_damage_pixels<5000&&renderer.last_damage_regions==4);
+            CHECK(SUCCEEDED(fresh.print(surface.window,surface.dc,&image,0,view,20,&selection)));GdiFlush();
+            CHECK(std::equal(expected.begin(),expected.end(),static_cast<const uint32_t *>(surface.pixels)));
+        }
+        const RECT tiny{70,55,80,65};
+        CHECK(SUCCEEDED(renderer.draw(surface.window,&image,0,view,20,0,&selection,{&tiny,1})));
+        CHECK(renderer.last_damage_pixels==360*260); // a new HWND surface must be complete
+        CHECK(SUCCEEDED(renderer.draw(surface.window,&image,0,view,20,0,&selection,{&tiny,1})));
+        CHECK(renderer.last_damage_pixels==100);
+        renderer.reset_background();
+        CHECK(SUCCEEDED(renderer.draw(surface.window,&image,0,view,20,0,&selection,{&tiny,1})));
+        CHECK(renderer.last_damage_pixels==360*260);
+    }
+};
+}
+TEST(partial_native_selection_frames_match_full_paint_and_reset_forces_complete_surface) {
+    RendererAudit::partial_pixels();
+}

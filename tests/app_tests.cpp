@@ -6972,6 +6972,7 @@ void background_changes_preserve_image_animation_copy_save_and_ole() {
 #include "feedback_app_cases.inc"
 #include "daily_hotpath_app_cases.inc"
 #include "prompt_app_cases.inc"
+#include "everyday_app_cases.inc"
 };
 } // namespace gvn
 
@@ -7356,3 +7357,7 @@ APP_TEST(feedback_settings_independent_sound_throttle_and_reused_window)
 APP_TEST(feedback_async_clipboard_file_complete_failure_and_cancel)
 APP_TEST(feedback_edit_save_transfer_success_and_cancel)
 APP_TEST(feedback_preferences_native_controls_apply_reset)
+
+APP_TEST(everyday_damage_timer_and_minimized_updates)
+
+APP_TEST(everyday_copy_and_export_reuse_preserve_pixels_alpha_origin_and_metadata)

@@ -131,7 +131,8 @@ class App {
     HWND status{}, slider{}, canvas_horizontal{}, canvas_vertical{}, canvas_corner{};
     CanvasScrollbars canvas_bars;
     int canvas_width{}, canvas_height{}, canvas_top{-1}, canvas_left{-1},canvas_thickness{};
-    int status_min_height{};
+    int status_min_height{}, status_measured_height{};
+    SIZE status_parent_size{};UINT status_dpi{};
     bool status_parts_image{};std::array<int,5> status_edges{};
     bool canvas_tracking{};
     uint64_t overlay_scroll_until{};
@@ -422,6 +423,7 @@ class App {
     void reset_animation_clock() {
         KillTimer(hwnd, 1);
         animation_timer = false;
+        animation_interval = 0;
     }
     HMENU main_menu{};
     WINDOWPLACEMENT placement{sizeof(WINDOWPLACEMENT)};
@@ -828,6 +830,9 @@ class App {
     }
     int measure_status_height(UINT dpi,bool has_image) {
         const int wanted=EditorChrome::status_height(dpi,has_image);if(!status)return wanted;
+        RECT client{};GetClientRect(hwnd,&client);const SIZE size{client.right,client.bottom};
+        if(status_min_height==wanted&&status_dpi==dpi&&status_parent_size.cx==size.cx&&status_parent_size.cy==size.cy&&status_measured_height)
+            return status_measured_height;
         if(status_min_height!=wanted){
             // Themed status padding and the native outer border have different sizes.
             // Measure the actual control rather than subtracting its text-part padding.
@@ -836,7 +841,8 @@ class App {
             if(actual!=wanted)SendMessageW(status,SB_SETMINHEIGHT,std::max(0,2*wanted-actual),0);
             status_min_height=wanted;
         }
-        SendMessageW(status,WM_SIZE,0,0);RECT bounds{};GetWindowRect(status,&bounds);return bounds.bottom-bounds.top;
+        SendMessageW(status,WM_SIZE,0,0);RECT bounds{};GetWindowRect(status,&bounds);
+        status_dpi=dpi;status_parent_size=size;status_measured_height=bounds.bottom-bounds.top;return status_measured_height;
     }
     SIZE minimum_window_size(int outer_width) {
         const UINT dpi = GetDpiForWindow(hwnd);
@@ -1045,6 +1051,7 @@ class App {
         view.manual = true;
         update();
     }
+#include "viewer_damage.inc"
     void sync_ants_timer() {
         const bool needed=(image||floating)&&(!selection.empty()||renderer.selection_path.size()>1||floating)&&!IsIconic(hwnd);
         if(needed&&!ants_timer)ants_timer=SetTimer(hwnd,39,80,nullptr)!=0;
@@ -1052,23 +1059,36 @@ class App {
     }
 #include "viewer_presentation.inc"
 #include "viewer_feedback.inc"
-    void update() {
+    void update(bool layout_synced=false) {
         sync_ants_timer();
-        sync_canvas_scrollbars();
+        if(!layout_synced)sync_canvas_scrollbars();
         render_settings();
-        layout_status_parts();
+        if(!layout_synced)layout_status_parts();
         update_caption_and_status();
         if(image&&image->animated())
             playback.update(player.frame,image->frames.size(),player.playing,player.loop,player.honor_file_loops,image->file_loops);
-        if(image&&image->animated()&&player.playing){
-            if(!animation_timer){last_tick=animation_now();SetTimer(hwnd,1,16,nullptr);animation_timer=true;}
-        }else if(animation_timer){
-            KillTimer(hwnd,1);animation_timer=false;
-        }
+        sync_animation_timer();
         update_command_controls();
         InvalidateRect(hwnd,nullptr,FALSE);
     }
     bool animation_timer{};
+    UINT animation_interval{};
+    std::chrono::steady_clock::time_point animation_due;
+    void sync_animation_timer(bool force=false) {
+        if(!image||!image->animated()||!player.playing){
+            if(animation_timer)KillTimer(hwnd,1);
+            animation_timer=false;animation_interval=0;return;
+        }
+        const auto now=animation_now();
+        if(!animation_timer)last_tick=now;
+        const auto remaining=player.durations.at(player.frame)-std::min(player.elapsed,player.durations.at(player.frame));
+        const auto due=last_tick+std::chrono::milliseconds(remaining);
+        if(!force&&animation_timer&&due==animation_due)return;
+        const auto delay=std::chrono::duration_cast<std::chrono::milliseconds>(due-now).count();
+        animation_interval=static_cast<UINT>(std::clamp<int64_t>(delay,USER_TIMER_MINIMUM,USER_TIMER_MAXIMUM));
+        animation_due=due;
+        animation_timer=SetTimer(hwnd,1,animation_interval,nullptr)!=0;
+    }
     bool original_file() const {
         return image && !image->path.empty() && archive.empty() &&
                std::filesystem::is_regular_file(image->path);
@@ -1567,7 +1587,7 @@ class App {
     }
     const Image *presented_image() const {return floating?floating->canvas.get():previewing_mask()?mask_preview_image.get():image.get();}
     size_t presented_frame() const {return previewing_mask()?0:player.frame;}
-    HRESULT render_scene(HDC dc=nullptr) {
+    HRESULT render_scene(HDC dc=nullptr, std::span<const RECT> damage={}) {
         renderer.selection_region=&selection;
         renderer.crop_box=cropping?std::optional<FloatingBox>(cropping->box):std::nullopt;
         renderer.set_floating(floating?floating->source:nullptr,floating?floating->box:FloatingBox{});
@@ -1575,7 +1595,7 @@ class App {
         struct Restore {bool &value;bool previous;~Restore(){value=previous;}} restore{renderer.dragging_low,previous};
         const auto frame=floating?size_t(0):presented_frame();
         return dc?renderer.print(hwnd,dc,presented_image(),frame,view,top,floating?nullptr:&selection)
-                 :renderer.draw(hwnd,presented_image(),frame,view,top,bottom,floating?nullptr:&selection);
+                 :renderer.draw(hwnd,presented_image(),frame,view,top,bottom,floating?nullptr:&selection,damage);
     }
 #include "viewer_selection.inc"
     void rainbow_edit() {
@@ -1832,6 +1852,7 @@ class App {
         remember_undo(std::move(previous_player),image_metadata);
         image_metadata=next;modified=true;update();
     }
+#include "viewer_transfer_cache.inc"
     Image copied_image() const {
         auto frame = still_frame(*image, player.frame);
         frame.metadata=current_metadata();
@@ -2160,15 +2181,11 @@ class App {
             auto preview = entry; preview.send = ExternalSend::None;
             launch = plan_external_application(preview, context);
             if (!launch.explicit_arguments) {
-                const auto metadata=current_metadata();
-                context.displayed_png = drag_path(*image, player.frame, modified || image->format == L"見開き",&metadata);
+                context.displayed_png = prepared_export_path(false);
                 launch = plan_external_application(entry, context);
             }
         } else launch = plan_external_application(entry, context);
-        if (launch.copy_image) {
-            auto frame = copied_image();
-            copy_current_selection(frame);
-        }
+        if (launch.copy_image) copy_current_selection();
         if(dialogs.external_launch(hwnd,launch)){
             feedback_done(External,L"編集ソフトへファイルを渡しました");
             if(launch.quit_after_launch)PostMessageW(hwnd,WM_CLOSE,0,0);
@@ -2836,8 +2853,8 @@ class App {
             break;
         case Copy:
             if (image) {
-                feedback_begin(id,L"コピー中…");auto frame=copied_image();copy_current_selection(frame);
-                feedback_done(id,L"コピーしました · "+std::to_wstring(frame.width)+L"×"+std::to_wstring(frame.height));
+                feedback_begin(id,L"コピー中…");const auto copied=copy_current_selection();
+                feedback_done(id,L"コピーしました · "+std::to_wstring(copied.cx)+L"×"+std::to_wstring(copied.cy));
             }
             break;
         case Paste:
@@ -2893,8 +2910,7 @@ class App {
         case Cut:
             if (image && !selection.empty()) {
                 feedback_begin(id,L"切り取り中…");const auto before=image;
-                auto frame = copied_image();
-                copy_current_selection(frame);
+                copy_current_selection();
                 const auto rect = selection;
                 const auto color = settings.cut_color;
                 const auto fill = settings.cut_transparent ? Pixel{}
@@ -3562,8 +3578,7 @@ class App {
         if (!image)
             return;
         auto source = image;
-        const auto metadata=current_metadata();
-        const auto path = drag_path(*source, player.frame, modified || source->format == L"見開き",&metadata);
+        const auto path = prepared_export_path(false);
         const bool was_playing = player.playing;
         drag_armed = false;
         cancel_pointer();
@@ -3784,7 +3799,7 @@ class App {
     }
     void pointer_move(POINT point, WPARAM flags) {
         if(pen_player){if(flags&MK_LBUTTON){const auto p=floating_point(point);auto &points=renderer.pen_points;
-            if(points.size()<65536&&std::hypot(p.x-points.back().x,p.y-points.back().y)>=.25){points.push_back(p);InvalidateRect(hwnd,nullptr,FALSE);}}return;}
+            if(points.size()<65536&&std::hypot(p.x-points.back().x,p.y-points.back().y)>=.25){const auto before=points.back();points.push_back(p);invalidate_pen_segment(before,p);}}return;}
         if(crop_drag&&cropping){if(flags&MK_LBUTTON){cropping->box=crop_drag->moved(floating_point(point),(flags&MK_SHIFT)!=0);update();}return;}
         auto &pending=mouse_presses[0];
         if(pending.down&&pending.selection_move_pending){
@@ -4159,9 +4174,10 @@ class App {
         case WM_SIZE:
             if (!full && w != SIZE_MINIMIZED)
                 was_maximized = w == SIZE_MAXIMIZED;
+            if(w==SIZE_MINIMIZED){sync_ants_timer();sync_animation_timer();return 0;}
             layout();
             if (status)
-                update();
+                update(true);
             return 0;
         case WM_DPICHANGED: {
             sync_ui_theme();
@@ -4183,9 +4199,20 @@ class App {
             return 1;
         case WM_PAINT: {
             PAINTSTRUCT ps{};
+            // Retain separate edge strips instead of painting their large union box.
+            alignas(RGNDATA) std::array<uint8_t,sizeof(RGNDATAHEADER)+64*sizeof(RECT)> storage{};
+            std::span<const RECT> damage;
+            if (auto region=CreateRectRgn(0,0,0,0)) {
+                if(GetUpdateRgn(hwnd,region,FALSE)!=ERROR && GetRegionData(region,DWORD(storage.size()),reinterpret_cast<RGNDATA *>(storage.data()))) {
+                    const auto data=reinterpret_cast<const RGNDATA *>(storage.data());
+                    if(data->rdh.iType==RDH_RECTANGLES && data->rdh.nCount<=64)
+                        damage={reinterpret_cast<const RECT *>(data->Buffer),data->rdh.nCount};
+                }
+                DeleteObject(region);
+            }
             BeginPaint(hwnd, &ps);
             try {
-                const auto result = render_scene();
+                const auto result = render_scene(nullptr,damage);
                 if (SUCCEEDED(result))
                     ++paints;
                 else if (result != D2DERR_RECREATE_TARGET)
@@ -4223,7 +4250,7 @@ class App {
             ui_theme_menu(reinterpret_cast<HMENU>(w));
             return 0;
         case WM_SETTINGCHANGE:
-        case WM_THEMECHANGED:sync_ui_theme(true);layout();return 0;
+        case WM_THEMECHANGED:status_measured_height=0;sync_ui_theme(true);layout();return 0;
         case WM_COMMAND: {
             UINT id = LOWORD(w);
             if(id==MoreCommands){toolbar.show_more(hwnd);return 0;}
@@ -4269,7 +4296,7 @@ class App {
             if(w==39){
                 sync_ants_timer();
                 if(ants_timer){renderer.ants_phase=(renderer.ants_phase+1)%8;
-                    RECT canvas{left,top,left+LONG(view.width),top+LONG(view.height)};InvalidateRect(hwnd,&canvas,FALSE);}
+                    invalidate_selection_lines();}
             } else if (w == kForwardRetryTimer) {
                 process_forwarded_file();
             } else if (w == kPreviewCleanupTimer) {
@@ -4287,11 +4314,9 @@ class App {
                     last_tick += std::chrono::milliseconds(elapsed);
                 else if (elapsed < 0)
                     last_tick = now;
-                if (player.advance(static_cast<uint64_t>(std::max<int64_t>(0, elapsed)))) {
-                    update();
-                }
-                if (!player.playing)
-                    update();
+                const bool changed=player.advance(static_cast<uint64_t>(std::max<int64_t>(0, elapsed)));
+                if(!IsIconic(hwnd)&&(changed||!player.playing))update();
+                else sync_animation_timer(true);
             } else if (w == 2) {
                 advance_slideshow();
             } else if (w == 9) {

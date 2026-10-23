@@ -3,6 +3,7 @@
 #include <shlguid.h>
 #include <bit>
 #include <cstring>
+#include "pixel_conversion.h"
 
 using Microsoft::WRL::ComPtr;
 namespace gvn {
@@ -27,25 +28,19 @@ struct Clipboard {
     }
 };
 struct Global {
-    HGLOBAL value{};
-    explicit Global(std::span<const uint8_t> bytes) {
-        value = GlobalAlloc(GMEM_MOVEABLE, bytes.size());
-        require(value != nullptr, "Clipboard allocation failed");
-        auto data = GlobalLock(value);
-        if (!data) {
-            GlobalFree(value);
-            throw std::runtime_error("Clipboard allocation failed");
-        }
-        memcpy(data, bytes.data(), bytes.size());
-        GlobalUnlock(value);
+    HGLOBAL value{};uint8_t *data{};size_t size{};
+    explicit Global(size_t bytes):size(bytes) {
+        value=GlobalAlloc(GMEM_MOVEABLE,bytes);require(value!=nullptr,"Clipboard allocation failed");
+        data=static_cast<uint8_t *>(GlobalLock(value));
+        if(!data){GlobalFree(value);throw std::runtime_error("Clipboard allocation failed");}
     }
-    ~Global() {
-        if (value)
-            GlobalFree(value);
-    }
-    void publish(UINT format) {
-        require(SetClipboardData(format, value) != nullptr, "Cannot publish clipboard image");
-        value = nullptr;
+    explicit Global(std::span<const uint8_t> bytes):Global(bytes.size()){std::memcpy(data,bytes.data(),bytes.size());}
+    Global(const Global &)=delete;
+    ~Global(){if(data)GlobalUnlock(value);if(value)GlobalFree(value);}
+    std::span<uint8_t> writable(){return {data,size};}
+    void publish(UINT format){
+        if(data){GlobalUnlock(value);data=nullptr;}
+        require(SetClipboardData(format,value)!=nullptr,"Cannot publish clipboard image");value=nullptr;
     }
 };
 // The caller holds Clipboard open for this entire lifetime. Decoders consume
@@ -110,7 +105,7 @@ std::filesystem::path clipboard_file() {
     return {};
 }
 } // namespace
-std::vector<uint8_t> make_dibv5(const Image &image, size_t frame) {
+static void fill_dibv5(std::span<uint8_t> result,const Image &image,size_t frame) {
     const size_t count = checked_image_pixels(image.width, image.height);
     const auto &pixels = image.frames.at(frame).pixels;
     require(pixels.size() == count, "Invalid frame");
@@ -128,17 +123,13 @@ std::vector<uint8_t> make_dibv5(const Image &image, size_t frame) {
     header.bV5AlphaMask = 0xff000000;
     header.bV5CSType = LCS_sRGB;
     header.bV5Intent = LCS_GM_IMAGES;
-    std::vector<uint8_t> result(sizeof(header) + count * 4);
+    require(result.size()==sizeof(header)+count*4,"Invalid DIB output buffer");
     memcpy(result.data(), &header, sizeof(header));
-    for (size_t i = 0; i < count; ++i) {
-        const auto p = pixels[i];
-        auto *d = result.data() + sizeof(header) + i * 4;
-        d[0] = p.b;
-        d[1] = p.g;
-        d[2] = p.r;
-        d[3] = p.a;
-    }
-    return result;
+    detail::swizzle_rgba(reinterpret_cast<const uint8_t *>(pixels.data()),result.data()+sizeof(header),count);
+}
+std::vector<uint8_t> make_dibv5(const Image &image,size_t frame) {
+    std::vector<uint8_t> result(sizeof(BITMAPV5HEADER)+checked_image_pixels(image.width,image.height)*4);
+    fill_dibv5(result,image,frame);return result;
 }
 Image read_dib(std::span<const uint8_t> data) {
     const uint32_t header = u32(data, 0);
@@ -251,13 +242,17 @@ Image read_dib(std::span<const uint8_t> data) {
     }
     return image;
 }
-void copy_image(HWND owner, const Image &image, size_t frame,std::optional<SelectionOrigin> origin) {
-    const auto png = encode(image, frame, L".png");
-    const auto dib = make_dibv5(image, frame);
-    Global png_memory(png), dib_memory(dib);
+void copy_image(HWND owner, const Image &image, size_t frame,std::optional<SelectionOrigin> origin,const ImageMetadata *metadata) {
+    PngSaveOptions options;options.compression=1; // Lossless interchange, prioritize command latency.
+    const auto png = encode_png(image,frame,options,metadata);
+    Global png_memory(png), dib_memory(sizeof(BITMAPV5HEADER)+checked_image_pixels(image.width,image.height)*4);
+    fill_dibv5(dib_memory.writable(),image,frame);
     std::unique_ptr<Global> positioned;
     UINT position_format{};
-    if(origin){positioned=std::make_unique<Global>(encode_selection_clipboard(png,image.width,image.height,*origin));
+    if(origin){
+        const auto header=selection_clipboard_header(png.size(),image.width,image.height,*origin);
+        positioned=std::make_unique<Global>(header.size()+png.size());const auto bytes=positioned->writable();
+        std::copy(header.begin(),header.end(),bytes.begin());std::copy(png.begin(),png.end(),bytes.begin()+header.size());
         position_format=RegisterClipboardFormatW(selection_clipboard_format);require(position_format!=0,"Cannot register selection format");}
     const UINT png_format = RegisterClipboardFormatW(L"PNG");
     require(png_format != 0, "Cannot register PNG clipboard format");

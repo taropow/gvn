@@ -5,7 +5,7 @@ namespace gvn {
 namespace {
 constexpr uint8_t magic[]{'G','V','N','S','E','L','1',0};
 uint32_t get(std::span<const uint8_t> b,size_t p){return uint32_t(b[p])|(uint32_t(b[p+1])<<8)|(uint32_t(b[p+2])<<16)|(uint32_t(b[p+3])<<24);}
-void put(std::vector<uint8_t> &b,size_t p,uint32_t v){for(int i=0;i<4;++i)b[p+i]=uint8_t(v>>(8*i));}
+void put(std::span<uint8_t> b,size_t p,uint32_t v){for(int i=0;i<4;++i)b[p+i]=uint8_t(v>>(8*i));}
 bool dimension(uint32_t v){return v>0&&v<=65535;}
 }
 SelectionClipboard decode_selection_clipboard(std::span<const uint8_t> b) {
@@ -23,12 +23,17 @@ SelectionClipboard decode_selection_clipboard(std::span<const uint8_t> b) {
     if(get(b,40)&1)value.origin=SelectionOrigin{std::bit_cast<int32_t>(get(b,16)),std::bit_cast<int32_t>(get(b,20)),get(b,24),get(b,28)};
     return value;
 }
-std::vector<uint8_t> encode_selection_clipboard(std::span<const uint8_t> png,uint32_t width,uint32_t height,SelectionOrigin origin,bool known) {
-    if(!dimension(width)||!dimension(height)||!dimension(origin.canvas_width)||!dimension(origin.canvas_height)||png.size()>512ull*1024*1024)
+std::array<uint8_t,64> selection_clipboard_header(size_t png_bytes,uint32_t width,uint32_t height,SelectionOrigin origin,bool known) {
+    if(!dimension(width)||!dimension(height)||!dimension(origin.canvas_width)||!dimension(origin.canvas_height)||png_bytes>512ull*1024*1024)
         throw std::invalid_argument("Invalid selection metadata dimensions");
-    std::vector<uint8_t> result(64+png.size());std::memcpy(result.data(),magic,8);
+    std::array<uint8_t,64> result{};std::memcpy(result.data(),magic,8);
     put(result,8,64);put(result,12,1);put(result,16,std::bit_cast<uint32_t>(origin.x));put(result,20,std::bit_cast<uint32_t>(origin.y));
     put(result,24,origin.canvas_width);put(result,28,origin.canvas_height);put(result,32,width);put(result,36,height);
-    put(result,40,known?1:0);put(result,44,uint32_t(png.size()));std::copy(png.begin(),png.end(),result.begin()+64);return result;
+    put(result,40,known?1:0);put(result,44,uint32_t(png_bytes));return result;
+}
+std::vector<uint8_t> encode_selection_clipboard(std::span<const uint8_t> png,uint32_t width,uint32_t height,SelectionOrigin origin,bool known) {
+    const auto header=selection_clipboard_header(png.size(),width,height,origin,known);
+    std::vector<uint8_t> result(64+png.size());std::copy(header.begin(),header.end(),result.begin());
+    std::copy(png.begin(),png.end(),result.begin()+64);return result;
 }
 } // namespace gvn
