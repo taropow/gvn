@@ -495,7 +495,7 @@ void IconToolbar::create(HWND parent, bool playback,bool editing_tools) {
     SendMessageW(hwnd, TB_SETUNICODEFORMAT, TRUE, 0);apply_ui_theme(bar_window());
 }
 void IconToolbar::rebuild() {
-    measured_width=-1;texts.clear();palette_generation=ui_theme_generation();
+    measured_width=-1;tool_content=0;texts.clear();palette_generation=ui_theme_generation();
     struct Saved {
         BYTE state{};
         std::wstring text;
@@ -555,24 +555,39 @@ void IconToolbar::rebuild() {
         const auto pause = icon_bitmap(kPauseIcon, icon);
         pause_bitmap = ImageList_Add(images, pause, nullptr);
         DeleteObject(pause);
-        playing(is_playing);
+        playing_bitmap_current=false;playing(is_playing);
     }
+}
+namespace {
+void show_control(HWND window,bool visible){
+    if(bool(GetWindowLongPtrW(window,GWL_STYLE)&WS_VISIBLE)!=visible)
+        ShowWindow(window,visible?SW_SHOWNA:SW_HIDE);
+}
+void place_control(HWND window,int x,int y,int width,int height){
+    RECT previous{};GetWindowRect(window,&previous);
+    MapWindowPoints(nullptr,GetParent(window),reinterpret_cast<POINT *>(&previous),2);
+    const RECT next{x,y,x+width,y+height};
+    if(!EqualRect(&previous,&next))SetWindowPos(window,nullptr,x,y,width,height,SWP_NOZORDER|SWP_NOACTIVATE);
+}
 }
 int IconToolbar::layout_tools(UINT new_dpi,int top,int height,bool visible){
     if(!hwnd)return 0;
-    if(!visible){ShowWindow(host,SW_HIDE);return 0;}
+    if(!visible){show_control(host,false);return 0;}
     if(dpi!=int(new_dpi)||large!=built_large||palette_generation!=ui_theme_generation()){dpi=int(new_dpi);rebuild();}
-    RECT bounds{};SendMessageW(hwnd,TB_SETROWS,MAKEWPARAM(SendMessageW(hwnd,TB_BUTTONCOUNT,0,0),TRUE),reinterpret_cast<LPARAM>(&bounds));
-    // A repeated TB_SETROWS can leave the output RECT untouched.
-    for(int item_index=0;item_index<SendMessageW(hwnd,TB_BUTTONCOUNT,0,0);++item_index){RECT item{};if(SendMessageW(hwnd,TB_GETITEMRECT,item_index,reinterpret_cast<LPARAM>(&item)))bounds.bottom=std::max(bounds.bottom,item.bottom);}
-    tool_content=std::max(1L,bounds.bottom);tool_height=std::max(1,height);
+    if(!tool_content){
+        RECT bounds{};const int count=int(SendMessageW(hwnd,TB_BUTTONCOUNT,0,0));
+        SendMessageW(hwnd,TB_SETROWS,MAKEWPARAM(count,TRUE),reinterpret_cast<LPARAM>(&bounds));
+        for(int n=0;n<count;++n){RECT item{};if(SendMessageW(hwnd,TB_GETITEMRECT,n,reinterpret_cast<LPARAM>(&item)))bounds.bottom=std::max(bounds.bottom,item.bottom);}
+        tool_content=std::max(1L,bounds.bottom);
+    }
+    tool_height=std::max(1,height);
     const int button=MulDiv(ui_button_size(large),dpi,96);
     tool_width=button+4+(tool_content>tool_height?GetSystemMetricsForDpi(SM_CXVSCROLL,new_dpi):0);
     tool_scroll=std::clamp(tool_scroll,0,std::max(0,tool_content-tool_height));
     SCROLLINFO info{sizeof(info),SIF_RANGE|SIF_PAGE|SIF_POS,0,tool_content-1,UINT(tool_height),tool_scroll};ui_set_scroll_info(tools_scroll,info);
-    MoveWindow(host,0,top,tool_width,tool_height,TRUE);MoveWindow(hwnd,1,-tool_scroll,button+2,tool_content,TRUE);
-    if(tool_content>tool_height){SetWindowPos(tools_scroll,HWND_TOP,button+4,0,tool_width-button-4,tool_height,SWP_NOACTIVATE|SWP_SHOWWINDOW);}else ShowWindow(tools_scroll,SW_HIDE);
-    ShowWindow(host,SW_SHOWNA);ShowWindow(hwnd,SW_SHOWNA);return tool_width;
+    place_control(host,0,top,tool_width,tool_height);place_control(hwnd,1,-tool_scroll,button+2,tool_content);
+    if(tool_content>tool_height)place_control(tools_scroll,button+4,0,tool_width-button-4,tool_height);
+    show_control(tools_scroll,tool_content>tool_height);show_control(host,true);show_control(hwnd,true);return tool_width;
 }
 void IconToolbar::scroll_tools(UINT action,int delta){
     const int step=MulDiv(ui_button_size(large),dpi,96);int next=tool_scroll;
@@ -614,8 +629,8 @@ int IconToolbar::layout(int width, UINT new_dpi, bool visible, int x, int y) {
     const int measured = measure_height(width, new_dpi);
     const int divider = !player && line ? std::max(2, MulDiv(2, dpi, 96)) : 0;
     const int height = measured - divider;
-    ShowWindow(bar_window(), visible ? SW_SHOW : SW_HIDE);
-    ShowWindow(hwnd, visible ? SW_SHOW : SW_HIDE);
+    show_control(bar_window(),visible);
+    show_control(hwnd,visible);
     int extent = player?0:measured_extent;
     for (int i = 0; player&&i < SendMessageW(hwnd, TB_BUTTONCOUNT, 0, 0); ++i) {
         TBBUTTON item{};
@@ -627,12 +642,10 @@ int IconToolbar::layout(int width, UINT new_dpi, bool visible, int x, int y) {
     }
     const int used_width = !player && centered ? std::min(width, extent + MulDiv(2, dpi, 96)) : width;
     if (host) {
-        MoveWindow(host, x, y, width, height + divider, TRUE);
-        SetWindowLongPtrW(host, GWLP_USERDATA, line);
-        InvalidateRect(host, nullptr, TRUE);
+        place_control(host,x,y,width,height+divider);
+        if(GetWindowLongPtrW(host,GWLP_USERDATA)!=LONG_PTR(line)){SetWindowLongPtrW(host,GWLP_USERDATA,line);InvalidateRect(host,nullptr,TRUE);}
     }
-    MoveWindow(hwnd, host ? (width - used_width) / 2 : x, host ? divider : y, std::max(1, used_width), height,
-               TRUE);
+    place_control(hwnd,host?(width-used_width)/2:x,host?divider:y,std::max(1,used_width),height);
     bar_height = height + divider;
     return visible ? bar_height : 0;
 }
@@ -678,8 +691,10 @@ void IconToolbar::text(UINT command, const wchar_t *value) {
     SendMessageW(hwnd, TB_SETBUTTONINFOW, command, reinterpret_cast<LPARAM>(&info));
 }
 void IconToolbar::playing(bool value) {
+    if(playing_bitmap_current&&is_playing==value)return;
     is_playing = value;
     if (play_bitmap >= 0) {
+        playing_bitmap_current=true;
         SendMessageW(hwnd, TB_CHANGEBITMAP, Play, value ? pause_bitmap : play_bitmap);
         text(Play, value ? L"一時停止" : L"再生");
     }
@@ -744,31 +759,32 @@ int AnimationBar::measure_height(int width, UINT dpi) {
 }
 int AnimationBar::layout(int width, int client_height, int status_height, UINT dpi, bool visible) {
     auto px = [&](int v) { return MulDiv(v, dpi, 96); };
-    ShowWindow(hwnd, visible ? SW_SHOW : SW_HIDE);
-    if (!visible)
-        return 0;
-    toolbar.layout(width, dpi, true);
+    show_control(hwnd,visible);
+    if(!visible)return 0;
+    toolbar.measure_height(width,dpi);
     const int icons = toolbar.ideal_width(), info = px(80);
     const bool narrow = width < icons + info + px(120);
     const bool third_row = narrow && width < icons + info + px(4);
     const int height = measure_height(width, dpi);
-    MoveWindow(hwnd, 0, std::max(0, client_height - status_height - height), width, height, TRUE);
+    place_control(hwnd,0,std::max(0,client_height-status_height-height),width,height);
     toolbar.layout(icons, dpi, true, px(2), px(narrow ? 29 : 3));
     const int seek_x = narrow ? px(4) : icons + px(6);
     const int controls_height=toolbar.height();
-    MoveWindow(slider, seek_x, narrow?px(3):px(3)+(controls_height-px(26))/2, std::max(px(20), width - seek_x - (narrow ? px(4) : info + px(4))),
-               px(26), TRUE);
-    MoveWindow(counter, third_row ? std::max(0, width - info) : std::max(icons, width - info),
+    place_control(slider, seek_x, narrow?px(3):px(3)+(controls_height-px(26))/2, std::max(px(20), width - seek_x - (narrow ? px(4) : info + px(4))),
+               px(26));
+    place_control(counter, third_row ? std::max(0, width - info) : std::max(icons, width - info),
                third_row ? height - px(28) : px(narrow ? 29 : 3), info,
-               third_row?px(26):controls_height,
-               TRUE);
+               third_row?px(26):controls_height);
     return height;
 }
 void AnimationBar::update(size_t frame, size_t count, bool playing, bool loop, bool honor_file_loops,
                           uint32_t file_loops) {
-    SendMessageW(slider, TBM_SETRANGEMIN, FALSE, 0);
-    SendMessageW(slider, TBM_SETRANGEMAX, FALSE, count ? count - 1 : 0);
-    SendMessageW(slider, TBM_SETPOS, TRUE, frame);
+    const bool count_changed=displayed_count!=count,frame_changed=displayed_frame!=frame;
+    if(count_changed){
+        SendMessageW(slider,TBM_SETRANGEMIN,FALSE,0);
+        SendMessageW(slider,TBM_SETRANGEMAX,FALSE,count?count-1:0);
+    }
+    if(count_changed||frame_changed)SendMessageW(slider,TBM_SETPOS,TRUE,frame);
     toolbar.playing(playing);
     toolbar.check(Loop, loop);
     const auto mode = !loop ? std::wstring(L"ループ: オフ")
@@ -776,8 +792,11 @@ void AnimationBar::update(size_t frame, size_t count, bool playing, bool loop, b
                           ? L"ループ: オン（ファイル指定: " + std::to_wstring(file_loops) + L"周）"
                           : std::wstring(L"ループ: オン（無限）");
     toolbar.text(Loop, mode.c_str());
-    const auto text = std::to_wstring(count ? frame + 1 : 0) + L" / " + std::to_wstring(count);
-    SetWindowTextW(counter, text.c_str());
+    if(count_changed||frame_changed){
+        const auto text=std::to_wstring(count?frame+1:0)+L" / "+std::to_wstring(count);
+        SetWindowTextW(counter,text.c_str());
+        displayed_frame=frame;displayed_count=count;
+    }
 }
 BoundaryChoice choose_boundary(HWND owner, bool forward, const std::filesystem::path &folder) {
     const TASKDIALOG_BUTTON choices[]{{101, forward ? L"フォルダの先頭へ(&F)" : L"フォルダの末尾へ(&F)"},

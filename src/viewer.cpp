@@ -924,12 +924,16 @@ class App {
         ime.apply(hwnd, settings.disable_ime);
         InvalidateRect(hwnd, nullptr, FALSE);
     }
+    std::array<std::optional<std::wstring>,5> status_texts;
     void status_text(int part, const std::wstring &text) {
-        SendMessageW(status, SB_SETTEXTW, part, reinterpret_cast<LPARAM>(text.c_str()));
+        auto &previous=status_texts.at(part);
+        if(previous&&*previous==text)return;
+        SendMessageW(status,SB_SETTEXTW,part,reinterpret_cast<LPARAM>(text.c_str()));
+        previous=text;
     }
     void layout_status_parts() {
         const auto dpi=GetDpiForWindow(status);const auto px=[&](int n){return MulDiv(n,dpi,96);};
-        if(!image){const int edge=-1;if(status_parts_image)SendMessageW(status,SB_SETPARTS,1,reinterpret_cast<LPARAM>(&edge));status_parts_image=false;editor_chrome.layout_status(hwnd,status,{},dpi,false,false);return;}
+        if(!image){const int edge=-1;if(status_parts_image){SendMessageW(status,SB_SETPARTS,1,reinterpret_cast<LPARAM>(&edge));status_texts={};}status_parts_image=false;editor_chrome.layout_status(hwnd,status,{},dpi,false,false);return;}
         RECT area{};GetClientRect(status,&area);const int right=std::max(1L,area.right-px(20));
         const int export_width=std::min(right,std::clamp(int(right*.42),px(260),px(420))),information=std::max(0,right-export_width-px(6));
         int edges[5]{};
@@ -938,7 +942,7 @@ class App {
         else if(information>=px(145)){edges[0]=edges[1]=information-px(45);edges[2]=edges[3]=information;}
         else {edges[0]=edges[1]=edges[2]=edges[3]=information;}
         edges[4]=information;const std::array<int,5> next_edges{edges[0],edges[1],edges[2],edges[3],edges[4]};
-        if(!status_parts_image||status_edges!=next_edges){SendMessageW(status,SB_SETPARTS,5,reinterpret_cast<LPARAM>(edges));status_edges=next_edges;status_parts_image=true;
+        if(!status_parts_image||status_edges!=next_edges){if(!status_parts_image)status_texts={};SendMessageW(status,SB_SETPARTS,5,reinterpret_cast<LPARAM>(edges));status_edges=next_edges;status_parts_image=true;
             for(int part=0;part<5;++part)SendMessageW(status,SB_SETTIPTEXTW,part,reinterpret_cast<LPARAM>(part==2?L"クリックで表示倍率を指定":L"クリックで画像の詳しい情報を表示"));}
         const RECT panel{right-export_width,px(2),right,area.bottom-px(2)};
         editor_chrome.layout_status(hwnd,status,panel,dpi,status_shown,image&&!loading&&!floating&&!cropping);
@@ -1039,84 +1043,22 @@ class App {
         if(needed&&!ants_timer)ants_timer=SetTimer(hwnd,39,80,nullptr)!=0;
         else if(!needed&&ants_timer){KillTimer(hwnd,39);ants_timer=false;}
     }
+#include "viewer_presentation.inc"
     void update() {
         sync_ants_timer();
         sync_canvas_scrollbars();
         render_settings();
         layout_status_parts();
-        std::wostringstream title;
-        if (image) {
-            title << (modified ? L"* " : L"") << caption_name() << L" <" << (view.manual ? L"" : L"Fit ")
-                  << std::fixed << std::setprecision(0) << view.scale * 100 << L" %> — GVN";
-            if (!status_shown && !files.empty() && !removed_current)
-                title << L" (" << index + 1 << L" / " << files.size() << L")";
-            status_text(0,
-                        std::to_wstring(image->width) + L" × " + std::to_wstring(image->height) + L"  RGBA");
-            status_text(1, files.empty() || removed_current
-                               ? L"—"
-                               : std::to_wstring(index + 1) + L" / " + std::to_wstring(files.size()));
-            std::wostringstream scale;
-            scale << std::fixed << std::setprecision(1) << view.scale * 100 << L" %";
-            status_text(2, scale.str());
-            status_text(3, size_text(image->file_bytes) + L" / " + size_text(image->bytes()));
-            std::wstring detail = image->format + L"  " + std::to_wstring(image->load_ms) + L" ms";
-            if (image->animated())
-                detail +=
-                    L"  " + std::to_wstring(player.frame + 1) + L"/" + std::to_wstring(image->frames.size());
-            if (!selection.empty())
-                detail += L"  選択 " + std::to_wstring(selection.w) + L"×" + std::to_wstring(selection.h);
-            if (loading)
-                detail += L"  読み込み中…";
-            if (renderer.filter(view) != DisplaySimple && renderer.sampling_limited(view))
-                detail += L"  画質: 高速Linear（表示領域の上限）";
-            if (drag_armed)
-                detail = L"左ドラッグでファイルを渡す（Escで解除）";
-            status_text(4, detail);
-        } else {
-            title << (folder.empty() ? L"GVN Image Viewer" : folder.wstring() + L" — GVN");
-            status_text(0, loading ? L"画像を読み込み中です…"
-                                  : L"画像を開いてください。タップするとクリップボードの内容がペーストされます");
+        update_caption_and_status();
+        if(image&&image->animated())
+            playback.update(player.frame,image->frames.size(),player.playing,player.loop,player.honor_file_loops,image->file_loops);
+        if(image&&image->animated()&&player.playing){
+            if(!animation_timer){last_tick=animation_now();SetTimer(hwnd,1,16,nullptr);animation_timer=true;}
+        }else if(animation_timer){
+            KillTimer(hwnd,1);animation_timer=false;
         }
-        renderer.overlay.text = title.str();
-        SetWindowTextW(hwnd, renderer.overlay.text.c_str());
-        refresh_overlay();
-        if (image && image->animated()) {
-            playback.update(player.frame, image->frames.size(), player.playing, player.loop,
-                            player.honor_file_loops, image->file_loops);
-        }
-        if (image && image->animated() && player.playing) {
-            if (!animation_timer) {
-                last_tick = animation_now();
-                SetTimer(hwnd, 1, 16, nullptr);
-                animation_timer = true;
-            }
-        } else {
-            KillTimer(hwnd, 1);
-            animation_timer = false;
-        }
-        const auto commands=command_context();
-        for(UINT id:{Save,Copy,ArmDrag,Info,ZoomIn,ZoomOut,FitImage,Actual,Fullscreen,Undo,Redo,FileDelete,Previous,Next})toolbar.enable(id,common_command_enabled(id,commands));
-        toolbar.text(FileDelete,command_caption(settings,FileDelete,settings.recycle_deleted?L"ごみ箱へ":L"ファイルを削除").c_str());
-
-        const bool reversed = comic && settings.comic_rtl && settings.comic_toolbar_reverse;
-        toolbar.text(Previous,command_caption(settings,Previous,reversed?L"次の画像":L"前の画像").c_str());
-        toolbar.text(Next,command_caption(settings,Next,reversed?L"前の画像":L"次の画像").c_str());
-        toolbar.check(Slideshow, slideshow);
-        toolbar.check(ToggleEditor,editor_mode);
-        toolbar.text(ToggleEditor,command_caption(settings,ToggleEditor,editor_mode?L"画像編集モードを終了":L"画像編集モードに切り替え").c_str());
-        if(editor_mode){
-            for(UINT id:{SelectRectangle,SelectFreehand,SelectPolygon,SelectMove,ToolPan,ToolPen,ToolText,ToolCrop})editor_tools.check(id,checked(id));
-            for(UINT id:{SelectRectangle,SelectFreehand,SelectPolygon,SelectAll,InvertSelection,ToolCrop,ToolPen,ToolText,Resize,Canvas,RotateRight,FlipH,FlipV,Brightness,ColorAdjust,Levels})editor_tools.enable(id,image&&!floating&&!loading);
-            for(UINT id:{SelectMove,DeleteSelection,ClearSelection})editor_tools.enable(id,image&&!selection.empty()&&!floating&&!loading);
-            editor_tools.enable(PasteSelection,!loading&&!floating);
-        }
-        if(cropping)editor_chrome.bounds(cropping->box,cropping->scale);
-        else if(floating&&!floating->text_annotation)editor_chrome.bounds(floating->box);
-        if(image&&!floating)status_text(4,editor_session().hint());
-        if(floating){
-            status_text(image?4:0,editor_session().hint());
-        }
-        InvalidateRect(hwnd, nullptr, FALSE);
+        update_command_controls();
+        InvalidateRect(hwnd,nullptr,FALSE);
     }
     bool animation_timer{};
     bool original_file() const {
@@ -2219,7 +2161,7 @@ class App {
             PostMessageW(hwnd, WM_CLOSE, 0, 0);
     }
     void render_settings() {
-        set_ui_theme(settings.ui_theme,settings.ui_density);if(hwnd)apply_ui_theme(hwnd);
+        sync_ui_theme();
         const bool background_changed = renderer.checker_light != settings.checker_light ||
                                         renderer.checker_dark != settings.checker_dark ||
                                         renderer.checker_size != settings.checker_size ||
@@ -4185,7 +4127,7 @@ class App {
                 update();
             return 0;
         case WM_DPICHANGED: {
-            apply_ui_theme(hwnd);
+            sync_ui_theme();
             const auto *rc = reinterpret_cast<RECT *>(l);
             SetWindowPos(hwnd, nullptr, rc->left, rc->top, rc->right - rc->left, rc->bottom - rc->top,
                          SWP_NOZORDER);
@@ -4242,7 +4184,7 @@ class App {
             update_wallpaper_menu(reinterpret_cast<HMENU>(w));ui_theme_menu(reinterpret_cast<HMENU>(w));
             return 0;
         case WM_SETTINGCHANGE:
-        case WM_THEMECHANGED:set_ui_theme(settings.ui_theme,settings.ui_density);apply_ui_theme(hwnd);layout();return 0;
+        case WM_THEMECHANGED:sync_ui_theme(true);layout();return 0;
         case WM_COMMAND: {
             UINT id = LOWORD(w);
             if(id==MoreCommands){toolbar.show_more(hwnd);return 0;}

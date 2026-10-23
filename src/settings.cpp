@@ -205,8 +205,8 @@ std::vector<std::wstring> Settings::keys_for(UINT command) const {
     return result;
 }
 std::wstring Settings::first_key(UINT command) const {
-    const auto keys = keys_for(command);
-    return keys.empty() ? L"" : keys.front();
+    const auto first=std::find_if(bindings.begin(),bindings.end(),[=](const auto &binding){return binding.command==command;});
+    return first==bindings.end()?L"":first->key;
 }
 void Settings::set_keys(UINT command, const std::vector<std::wstring> &keys) {
     auto next = bindings;

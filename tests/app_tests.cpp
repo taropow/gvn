@@ -6967,6 +6967,7 @@ void background_changes_preserve_image_animation_copy_save_and_ole() {
 #include "editor_app_cases.inc"
 #include "skitch_app_cases.inc"
 #include "modern_app_cases.inc"
+#include "responsive_app_cases.inc"
 };
 } // namespace gvn
 
@@ -7335,3 +7336,7 @@ APP_TEST(timestamp_export_name_on_open_new_and_every_successful_paste_keeps_manu
 APP_TEST(modern_preferences_search_reset_categories_and_theme_apply)
 APP_TEST(modern_theme_overflow_density_and_stable_native_resources)
 APP_TEST(modern_details_state_and_command_shortcuts_preserve_edits)
+
+APP_TEST(responsive_native_update_and_layout_benchmark)
+APP_TEST(responsive_native_updates_preserve_status_theme_and_document)
+APP_TEST(responsive_animation_controls_only_write_changed_values)

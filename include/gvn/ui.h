@@ -28,6 +28,7 @@ class IconToolbar {
     std::vector<UINT> overflow_commands;
     void arrange_overflow(int);
     int play_bitmap{-1}, pause_bitmap{-1};
+    bool playing_bitmap_current{};
     void rebuild();
 
   public:
@@ -65,6 +66,7 @@ class IconToolbar {
     }
 };
 class AnimationBar {
+    std::optional<size_t> displayed_frame,displayed_count;
   public:
     HWND hwnd{}, slider{}, counter{};
     IconToolbar toolbar;
