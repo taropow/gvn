@@ -192,12 +192,30 @@ int Renderer::filter(const View &view) const {
     if(dragging_low||resizing)return method==DisplaySimple?DisplaySimple:DisplayLinear;
     return method>1&&sampling_limited(view)?DisplayLinear:method;
 }
+static bool aligned_display_grid(const Image *image, const View &view) {
+    const double width = image->width * view.scale, height = image->height * view.scale;
+    return std::abs(width - std::round(width)) < 1e-9 && std::abs(height - std::round(height)) < 1e-9;
+}
 bool Renderer::sample_current(const Image *image, size_t frame, const View &view) const {
     const int method = std::abs(view.scale - 1) < 1e-9 ? DisplaySimple : filter(view);
-    return image && !tile.bgra.empty() && sampled == image && sampled_frame == frame &&
-           sampled_method == method && sampled_view.scale == view.scale &&
-           sampled_view.left() == view.left() && sampled_view.top() == view.top() &&
-           sampled_view.width == view.width && sampled_view.height == view.height;
+    if (!image || tile.bgra.empty() || sampled != image || sampled_frame != frame ||
+        sampled_method != method || sampled_view.scale != view.scale)
+        return false;
+    if (sampled_view.left() == view.left() && sampled_view.top() == view.top() &&
+        sampled_view.width == view.width && sampled_view.height == view.height)
+        return true;
+    // A rounded scaled extent introduces fractional D2D bitmap scaling. Drawing
+    // a larger tile can change edge coverage there, so retain exact old bounds.
+    if (!aligned_display_grid(image, view)) return false;
+    // Resampling coefficients depend on the image's scaled pixel grid, not on
+    // its position in the window. Reuse the tile while it covers visible pixels.
+    const double dx = view.left() - sampled_view.left(), dy = view.top() - sampled_view.top();
+    const double left = std::max(0.0, view.left()), top = std::max(0.0, view.top());
+    const double right = std::min(view.width, view.left() + image->width * view.scale);
+    const double bottom = std::min(view.height, view.top() + image->height * view.scale);
+    constexpr double epsilon = 1e-7; // image-edge arithmetic, below D2D float precision
+    return left < right && top < bottom && tile.left + dx <= left + epsilon && tile.top + dy <= top + epsilon &&
+           tile.right + dx >= right - epsilon && tile.bottom + dy >= bottom - epsilon;
 }
 bool Renderer::prepare_sample(const Image *image, size_t frame, const View &view, uint32_t bitmap_limit) {
     if (!image) {
@@ -225,19 +243,31 @@ bool Renderer::prepare_sample(const Image *image, size_t frame, const View &view
         tile={};sampled=nullptr;sampled_bitmap.Reset();return false;
     }
     if (!sample_current(image, frame, view)) {
-        if (view.manual || resizing) {
-            prepare_image(image, frame);
-            tile = resample_display(premultiplied, image->width, image->height, view, method);
-        } else
-            tile = resample_rgba_display(image->frames.at(frame).pixels, image->width, image->height, view,
-                                         method);
+        // Fit, zoom and pan all borrow the source. The sampler converts only visible
+        // columns/rows, so a small viewport never requires an image-sized BGRA copy.
+        View area = view;
+        // A small bounded apron amortizes hand/scroll dragging without a second
+        // source bitmap. Fit/animation display keeps its original allocation.
+        const double padding = view.manual && !resizing && method <= DisplayLanczos3 && aligned_display_grid(image, view) &&
+            view.width + 196 <= bitmap_limit && view.height + 196 <= bitmap_limit &&
+            (view.width + 196) * (view.height + 196) <= 64.0 * 1024 * 1024 / 4 ? 96 : 0;
+        if (padding) {
+            area.centered = false;
+            area.width += 2 * padding; area.height += 2 * padding;
+            area.pan_x = view.left() + padding; area.pan_y = view.top() + padding;
+        }
+        tile = resample_rgba_display(image->frames.at(frame).pixels, image->width, image->height, area,
+                                     method);
+        tile.left -= padding; tile.right -= padding;
+        tile.top -= padding; tile.bottom -= padding;
+        ++sample_builds;
         sampled = image;
         sampled_frame = frame;
         sampled_view = view;
         sampled_method = method;
         sampled_bitmap.Reset();
     }
-    if (!view.manual && !resizing) {
+    if (!resizing) {
         std::vector<uint8_t>().swap(premultiplied);
         prepared = nullptr;
         prepared_frame = SIZE_MAX;
@@ -347,12 +377,14 @@ HRESULT Renderer::scene(ID2D1RenderTarget *context, ID2D1Bitmap *pixels, ID2D1Bi
         auto sampled_destination = destination;
         const int method = filter(view);
         const bool sampled_tile = sampled == image && !tile.bgra.empty();
-        if (sampled_tile)
+        if (sampled_tile) {
+            const double dx = view.left() - sampled_view.left(), dy = view.top() - sampled_view.top();
             sampled_destination =
-                D2D1::RectF(static_cast<float>(actual ? std::floor(tile.left) : tile.left),
-                            static_cast<float>(top + (actual ? std::floor(tile.top) : tile.top)),
-                            static_cast<float>(actual ? std::floor(tile.right) : tile.right),
-                            static_cast<float>(top + (actual ? std::floor(tile.bottom) : tile.bottom)));
+                D2D1::RectF(static_cast<float>(actual ? std::floor(tile.left + dx) : tile.left + dx),
+                            static_cast<float>(top + (actual ? std::floor(tile.top + dy) : tile.top + dy)),
+                            static_cast<float>(actual ? std::floor(tile.right + dx) : tile.right + dx),
+                            static_cast<float>(top + (actual ? std::floor(tile.bottom + dy) : tile.bottom + dy)));
+        }
         if (pixels)
             context->DrawBitmap(pixels, sampled_destination, 1,
                                 sampled_tile || method == 0 || std::abs(view.scale - 1) < 1e-9

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(GVN VERSION 0.72.0 LANGUAGES C CXX RC)
+project(GVN VERSION 0.73.0 LANGUAGES C CXX RC)
 configure_file(include/gvn/version.h.in generated/gvn/version.h @ONLY)
 configure_file(src/gvn_version.rc.in gvn_version.rc @ONLY)
 set(CMAKE_CXX_STANDARD 20)
@@ -299,6 +299,9 @@ target_link_options(gvn_file_transfer_tests PRIVATE "/MANIFEST:EMBED" "/MANIFEST
 add_test(NAME file_transfer_ui COMMAND gvn_file_transfer_tests)
 set_tests_properties(file_transfer_ui PROPERTIES TIMEOUT 60)
 add_library(gvn_render src/renderer.cpp src/resample.cpp)
+
+add_executable(gvn_render_benchmark EXCLUDE_FROM_ALL tools/render_benchmark.cpp)
+target_link_libraries(gvn_render_benchmark PRIVATE gvn_render psapi)
 target_include_directories(gvn_render PUBLIC include)
 target_compile_definitions(gvn_render PUBLIC UNICODE _UNICODE NOMINMAX)
 target_compile_options(gvn_render PRIVATE /W4 /utf-8 /permissive-)

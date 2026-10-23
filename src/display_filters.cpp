@@ -1,5 +1,6 @@
 #include "gvn/resample.h"
 #include "display_source.h"
+#include "display_math.h"
 #include <array>
 #include <cmath>
 #include <list>
@@ -134,14 +135,14 @@ Axis axis(uint32_t source, uint32_t destination, uint32_t origin, uint32_t count
 }
 std::array<uint8_t, 4> quantized(const std::array<double, 4> &pixel) {
     std::array<uint8_t, 4> result{};
-    const auto alpha = std::clamp(static_cast<int>(std::lround(pixel[3])), 0, 255);
+    const auto alpha = detail::display_round(pixel[3], 255);
     result[3] = static_cast<uint8_t>(alpha);
     for (size_t channel = 0; channel < 3; ++channel)
         result[channel] =
-            static_cast<uint8_t>(std::clamp(static_cast<int>(std::lround(pixel[channel])), 0, alpha));
+            detail::display_round(pixel[channel], alpha);
     return result;
 }
-void horizontal_first(detail::DisplayRows &source, const Axis &horizontal, const Axis &vertical,
+void horizontal_first(detail::DisplayRows &source, uint32_t left, uint32_t right, const Axis &horizontal, const Axis &vertical,
                       DisplayTile &tile) {
     struct Row {
         uint32_t source{};
@@ -153,6 +154,9 @@ void horizontal_first(detail::DisplayRows &source, const Axis &horizontal, const
         needed_rows = std::max(needed_rows, span.last - span.first);
     const size_t capacity =
         std::max<size_t>(1, std::min({needed_rows, size_t(512), size_t(16ull * 1024 * 1024 / stride)}));
+    // Expand a source row once instead of unpacking the same byte channels at
+    // every Lanczos tap. Only this row is double precision, not the full image.
+    std::vector<double> expanded(static_cast<size_t>(right - left) * 4);
     std::list<Row> cache;
     std::unordered_map<uint32_t, std::list<Row>::iterator> lookup;
     const auto row = [&](uint32_t source_y) -> const std::vector<uint8_t> & {
@@ -168,17 +172,17 @@ void horizontal_first(detail::DisplayRows &source, const Axis &horizontal, const
         auto &result = cache.front();
         result.source = source_y;
         result.values.resize(stride);
-        const auto source_pixels = source.get(source_y);
+        detail::expand_display_row(source.get(source_y), expanded.data(), expanded.size());
+        const auto source_pixels = expanded.data();
         for (size_t x = 0; x < tile.width; ++x) {
-            std::array<double, 4> sum{};
+            detail::DisplaySum sum;
             const auto span = horizontal.spans[x];
             for (auto i = span.first; i < span.last; ++i) {
                 const auto tap = horizontal.taps[i];
-                const auto pixel = source_pixels + static_cast<size_t>(tap.index) * 4;
-                for (size_t channel = 0; channel < 4; ++channel)
-                    sum[channel] += pixel[channel] * tap.weight;
+                const auto pixel = source_pixels + static_cast<size_t>(tap.index - left) * 4;
+                sum.add(pixel, tap.weight);
             }
-            const auto pixel = quantized(sum);
+            const auto pixel = quantized(sum.value());
             std::copy(pixel.begin(), pixel.end(), result.values.begin() + x * 4);
         }
         lookup[source_y] = cache.begin();
@@ -191,8 +195,7 @@ void horizontal_first(detail::DisplayRows &source, const Axis &horizontal, const
         for (auto i = span.first; i < span.last; ++i) {
             const auto tap = vertical.taps[i];
             const auto &pixels = row(tap.index);
-            for (size_t channel = 0; channel < stride; ++channel)
-                sum[channel] += pixels[channel] * tap.weight;
+            detail::add_display_row(sum.data(), pixels.data(), stride, tap.weight);
         }
         for (size_t x = 0; x < tile.width; ++x) {
             const auto pixel = quantized({sum[x * 4], sum[x * 4 + 1], sum[x * 4 + 2], sum[x * 4 + 3]});
@@ -200,7 +203,33 @@ void horizontal_first(detail::DisplayRows &source, const Axis &horizontal, const
         }
     }
     tile.workspace_bytes =
-        horizontal.bytes() + vertical.bytes() + cache.size() * stride + sum.capacity() * sizeof(double);
+        horizontal.bytes() + vertical.bytes() + cache.size() * stride +
+        (sum.capacity() + expanded.capacity()) * sizeof(double);
+}
+void average_tile(detail::DisplayRows &rows, uint32_t left, uint32_t right,
+                  const Axis &horizontal, const Axis &vertical, DisplayTile &tile) {
+    std::vector<uint32_t> columns(static_cast<size_t>(right - left) * 4);
+    for (size_t y = 0; y < tile.height; ++y) {
+        std::fill(columns.begin(), columns.end(), 0);
+        const auto span = vertical.spans[y];
+        for (auto i = span.first; i < span.last; ++i)
+            detail::add_average_row(columns.data(), rows.get(vertical.taps[i].index), columns.size());
+        for (size_t x = 0; x < tile.width; ++x) {
+            std::array<uint64_t, 4> sum{};
+            const auto horizontal_span = horizontal.spans[x];
+            for (auto i = horizontal_span.first; i < horizontal_span.last; ++i) {
+                const auto pixel = columns.data() + static_cast<size_t>(horizontal.taps[i].index - left) * 4;
+                for (size_t c = 0; c < 4; ++c) sum[c] += pixel[c];
+            }
+            const auto divisor = uint64_t(horizontal_span.last - horizontal_span.first) * (span.last - span.first);
+            const auto alpha = static_cast<uint8_t>(sum[3] / divisor);
+            auto output = tile.bgra.data() + (y * tile.width + x) * 4;
+            output[3] = alpha;
+            for (size_t c = 0; c < 3; ++c) output[c] = static_cast<uint8_t>(std::min<uint64_t>(sum[c] / divisor, alpha));
+        }
+    }
+    tile.conversion_bytes = rows.bytes();
+    tile.workspace_bytes = horizontal.bytes() + vertical.bytes() + columns.capacity() * sizeof(uint32_t) + tile.conversion_bytes;
 }
 } // namespace
 void detail::resample_source_tile(DisplaySource source, uint32_t scaled_width, uint32_t scaled_height,
@@ -212,17 +241,19 @@ void detail::resample_source_tile(DisplaySource source, uint32_t scaled_width, u
         static_cast<uint64_t>(x) + tile.width > scaled_width ||
         static_cast<uint64_t>(y) + tile.height > scaled_height)
         throw std::invalid_argument("Invalid native display tile");
-    DisplayRows rows(source);
     if (method == DisplaySimple) {
         std::vector<uint32_t> columns(tile.width);
         for (size_t column = 0; column < tile.width; ++column)
             columns[column] = simple_position(width, scaled_width, x + static_cast<uint32_t>(column));
+        const auto [low, high] = std::minmax_element(columns.begin(), columns.end());
+        const auto left = *low;
+        DisplayRows rows(source, left, *high - left + 1);
         for (uint32_t line = 0; line < tile.height; ++line) {
             const auto source_y =
                 height - 1 - simple_position(height, scaled_height, scaled_height - 1 - y - line);
             const auto source_pixels = rows.get(source_y);
             for (size_t column = 0; column < tile.width; ++column) {
-                const auto input = source_pixels + static_cast<size_t>(columns[column]) * 4;
+                const auto input = source_pixels + static_cast<size_t>(columns[column] - left) * 4;
                 const auto output = tile.bgra.data() + (static_cast<size_t>(line) * tile.width + column) * 4;
                 std::copy_n(input, 4, output);
             }
@@ -238,30 +269,34 @@ void detail::resample_source_tile(DisplaySource source, uint32_t scaled_width, u
                          (scaled_height - 1) * 2ull <= height - 1;
     const auto horizontal = axis(width, scaled_width, x, tile.width, method, average);
     const auto vertical = axis(height, scaled_height, y, tile.height, method, average);
-    const bool horizontal_shrink_first =
-        scaled_width < width &&
-        static_cast<uint64_t>(scaled_width) * height <= static_cast<uint64_t>(scaled_height) * width;
-    if (method >= DisplayHermite && horizontal_shrink_first) {
-        horizontal_first(rows, horizontal, vertical, tile);
-        tile.conversion_bytes = rows.bytes();
-        tile.workspace_bytes += tile.conversion_bytes;
-        return;
-    }
-    const size_t stride = static_cast<size_t>(tile.width) * 4;
     uint32_t left = width, right{};
     for (const auto tap : horizontal.taps) {
         left = std::min(left, tap.index);
         right = std::max(right, tap.index + 1);
     }
+    DisplayRows rows(source, left, right - left);
+    if (average) {
+        average_tile(rows, left, right, horizontal, vertical, tile);
+        return;
+    }
+    const bool horizontal_shrink_first =
+        scaled_width < width &&
+        static_cast<uint64_t>(scaled_width) * height <= static_cast<uint64_t>(scaled_height) * width;
+    if (method >= DisplayHermite && horizontal_shrink_first) {
+        horizontal_first(rows, left, right, horizontal, vertical, tile);
+        tile.conversion_bytes = rows.bytes();
+        tile.workspace_bytes += tile.conversion_bytes;
+        return;
+    }
+    const size_t stride = static_cast<size_t>(tile.width) * 4;
     std::vector<double> intermediate(static_cast<size_t>(right - left) * 4);
     for (size_t destination_y = 0; destination_y < tile.height; ++destination_y) {
         std::fill(intermediate.begin(), intermediate.end(), 0);
         const auto span = vertical.spans[destination_y];
         for (auto i = span.first; i < span.last; ++i) {
             const auto tap = vertical.taps[i];
-            const auto input = rows.get(tap.index) + static_cast<size_t>(left) * 4;
-            for (size_t channel = 0; channel < intermediate.size(); ++channel)
-                intermediate[channel] += input[channel] * tap.weight;
+            const auto input = rows.get(tap.index);
+            detail::add_display_row(intermediate.data(), input, intermediate.size(), tap.weight);
         }
         // Reconstruct Y before X and clip between passes, retaining premultiplied colors.
         if (method >= DisplayHermite)
@@ -273,24 +308,15 @@ void detail::resample_source_tile(DisplaySource source, uint32_t scaled_width, u
             }
         auto output = tile.bgra.data() + destination_y * stride;
         for (size_t column = 0; column < tile.width; ++column) {
-            std::array<double, 4> sum{};
+            detail::DisplaySum accumulation;
             const auto horizontal_span = horizontal.spans[column];
             for (auto i = horizontal_span.first; i < horizontal_span.last; ++i) {
                 const auto tap = horizontal.taps[i];
                 const auto offset = static_cast<size_t>(tap.index - left) * 4;
-                for (size_t channel = 0; channel < 4; ++channel)
-                    sum[channel] += intermediate[offset + channel] * tap.weight;
+                accumulation.add(intermediate.data() + offset, tap.weight);
             }
-            const size_t divisor =
-                average ? (horizontal_span.last - horizontal_span.first) * (span.last - span.first) : 1;
-            const auto quantize = [&](size_t channel) {
-                return average ? static_cast<int>(static_cast<uint64_t>(sum[channel]) / divisor)
-                               : static_cast<int>(std::lround(sum[channel]));
-            };
-            const int alpha = std::clamp(quantize(3), 0, 255);
-            output[column * 4 + 3] = static_cast<uint8_t>(alpha);
-            for (size_t channel = 0; channel < 3; ++channel)
-                output[column * 4 + channel] = static_cast<uint8_t>(std::clamp(quantize(channel), 0, alpha));
+            const auto pixel = quantized(accumulation.value());
+            std::copy(pixel.begin(), pixel.end(), output + column * 4);
         }
     }
     tile.conversion_bytes = rows.bytes();

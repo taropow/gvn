@@ -93,6 +93,7 @@ class Renderer {
     bool overlay_visible{};
     Rect overlay_rect;
     size_t overlay_layout_builds{};
+    size_t sample_builds{}; // Diagnostics; includes only actual tile reconstructions.
     bool overlay_uses_gdi() const { return overlay_native_font; }
     size_t overlay_mask_bytes() const { return overlay_mask.size() * sizeof(uint32_t); }
     bool checkerboard{true}, nearest{};

@@ -4,9 +4,106 @@
 #include "test.h"
 #include "test_desktop.h"
 #include "../src/pixel_conversion.h"
+#include "../src/display_math.h"
 #include <cmath>
 #include <cstring>
 using namespace gvn;
+TEST(display_round_matches_lround_at_all_byte_boundaries_and_negative_lobes) {
+    for (int maximum = 0; maximum <= 255; ++maximum)
+        for (int whole = -512; whole <= 767; ++whole) {
+            const double half = whole + .5;
+            for (double value : {double(whole), half, std::nextafter(half, -INFINITY),
+                                 std::nextafter(half, INFINITY), whole + .123456789})
+                CHECK(detail::display_round(value, maximum) == std::clamp(std::lround(value), 0l, long(maximum)));
+        }
+}
+TEST(display_simd_accumulation_is_bit_exact_including_negative_weights_unaligned_rows_and_tails) {
+    std::array<double, 4> reference{}; detail::DisplaySum actual;
+    uint32_t seed = 183617;
+    for (int n = 0; n < 1024; ++n) {
+        seed = seed * 1664525 + 1013904223;
+        const std::array<uint8_t, 4> pixel{uint8_t(seed), uint8_t(seed >> 8), uint8_t(seed >> 16), uint8_t(seed >> 24)};
+        const double weight = (int(seed % 10000) - 2500) / 7937.0;
+        actual.add(pixel.data(), weight);
+        for (size_t c = 0; c < 4; ++c) reference[c] += pixel[c] * weight;
+        CHECK(actual.value() == reference);
+        const auto floating = reference;
+        actual.add(floating.data(), weight);
+        for (size_t c = 0; c < 4; ++c) reference[c] += floating[c] * weight;
+        CHECK(actual.value() == reference);
+    }
+    std::vector<uint8_t> bytes(71); for (size_t i = 0; i < bytes.size(); ++i) bytes[i] = uint8_t(i * 37);
+    for (size_t offset : {0, 1, 3, 7}) for (size_t count = 0; count < 64; ++count) {
+        std::vector<double> expected(count + 2, 73.25), output = expected;
+        std::vector<uint32_t> integer_expected(count + 2, 65534 * 255), integer_output = integer_expected;
+        detail::add_average_row(integer_output.data() + 1, bytes.data() + offset, count);
+        for (size_t c = 0; c < count; ++c) integer_expected[c + 1] += bytes[offset + c];
+        CHECK(integer_output == integer_expected);
+        auto expanded = output;
+        detail::expand_display_row(bytes.data() + offset, expanded.data() + 1, count);
+        CHECK(expanded.front() == 73.25 && expanded.back() == 73.25);
+        for (size_t c = 0; c < count; ++c) CHECK(expanded[c + 1] == bytes[offset + c]);
+        for (double weight : {-1.23456789, 1.0, .00000000001, .98765}) {
+            detail::add_display_row(output.data() + 1, bytes.data() + offset, count, weight);
+            for (size_t c = 0; c < count; ++c) expected[c + 1] += bytes[offset + c] * weight;
+            CHECK(output == expected);
+        }
+    }
+}
+TEST(fast_shrink_matches_independent_integer_box_oracle_with_alpha_crops_and_long_rows) {
+    for (auto size : {SIZE{17, 13}, SIZE{37, 29}, SIZE{1, 65535}, SIZE{65535, 1}}) {
+        auto image = new_image(size.cx, size.cy);
+        for (size_t n = 0; n < image.frames[0].pixels.size(); ++n)
+            image.frames[0].pixels[n] = {uint8_t(n * 37), uint8_t(n * 19), uint8_t(n * 71), uint8_t(n)};
+        for (double scale : {.49, .25, .00002}) for (bool cropped : {false, true}) {
+            View view; view.resize(9, 7); view.set_image(size.cx, size.cy); view.centered = false;
+            view.scale = scale; view.manual = true;
+            if (cropped) { view.pan_x = -2.125; view.pan_y = -1.5; }
+            const auto actual = resample_rgba_display(image.frames[0].pixels, size.cx, size.cy, view, DisplayLinear);
+            if (actual.bgra.empty()) continue;
+            const auto width = std::max(1ll, std::llround(size.cx * scale));
+            const auto height = std::max(1ll, std::llround(size.cy * scale));
+            const auto x0 = std::llround((actual.left - view.left()) * width / (size.cx * scale));
+            const auto y0 = std::llround((actual.top - view.top()) * height / (size.cy * scale));
+            for (size_t y = 0; y < actual.height; ++y) for (size_t x = 0; x < actual.width; ++x) {
+                const auto first_x = ((2 * (x0 + x) * size.cx) + width) / (2 * width);
+                const auto last_x = ((2 * (x0 + x + 1) * size.cx) + width) / (2 * width);
+                const auto first_y = ((2 * (y0 + y) * size.cy) + height) / (2 * height);
+                const auto last_y = ((2 * (y0 + y + 1) * size.cy) + height) / (2 * height);
+                std::array<uint64_t, 4> expected{};
+                for (auto sy = first_y; sy < last_y; ++sy) for (auto sx = first_x; sx < last_x; ++sx) {
+                    const auto p = image.frames[0].pixels[sy * size.cx + sx];
+                    expected[0] += (p.b * p.a + 127) / 255; expected[1] += (p.g * p.a + 127) / 255;
+                    expected[2] += (p.r * p.a + 127) / 255; expected[3] += p.a;
+                }
+                const auto divisor = (last_x - first_x) * (last_y - first_y); CHECK(divisor > 0);
+                for (size_t c = 0; c < 4; ++c) CHECK(actual.bgra[(y * actual.width + x) * 4 + c] == expected[c] / divisor);
+            }
+        }
+    }
+}
+TEST(manual_visible_tiles_release_full_conversion_and_bound_wide_image_row_workspace) {
+    HWND window = CreateWindowExW(0, L"STATIC", L"GVN visible source", WS_POPUP, 0, 0, 320, 240,
+                                  nullptr, nullptr, nullptr, nullptr); CHECK(window);
+    auto image = new_image(65535, 4);
+    for (size_t n = 0; n < image.frames[0].pixels.size(); ++n)
+        image.frames[0].pixels[n] = {uint8_t(n * 7), uint8_t(n * 29), uint8_t(n * 17), uint8_t(n)};
+    const auto original = image.frames[0].pixels;
+    Renderer renderer;
+    for (int method : {DisplaySimple, DisplayLinear, DisplayLanczos3}) {
+        renderer.down = renderer.up = method;
+        View view; view.resize(320, 240); view.set_image(image.width, image.height);
+        view.centered = false; view.manual = true; view.scale = 50; view.pan_x = -16383 * 50.0;
+        for (int pan = 0; pan < 3; ++pan) {
+            view.pan_x -= 13;
+            const auto tile = resample_rgba_display(image.frames[0].pixels, image.width, image.height, view, method);
+            CHECK(!tile.bgra.empty() && tile.conversion_bytes <= 4096 && tile.workspace_bytes < 1024 * 1024);
+            CHECK(SUCCEEDED(renderer.draw(window, &image, 0, view, 0, 0)));
+            CHECK(renderer.sample_current(&image, 0, view) && renderer.source_bytes() == 0);
+        }
+    }
+    CHECK(image.frames[0].pixels == original); DestroyWindow(window);
+}
 TEST(simd_premultiply_matches_scalar_for_every_color_alpha_pair_unaligned_and_tails) {
     std::vector<Pixel> rgba;
     for (unsigned alpha = 0; alpha <= 255; ++alpha)
@@ -122,7 +219,7 @@ TEST(fitted_renderer_releases_full_conversion_cache_and_reuses_its_tile) {
     CHECK(renderer.source_bytes() >= source.bytes() && renderer.sample_bytes() == 0);
     view.scale = 1.25;
     CHECK(SUCCEEDED(renderer.draw(window, &source, 0, view, 0, 0)));
-    CHECK(renderer.source_bytes() >= source.bytes() && renderer.sample_bytes() > 0);
+    CHECK(renderer.source_bytes() == 0 && renderer.sample_bytes() > 0);
     view.apply_fit(Fit::Contain);
     renderer.resizing = true;
     CHECK(SUCCEEDED(renderer.draw(window, &source, 0, view, 0, 0)));
@@ -478,7 +575,7 @@ TEST(device_reset_preserves_cpu_tile_and_rebuilds_only_target_resources) {
     GdiFlush();
     CHECK(std::equal(before.begin(), before.end(), static_cast<uint32_t *>(pixels)));
     view.pan_x += .25;
-    CHECK(!renderer.sample_current(&image, 0, view));
+    CHECK(renderer.sample_current(&image, 0, view)); // complete image tile only moves
     CHECK(SUCCEEDED(renderer.print(window, dc, &image, 0, view, 0, nullptr)));
     CHECK(renderer.sample_current(&image, 0, view));
     renderer.up = DisplayBell;
@@ -937,4 +1034,46 @@ TEST(shared_viewport_transform_roundtrips_sidebar_pan_fit_and_actual_pixel_origi
     }
     CHECK(EditorSession::resolve(true,true,true,true,true,true).activity==EditorActivity::Crop);
     CHECK(EditorSession::resolve(true,false,false,true,true,false).pending());
+}
+
+TEST(panning_reuses_bounded_tiles_and_matches_uncached_pixels_with_fractional_zoom_and_sidebar) {
+    gvn_test::BackgroundSurface surface(360, 260);
+    auto image = new_image(1024, 768);
+    for (size_t n = 0; n < image.frames[0].pixels.size(); ++n)
+        image.frames[0].pixels[n] = {uint8_t(n * 17), uint8_t(n * 37), uint8_t(n * 53), uint8_t(n)};
+    image.frames.push_back(image.frames[0]); image.frames[1].pixels[0] = {255, 0, 0, 255};
+    const auto original = image.frames[0].pixels;
+    Renderer cached, fresh; cached.viewport_left = fresh.viewport_left = 28;
+    std::vector<uint32_t> captured(360 * 260);
+    for (int method : {DisplaySimple, DisplayLinear, DisplayLanczos3})
+        for (double scale : {.35, .75, 1.0, 1.25, 3.1, 50.0}) {
+            cached.invalidate(); cached.down = cached.up = fresh.down = fresh.up = method;
+            View view; view.resize(332, 240); view.set_image(1024, 768);
+            view.manual = true; view.centered = false; view.scale = scale;
+            view.pan_x = -131 * scale + .125; view.pan_y = -71 * scale - .375;
+            size_t builds = 0;
+            for (double distance : {0.0, 13.25, -7.5, 88.0, 200.0, -700.0}) {
+                view.pan_x -= distance; view.pan_y -= distance / 2;
+                CHECK(SUCCEEDED(cached.print(surface.window, surface.dc, &image, 0, view, 20, nullptr)));
+                GdiFlush(); std::copy_n(static_cast<const uint32_t *>(surface.pixels), captured.size(), captured.begin());
+                if (distance == 0) builds = cached.sample_builds;
+                if ((distance == 13.25 || distance == -7.5) && scale != .35 && scale != 3.1 && cached.sample_builds != builds)
+                    throw std::runtime_error("pan cache miss method=" + std::to_string(method) + " scale=" + std::to_string(scale) + " distance=" + std::to_string(distance));
+                auto unpadded = view; unpadded.manual = false;
+                fresh.invalidate();
+                CHECK(SUCCEEDED(fresh.print(surface.window, surface.dc, &image, 0, unpadded, 20, nullptr)));
+                GdiFlush();
+                const auto compare = static_cast<const uint32_t *>(surface.pixels);
+                for (size_t n = 0; n < captured.size(); ++n) if (captured[n] != compare[n])
+                    throw std::runtime_error("pan pixel mismatch method=" + std::to_string(method) + " scale=" + std::to_string(scale) +
+                        " distance=" + std::to_string(distance) + " at=" + std::to_string(n % 360) + "," + std::to_string(n / 360) +
+                        " cached=" + std::to_string(captured[n]) + " fresh=" + std::to_string(compare[n]));
+            }
+            CHECK(SUCCEEDED(cached.print(surface.window, surface.dc, &image, 1, view, 20, nullptr)));
+            CHECK(!cached.sample_current(&image, 0, view));
+            cached.down = cached.up = method == DisplayLinear ? DisplayLanczos3 : DisplayLinear;
+            if (scale != 1) CHECK(!cached.sample_current(&image, 1, view));
+            CHECK(cached.sample_bytes() < 4 * 1024 * 1024);
+        }
+    CHECK(image.frames[0].pixels == original);
 }

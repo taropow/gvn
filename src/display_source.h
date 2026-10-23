@@ -28,14 +28,17 @@ class DisplayRows {
     DisplaySource source;
     std::array<Row, 16> rows;
     size_t capacity;
+    uint32_t first, count;
     uint64_t clock{};
 
   public:
-    explicit DisplayRows(DisplaySource input)
-        : source(input), capacity(std::clamp<size_t>(1024 * 1024 / (input.width * 4ull), 1, rows.size())) {}
+    // Returned rows start at first, not at the left edge of the full image.
+    DisplayRows(DisplaySource input, uint32_t left, uint32_t width)
+        : source(input), capacity(std::clamp<size_t>(1024 * 1024 / (width * 4ull), 1, rows.size())),
+          first(left), count(width) {}
     const uint8_t *get(uint32_t y) {
         if (!source.straight_rgba)
-            return source.bytes.data() + static_cast<size_t>(y) * source.width * 4;
+            return source.bytes.data() + (static_cast<size_t>(y) * source.width + first) * 4;
         auto oldest = &rows[0];
         for (size_t i = 0; i < capacity; ++i) {
             auto &row = rows[i];
@@ -46,8 +49,8 @@ class DisplayRows {
             if (row.used < oldest->used)
                 oldest = &row;
         }
-        oldest->pixels.resize(static_cast<size_t>(source.width) * 4);
-        source.copy_row(y, 0, source.width, oldest->pixels.data());
+        oldest->pixels.resize(static_cast<size_t>(count) * 4);
+        source.copy_row(y, first, count, oldest->pixels.data());
         oldest->index = y;
         oldest->used = ++clock;
         return oldest->pixels.data();
