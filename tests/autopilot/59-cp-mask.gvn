@@ -1,0 +1,127 @@
+open	${fixtures}/cp-reference/png/full-a-source.png
+wait
+remember	original
+menu	CPMask
+cp_expect_text
+expect	cp.preview	true
+cp_expect	${fixtures}/cp-reference/png/full-a-source.png
+cp_code	a
+cp_expect_text	a
+cp_expect	${fixtures}/cp-reference/png/full-a-expected.png
+expect_same	original	true
+expect	modified	false
+cp_code	a b1
+cp_expect_text	ab
+cp_expect	${fixtures}/cp-reference/png/full-ab-expected.png
+cp_code	あ
+cp_expect_text
+expect	cp.presented	false
+cp_expect	${fixtures}/cp-reference/png/full-a-source.png
+cp_code	abcdefghijklmnopq
+cp_expect_text	abcdefghijklmnop
+cp_snapshot	cp-filter.png
+cp_cancel
+expect_cp_code
+expect	settings.cp_preview	true
+expect_same	original	true
+menu	CPMask
+cp_code	a
+cp_preview	false
+cp_expect	${fixtures}/cp-reference/png/full-a-source.png
+cp_accept
+expect_image	${fixtures}/cp-reference/png/full-a-expected.png	0
+expect_cp_code	A
+expect	settings.cp_preview	false
+persisted
+pixel_copy
+save_target	pixels/cp-a.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/cp-a.png
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	1
+snapshot	cp-accepted.png
+menu	CPMask
+cp_expect_text	A
+expect	cp.preview	false
+cp_clear
+cp_preview	true
+cp_accept
+expect_cp_code
+expect_image	${fixtures}/cp-reference/png/full-a-expected.png	0
+expect	undo_available	true
+command	Undo
+expect_image	${fixtures}/cp-reference/png/full-a-source.png	0
+expect	scale	1
+open	${fixtures}/cp-reference/png/selected-a-source.png
+wait
+native_command	SelectNumbers
+prompt_text	3, 2, 65, 49
+prompt_accept
+menu	CPMask
+cp_code	A
+cp_expect	${fixtures}/cp-reference/png/selected-a-expected.png
+cp_preview	false
+cp_expect	${fixtures}/cp-reference/png/selected-a-source.png
+cp_preview	true
+cp_snapshot	cp-preview.png
+cp_accept
+expect_image	${fixtures}/cp-reference/png/selected-a-expected.png	0
+expect	selection_w	65
+expect	selection_h	49
+pixel_copy
+command	Undo
+expect_image	${fixtures}/cp-reference/png/selected-a-source.png	0
+expect	selection_w	65
+expect	selection_h	49
+menu	CPMask
+cp_code	b
+cp_preview	false
+cp_cancel
+expect_cp_code	A
+expect	settings.cp_preview	true
+persisted
+open	${fixtures}/cp-reference/png/odd-Q-source.png
+wait
+menu	CPMask
+cp_code	Q
+cp_expect	${fixtures}/cp-reference/png/odd-Q-expected.png
+cp_accept
+expect_image	${fixtures}/cp-reference/png/odd-Q-expected.png	0
+command	Undo
+expect_image	${fixtures}/cp-reference/png/odd-Q-source.png	0
+open	${fixtures}/cp-reference/png/tiny-a-source.png
+wait
+menu	CPMask
+cp_code	A
+cp_expect	${fixtures}/cp-reference/png/tiny-a-expected.png
+cp_accept
+expect_image	${fixtures}/cp-reference/png/tiny-a-expected.png	0
+command	Undo
+expect_image	${fixtures}/cp-reference/png/tiny-a-source.png	0
+open	${fixtures}/cp-reference/png/indexed-ab-source.png
+wait
+menu	CPMask
+cp_code	AB
+cp_expect	${fixtures}/cp-reference/png/indexed-ab-expected.png
+cp_accept
+expect_image	${fixtures}/cp-reference/png/indexed-ab-expected.png	0
+command	Undo
+expect_image	${fixtures}/cp-reference/png/indexed-ab-source.png	0
+open	${fixtures}/cp-reference/png/full-a-source.png
+wait
+edit_budget	1
+menu	CPMask
+expect	cp.valid	false
+expect	cp.presented	false
+cp_snapshot	cp-memory-error.png
+cp_clear
+expect	cp.valid	true
+cp_accept
+edit_budget	real
+expect_image	${fixtures}/cp-reference/png/full-a-source.png	0
+expect	modified	false
+expect_cp_code
+persisted

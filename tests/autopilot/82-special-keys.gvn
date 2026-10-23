@@ -1,0 +1,48 @@
+# Unsupported multimedia keys must be rejected without replacing valid bindings.
+settings
+tab	Keys
+function	ExternalBase
+set	KeyEdit	F12
+click	KeyAdd
+expect	key_slots	1
+set	KeyEdit	F12
+click	KeyCapture
+capture_vk	173	0
+expect	error_count	1
+expect_text	KeyEdit	F12
+expect	key_slots	1
+click	KeyCapture
+capture_vk	174	0
+expect	error_count	2
+expect_text	KeyEdit	F12
+click	KeyCapture
+capture_vk	175	0
+expect	error_count	3
+expect_text	KeyEdit	F12
+click	KeyCapture
+capture_vk	179	0
+expect	error_count	4
+expect_text	KeyEdit	F12
+click	KeyCapture
+capture_vk	180	5
+expect	error_count	5
+expect_text	KeyEdit	F12
+expect	key_slots	1
+set	KeyEdit	VolumeUp
+click	KeyAdd
+expect	error_count	6
+expect	key_slots	1
+click	KeyCapture
+key	Ctrl+Alt+F12
+expect_text	KeyEdit	Ctrl+Alt+F12
+click	KeyAdd
+expect	key_slots	2
+snapshot	special-key-rejection.png
+click	ApplyButton
+expect_binding	ExternalBase	F12
+expect_binding	ExternalBase	Ctrl+Alt+F12
+persisted
+click	OK
+expect_binding	ExternalBase	F12
+expect_binding	ExternalBase	Ctrl+Alt+F12
+persisted

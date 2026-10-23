@@ -1,0 +1,655 @@
+{
+  "entry_url": "http://www.massigra.net/massigrahelp/currentver/basic.htm",
+  "retrieved_at_utc": "2026-10-17T17:05:19Z",
+  "baseline_version": "0.45",
+  "page_count": 91,
+  "dialog_page_count": 51,
+  "menu_rows_including_top_level": 180,
+  "menu_rows_by_category": {
+    "ファイル": 19,
+    "編集": 24,
+    "画像": 47,
+    "リスト": 22,
+    "表示": 48,
+    "その他": 14
+  },
+  "pages": [
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/about.htm",
+      "title": "ソフト紹介 / 動作環境",
+      "sha256": "bf06307bd4b4891bb4babea1cced69145609d15ebc5cf103b435ddc66713a3a1",
+      "document": "massigra-spec.md",
+      "topic": "製品概要と標準対応"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/basic.htm",
+      "title": "基本的な使い方",
+      "sha256": "543db01f3aed11ce29adaeb56388cb66c3ab88d07789307a00d675bb3e00f5a0",
+      "document": "massigra-spec.md",
+      "topic": "画面と基本操作"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/cmndline.htm",
+      "title": "コマンドラインによる起動オプション",
+      "sha256": "e10002271fbe2291333760d3a57419e297b2650d3b5c326dbde4d3f3ade3dcb3",
+      "document": "massigra-spec.md",
+      "topic": "起動オプション"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/custom.htm",
+      "title": "カスタマイズで割り当てられる機能",
+      "sha256": "ea2512d01d08cac84dd86ffed8157b63e73fbfa161771787424f6aefb3a55e72",
+      "document": "massigra-settings.md",
+      "topic": "メニュー外の割り当て機能"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_assoc.htm",
+      "title": "関連付け (ダイアログ)",
+      "sha256": "f2a577cb03e107fddacb3bdbcef95f318e957a7f81c1d0cbece52081a577fa8e",
+      "document": "massigra-spec.md",
+      "topic": "関連付けとアンインストール"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_autonext.htm",
+      "title": "自動スライド (ダイアログ)",
+      "sha256": "cfa2da527bf4c815f54a2346ac918199316f5da17121f9c3a10dd58303e22c0c",
+      "document": "massigra-spec.md",
+      "topic": "自動スライド"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_blur_gau.htm",
+      "title": "ガウスぼかし (ダイアログ)",
+      "sha256": "e56042408d2b5d66d8633d2e5a9e8bb133b9b9f150262a9de2438483a63e413a",
+      "document": "massigra-editing.md",
+      "topic": "シャープとぼかし"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_bright.htm",
+      "title": "明るさ調整 (ダイアログ)",
+      "sha256": "54fd66938ad23977bdd5a5f7ba20cafa7208ea34cfcbea57aff289223dfa8b9d",
+      "document": "massigra-editing.md",
+      "topic": "明るさ"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_coldepth.htm",
+      "title": "減色/増色 (ダイアログ)",
+      "sha256": "695fd65d746e8e23842f7f71974668c65bc88e88ebf7294b133962e3bb6d43e5",
+      "document": "massigra-editing.md",
+      "topic": "減色と増色"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_cpmask.htm",
+      "title": "CPマスク (ダイアログ)",
+      "sha256": "d923023f6b0ff48c482469c289488569f419dc37ebc928527d91e6b6f916ede2",
+      "document": "massigra-editing.md",
+      "topic": "CPマスク"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_cpymov.htm",
+      "title": "ファイルを移動 / コピー (基本) (ダイアログ)",
+      "sha256": "2339d4c29593075544228ae1f5da129d4fc7c0397ecbdf78fda7310d21717136",
+      "document": "massigra-spec.md",
+      "topic": "ファイルの振り分け"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_cpymovex.htm",
+      "title": "ファイルを移動 / コピー (10 個 登録) (ダイアログ)",
+      "sha256": "8f4b94821802eba5af64bbfcf4ced2913196eb317c63fb3028595d2e2c9c0eab",
+      "document": "massigra-spec.md",
+      "topic": "ファイルの振り分け"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_imginfo.htm",
+      "title": "画像の情報 (ダイアログ)",
+      "sha256": "1425ae5a31cbef04814cc21d39dfdb6f8d85115358f8e419d5db2dd44aad21bd",
+      "document": "massigra-spec.md",
+      "topic": "画像情報"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_imgsize.htm",
+      "title": "画像サイズ (ダイアログ)",
+      "sha256": "57d8f886e539a8292be7693c92680930fb8b294495828221157f9ce39d72534b",
+      "document": "massigra-editing.md",
+      "topic": "画像サイズ"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_jump.htm",
+      "title": "ジャンプ (ダイアログ)",
+      "sha256": "2ee63a584bac1ccaab772fbe027fc78bb0c8cc504b1aff030fec8ed4d6002737",
+      "document": "massigra-spec.md",
+      "topic": "移動と終端"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_keycstm.htm",
+      "title": "キー設定 (ダイアログ)",
+      "sha256": "3c26397005ace0ccb775146d5061261293d693c3615a76729561f85b58d7e871",
+      "document": "massigra-settings.md",
+      "topic": "キー設定と割り当て"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_keyset.htm",
+      "title": "キー割り当て (ダイアログ)",
+      "sha256": "dc45ec781a05c5876ede91d6c179049924b75636b57413be534778c4cb9ab09d",
+      "document": "massigra-settings.md",
+      "topic": "キー設定と割り当て"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_level.htm",
+      "title": "レベル調整 (ダイアログ)",
+      "sha256": "9262ac2ad5e6a816d04ed16d525f3b3a7c0debb0153dd1fe75fcc81ee5b8e857",
+      "document": "massigra-editing.md",
+      "topic": "レベル"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_mous.htm",
+      "title": "マウス設定 (ダイアログ)",
+      "sha256": "9735ef89461026fac9a306498223f7865e085cbc2bf15ba4f00767179edd4cc5",
+      "document": "massigra-settings.md",
+      "topic": "マウス設定"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_mous_cs.htm",
+      "title": "カスタマイズ (「マウス設定」ダイアログ)",
+      "sha256": "41980a0c6eb8938aa1a4753e70c400d1b74cce519aa8c923a7f9c48efcac573c",
+      "document": "massigra-settings.md",
+      "topic": "マウス設定"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_mous_op.htm",
+      "title": "オプション (「マウス設定」ダイアログ)",
+      "sha256": "197e8f677d9cf71e3a21ee60d9ec43432719ba38a2c749e6b0318b0db435ec15",
+      "document": "massigra-settings.md",
+      "topic": "マウス設定"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_newimg.htm",
+      "title": "新規作成 (ダイアログ)",
+      "sha256": "3692c6d95a69a0fde04bb97498135232e294f99fd368b56c63e9e79b95bb5afe",
+      "document": "massigra-editing.md",
+      "topic": "新規画像"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_nextprev.htm",
+      "title": "次へ / 前へ (ダイアログ)",
+      "sha256": "c958b5aa0207fe499776eb6647b899d79b258f04f55c64182bd04a91df68836a",
+      "document": "massigra-spec.md",
+      "topic": "移動と終端"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_open.htm",
+      "title": "ファイルを開く (ダイアログ)",
+      "sha256": "d97e4e34b9c71bb60287b7aa7ad13ca153fd7810233cb42733f10d5d88bfb546",
+      "document": "massigra-spec.md",
+      "topic": "画像を開く"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_otherapp.htm",
+      "title": "他のアプリの設定 (ダイアログ)",
+      "sha256": "cab908a00107da5a3a48ac75d0ab5c3a3788d7324c1adfdbbc78025f3fe5e806",
+      "document": "massigra-settings.md",
+      "topic": "外部アプリ設定"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_palette.htm",
+      "title": "パレット編集 (ダイアログ)",
+      "sha256": "9ed880d7863901734d92109e7557343e23c0d5037386a6265204af06da8ecca0",
+      "document": "massigra-editing.md",
+      "topic": "パレット"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_plugset.htm",
+      "title": "プラグイン設定 (ダイアログ)",
+      "sha256": "a952f5498aa06955e2fae77c8c58db10a5ab73376f02f6953bf14478106f7954",
+      "document": "massigra-settings.md",
+      "topic": "プラグインの設定と互換性"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_print.htm",
+      "title": "印刷 (ダイアログ)",
+      "sha256": "f977d3cc7216a1ec13ce5a1fddc834f2f09ff72d0c17f48b96b3288ed348810e",
+      "document": "massigra-spec.md",
+      "topic": "印刷"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_prop.htm",
+      "title": "設定 (ダイアログ)",
+      "sha256": "a4f152916c404251cb46fbce3720b4af618619c88f84bbec1dd6c58d8ef91a30",
+      "document": "massigra-settings.md",
+      "topic": "一般設定11ページ"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_prop_bar.htm",
+      "title": "バー (「設定」ダイアログ)",
+      "sha256": "023a27266d6846fb3ece26443669a1f4f4870cf16aa3d16e6239f2f4a3eae785",
+      "document": "massigra-settings.md",
+      "topic": "バー"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_prop_bg.htm",
+      "title": "背景 (「設定」ダイアログ)",
+      "sha256": "89e42e8149a6a8afe502cb628a0c3409e1a391b68119eaf0b06761fdeff30a88",
+      "document": "massigra-settings.md",
+      "topic": "背景"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_prop_fload.htm",
+      "title": "ファイル読み込み (「設定」ダイアログ)",
+      "sha256": "349ab3a1b59c2e86848d42f2efda0c5b0071487eef5e764d108520fbb9819426",
+      "document": "massigra-settings.md",
+      "topic": "ファイル読み込み"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_prop_fope.htm",
+      "title": "ファイル操作 (「設定」ダイアログ)",
+      "sha256": "70aff851ef4565c105b21a3381c0f02138af46adcdec3f71597051f65b9654c4",
+      "document": "massigra-settings.md",
+      "topic": "ファイル操作"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_prop_full.htm",
+      "title": "全画面表示 (「設定」ダイアログ)",
+      "sha256": "0b2e9aa1376b2735d1e2a702a4873b6a6e6b9b5bb769af585d174acb6cd6b601",
+      "document": "massigra-settings.md",
+      "topic": "全画面表示"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_prop_gene.htm",
+      "title": "全般 (「設定」ダイアログ)",
+      "sha256": "523f2204280fe0bf01f4fe8656dae198d0650ec9dcb4b3a90c55d4621e372e24",
+      "document": "massigra-settings.md",
+      "topic": "全般"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_prop_mask.htm",
+      "title": "マスク (「設定」ダイアログ)",
+      "sha256": "5ca4deec5a01e464c471588c01b13143a48e0f36d9b28349188aadd121a17305",
+      "document": "massigra-settings.md",
+      "topic": "マスク設定"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_prop_move.htm",
+      "title": "移動 (「設定」ダイアログ)",
+      "sha256": "7ce2eb50580a52bc1f5d62e70719b46ef1a11a0720737d308f94ff56bfaca6c7",
+      "document": "massigra-settings.md",
+      "topic": "移動"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_prop_view.htm",
+      "title": "表示 (「設定」ダイアログ)",
+      "sha256": "6054df7f5ffbb60062f5d76b3acee282f927d581211d510395042ad5c181f8b4",
+      "document": "massigra-settings.md",
+      "topic": "表示"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_prop_wnd.htm",
+      "title": "ウィンドウ (「設定」ダイアログ)",
+      "sha256": "d8bade6e643826ff391e050c736c7e855a4174c25cd849bd8513f7fcaba6c546",
+      "document": "massigra-settings.md",
+      "topic": "ウィンドウ"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_prop_zoom.htm",
+      "title": "ズーム (「設定」ダイアログ)",
+      "sha256": "5f7fc63a83b2219ebf4bc5d6efa0dcbff2cafc3baed2578495d1661d58dd4609",
+      "document": "massigra-settings.md",
+      "topic": "ズーム"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_rainbow.htm",
+      "title": "虹色マスク (ダイアログ)",
+      "sha256": "ac50c7b7a12bdba556350ec6abb4d8da3004212f27d5c52a6afcaae3b06a4109",
+      "document": "massigra-editing.md",
+      "topic": "虹色マスク"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_rename.htm",
+      "title": "ファイル名を変更 (ダイアログ)",
+      "sha256": "4d3d2bd5fdd2bc2e5dfab5428a77b06e65238794cd7ad33f7828529b529a97e8",
+      "document": "massigra-spec.md",
+      "topic": "ファイルの振り分け"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_resize.htm",
+      "title": "拡大縮小 (ダイアログ)",
+      "sha256": "dac8d30286bb26fd79b124bbd4c781b21dad9a5ba5030a98666cff1a174c73df",
+      "document": "massigra-editing.md",
+      "topic": "拡大縮小とアルゴリズム"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_rotate.htm",
+      "title": "回転 (ダイアログ)",
+      "sha256": "afa207eb5ca889db51d1868cd391a7e6b517667c4169d45e3b98181d27582dc2",
+      "document": "massigra-editing.md",
+      "topic": "画像加工としての回転"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_save.htm",
+      "title": "上書き保存 / 名前を付けて保存 (ダイアログ)",
+      "sha256": "b0ca1d28e8811eed842668ab0f110616a297a3b72949c1e0f763dcda71f4a225",
+      "document": "massigra-spec.md",
+      "topic": "保存と形式別設定"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_save_bmp.htm",
+      "title": "BMP 保存設定 (「保存」ダイアログ)",
+      "sha256": "483639b0894a0c7f89ee83c4ccfe953c62caf088b381d507c20ea94f2ea51c3a",
+      "document": "massigra-spec.md",
+      "topic": "保存と形式別設定"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_save_gif.htm",
+      "title": "GIF 保存設定 (「保存」ダイアログ)",
+      "sha256": "49ac618dc26607116ea74f24075b57967c1ecea95860630663ccd79111848573",
+      "document": "massigra-spec.md",
+      "topic": "保存と形式別設定"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_save_jpeg.htm",
+      "title": "JPEG 保存設定 (「保存」ダイアログ)",
+      "sha256": "9ccfcd8fba13f1e7871ecb9316c9d2759d5188b94416eeabbec5fb7cbdeaf572",
+      "document": "massigra-spec.md",
+      "topic": "保存と形式別設定"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_save_png.htm",
+      "title": "PNG 保存設定 (「保存」ダイアログ)",
+      "sha256": "c15d8285fbd46992617e39dfec44d1432d12c6751b12921fc11c0bf5c346bc60",
+      "document": "massigra-spec.md",
+      "topic": "保存と形式別設定"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_selection.htm",
+      "title": "選択範囲 (ダイアログ)",
+      "sha256": "4087437ed77d22c9bf115bfaabf2f082502f07f799ae3e663a634900045537cb",
+      "document": "massigra-editing.md",
+      "topic": "選択範囲"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_selstep.htm",
+      "title": "選択範囲の単位 (ダイアログ)",
+      "sha256": "17b7fedebe27b8549de28bd8d3ed048c40bddddb711b7d776a58f81dc0bd579d",
+      "document": "massigra-editing.md",
+      "topic": "選択範囲の単位"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_tune_hsl.htm",
+      "title": "色合い調整 (ダイアログ)",
+      "sha256": "f8a1438ba9f7577d6258b21d2fbec6118058cd8d4f5f6eb7ed1c01703cc3d438",
+      "document": "massigra-editing.md",
+      "topic": "色合い"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_unshmask.htm",
+      "title": "アンシャープマスク (ダイアログ)",
+      "sha256": "bd3be2868c223e44a1229bee217b50196eca9ba6b33e681eff95e40ecc69c0e4",
+      "document": "massigra-editing.md",
+      "topic": "シャープとぼかし"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_version.htm",
+      "title": "バージョン情報 (ダイアログ)",
+      "sha256": "1d755cc65acb4d34c6ae1e3162bf09fc9e18ec18c0eca441d9af2c50bc8297c8",
+      "document": "massigra-spec.md",
+      "topic": "設定保存先とインストール"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/d_zoom.htm",
+      "title": "ズーム (ダイアログ)",
+      "sha256": "f6d52d79e561d3485205fbaee4f0aec82309408f639a6a2c5d8e491960d3b4dd",
+      "document": "massigra-spec.md",
+      "topic": "表示倍率"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/dialog.htm",
+      "title": "ダイアログ",
+      "sha256": "e10a813880449ccd6cb7887852b69b171ba38f2c50efe3d9e2f045fa156e1713",
+      "document": "massigra-sources.md",
+      "topic": "ダイアログ全体への入口"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/edit.htm",
+      "title": "画像加工の基本",
+      "sha256": "720e5e9fc233619ba56b903fa49f3bf3634d11ae97dac8604cc0c581a89a73d5",
+      "document": "massigra-editing.md",
+      "topic": "加工の基本と選択とUndo"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/faq.htm",
+      "title": "よくある質問",
+      "sha256": "11f1b9c5504528071355ecf5760084e26ded6d9b5e9bc29d496463079d5d2131",
+      "document": "massigra-spec.md",
+      "topic": "FAQの機能制約と例外を各節へ統合"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/help.htm",
+      "title": "画像ビューワ「MassiGra」公式ヘルプ",
+      "sha256": "69048826a0f4be0b7581ad692edc8630646010597f948347bc5643c72a8acb4a",
+      "document": "massigra-sources.md",
+      "topic": "ヘルプ全体への入口"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/history.htm",
+      "title": "更新履歴",
+      "sha256": "09878e92d6cab9067e1fdaec2f8bc6d2652633ed15e2bdb5d39fe44e5fcc9a37",
+      "document": "massigra-spec.md",
+      "topic": "0.45に至る主要変更を整理"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/install.htm",
+      "title": "インストール / アンインストール",
+      "sha256": "5b32f256eb5c770775c99ec1c1637673f57e47dacfb12101e1846165f63910be",
+      "document": "massigra-spec.md",
+      "topic": "設定保存先とインストール"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/keyboard.htm",
+      "title": "キーボード操作",
+      "sha256": "f59fb433b69ef4ea97eff21d7a2b34f7bb8216b096bad987408f5d5ae8a4071c",
+      "document": "massigra-spec.md",
+      "topic": "キーボード操作"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/license.htm",
+      "title": "使用条件 / 配布条件",
+      "sha256": "3f30bb9a58447c3f9b101815ba99e93af965360bc3be60055f719a07c9601546",
+      "document": "massigra-spec.md",
+      "topic": "公式の使用条件と配布条件"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_e_clip.htm",
+      "title": "ファイル名をクリップボードへ (メニュー)",
+      "sha256": "f2818f1d634fefdce1e109fdf446bcbaaa7380628b4fdf4a59665fd6072af19a",
+      "document": "massigra-spec.md",
+      "topic": "名前とパスのコピー"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_e_selstep.htm",
+      "title": "選択範囲の単位 (メニュー)",
+      "sha256": "af655d6d74160b120a885e9ddf6d6dca19a4cd761d249f02fae92408bc1b7c96",
+      "document": "massigra-editing.md",
+      "topic": "選択範囲の単位"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_edit.htm",
+      "title": "編集 (メニュー)",
+      "sha256": "b1c3d568edb6929adb049cf0e0646f464a4faf9a7a64c5fa352b0c496ac166f0",
+      "document": "massigra-editing.md",
+      "topic": "加工の基本と選択とUndo"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_f_app.htm",
+      "title": "他のアプリで開く (メニュー)",
+      "sha256": "bb286badec1b9fc9a7531b4e3ab4e5ae0e3604975ca024ccfc2ba15f5b7e1e4b",
+      "document": "massigra-settings.md",
+      "topic": "外部アプリ設定"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_f_mrud.htm",
+      "title": "最近開いたフォルダ (メニュー)",
+      "sha256": "f410686064b2d181becf79ddc64118f2e54354a832ba3a6bd8d345b87e98fac5",
+      "document": "massigra-spec.md",
+      "topic": "最近開いたフォルダ"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_f_newwnd.htm",
+      "title": "もう１つ起動 (メニュー)",
+      "sha256": "8126d7e7fbad3c28851da78750bd79a470e5dd190fab159e138f0b1726aef2cf",
+      "document": "massigra-spec.md",
+      "topic": "複数起動"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_file.htm",
+      "title": "ファイル (メニュー)",
+      "sha256": "38f940b00301756f47bf9e3b46c5921aa1820a7f49578c47103a442d52be9556",
+      "document": "massigra-spec.md",
+      "topic": "開くと保存とファイル整理"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_i_mask.htm",
+      "title": "マスク処理 (メニュー)",
+      "sha256": "bffd770885eb0d587caebe54bb430d8eed15a8382083cfd8332be045ee12d98d",
+      "document": "massigra-editing.md",
+      "topic": "マスク"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_i_rotate.htm",
+      "title": "回転/反転 (メニュー)",
+      "sha256": "8b45da64ee1c14de7e2e75ecfaeea996bffee72b5683eb856e775dd312ecfddd",
+      "document": "massigra-editing.md",
+      "topic": "画像加工としての回転"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_i_shbl.htm",
+      "title": "シャープ/ぼかし (メニュー)",
+      "sha256": "6269475a4fa529c7cdf97387693fe555d51ae42ebfd273636b765d616f12feb7",
+      "document": "massigra-editing.md",
+      "topic": "シャープとぼかし"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_i_swapcol.htm",
+      "title": "色の入れ替え (メニュー)",
+      "sha256": "3848607f022673127a9feb8c7bf65b943a87e83ca1d3ee804ceecaaac540350f",
+      "document": "massigra-editing.md",
+      "topic": "RGB交換"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_image.htm",
+      "title": "画像 (メニュー)",
+      "sha256": "eca3e15c08c0d2a7244129bd5d8f5a421d241cb8c5cb0e0a7a219c3f343b59c9",
+      "document": "massigra-editing.md",
+      "topic": "画像加工と色形式の変化"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_l_sort.htm",
+      "title": "ファイルの並び順 (メニュー)",
+      "sha256": "09e64d9244e954b45005d3340850fa6a3cc7206b5a728627a2a68a939817d24c",
+      "document": "massigra-spec.md",
+      "topic": "ファイルの並び順"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_list.htm",
+      "title": "リスト (メニュー)",
+      "sha256": "0a0eef386d4e571becfcfe6323891b00bd61ea4d0c6d879fd56ed160c9aaec40",
+      "document": "massigra-spec.md",
+      "topic": "移動と終端"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_o_wall.htm",
+      "title": "壁紙にする (メニュー)",
+      "sha256": "fe4217d5b35fd73642179c5e7b05c88e111fbb200aeb26d0b7d3ddb198289696",
+      "document": "massigra-spec.md",
+      "topic": "壁紙"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_option.htm",
+      "title": "その他 (メニュー)",
+      "sha256": "357fda45031f94768d49178cdf97cf0121dcc13146e4e230c1b3b7868dd1ff06",
+      "document": "massigra-spec.md",
+      "topic": "その他メニューの設定とOS連携"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_v_cmcopt.htm",
+      "title": "漫画オプション (メニュー)",
+      "sha256": "55accafea099d3df2908818e7ee69e188eaf1abe8ffe93009a7833e0cda80cd9",
+      "document": "massigra-spec.md",
+      "topic": "漫画モード"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_v_disp.htm",
+      "title": "表示オプション (メニュー)",
+      "sha256": "4687e42bd45d40b3dd2173862c6581fae01488173a71d226af62ca03449016c2",
+      "document": "massigra-spec.md",
+      "topic": "読み込み時の表示オプション"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_v_fit.htm",
+      "title": "フィットオプション (メニュー)",
+      "sha256": "b69a352695f0d423c21ac83c63ebb451e049c3a43bad7e5f00d28a85c62e3a0f",
+      "document": "massigra-spec.md",
+      "topic": "フィット"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_v_rotate.htm",
+      "title": "回転オプション (メニュー)",
+      "sha256": "6b6c8c90387a857932fc21b4e2323c967f0fb73a89531616d96da23a3eb6ef49",
+      "document": "massigra-spec.md",
+      "topic": "表示用の回転"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_v_wnd.htm",
+      "title": "ウィンドウ (メニュー)",
+      "sha256": "50aac4887f23bcdf59348eefaf22f73612847e460ac9c9091276ca10e0ee7296",
+      "document": "massigra-spec.md",
+      "topic": "画面の構成とバー"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/m_view.htm",
+      "title": "表示 (メニュー)",
+      "sha256": "757e618fbc12ce59ea7743e1a2263ee4446c03cbc02542e8cdeaa63b4318bedf",
+      "document": "massigra-spec.md",
+      "topic": "ズームと全画面と漫画"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/menulist.htm",
+      "title": "全てのメニューリスト",
+      "sha256": "af768c329e254b0db1920980d97c16a6050791cba29981650640c6731286c861",
+      "document": "massigra-menu.md",
+      "topic": "全メニュー階層"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/specifi.htm",
+      "title": "仕様 / 制限",
+      "sha256": "e3b63f8ee5e4d3ddce588de325aeb577faa176cdd1c36c6fe6dbdec57c39bb7d",
+      "document": "massigra-spec.md",
+      "topic": "制限と書庫内仕様"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/spiinfo.htm",
+      "title": "Susie Plug-in 対応状況",
+      "sha256": "35ae7b0d818b89c9bb1aa1fb3cb8373a460e3314e3d5e8308e865ec1291720de",
+      "document": "massigra-settings.md",
+      "topic": "プラグインの設定と互換性"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/support.htm",
+      "title": "サポート / 連絡先",
+      "sha256": "a7b6c30485a730bdf88c9b7efba73a724c1998e4170739cc9bfb2728a2984d36",
+      "document": "massigra-spec.md",
+      "topic": "サポート方針"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/thanks.htm",
+      "title": "謝辞 / 参考資料",
+      "sha256": "ad1a980983e332ebdfecd0122e05797a071d4ffafe1ec6d260b82bf260336a75",
+      "document": "massigra-spec.md",
+      "topic": "利用技術と参考ソフト"
+    },
+    {
+      "url": "http://www.massigra.net/massigrahelp/currentver/todo.htm",
+      "title": "今後の予定",
+      "sha256": "ded2ba945d9ccb5f4fd753904bef6d93ac6cc67940d1abf4633cc5d705670a94",
+      "document": "massigra-spec.md",
+      "topic": "搭載済みと予定の区別"
+    }
+  ]
+}

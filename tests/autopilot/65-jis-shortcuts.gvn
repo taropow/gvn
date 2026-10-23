@@ -1,0 +1,72 @@
+# JIS conversion keys: capture regular/IME notifications with context intact, persist, and invoke image operations.
+settings
+tab	Keys
+function	FlipH
+set	KeyEdit	NonConvert
+click	KeyAdd
+expect	key_slots	1
+function	FlipV
+expect	ime.key_edit_enabled	true
+click	KeyCapture
+expect	ime.key_edit_enabled	true
+ime_processed
+expect_text	KeyCapture	入力待ち（Escで中止）
+expect	ime.key_edit_enabled	true
+key_ime	Convert
+expect	ime.key_edit_enabled	true
+expect_text	KeyEdit	Convert
+click	KeyAdd
+expect	key_slots	1
+function	FlipH
+click	KeyCapture
+expect	ime.key_edit_enabled	true
+key	Shift+NonConvert
+expect	ime.key_edit_enabled	true
+expect_text	KeyEdit	Shift+NonConvert
+click	KeyAdd
+function	FlipV
+set	KeyEdit	Ctrl+変換
+click	KeyAdd
+click	KeyCapture
+expect	ime.key_edit_enabled	true
+key	Esc
+expect	ime.key_edit_enabled	true
+expect_text	KeyEdit	Ctrl+変換
+click	KeyCapture
+expect	ime.key_edit_enabled	true
+click	KeyAssign
+expect	ime.key_edit_enabled	true
+click	ApplyButton
+expect_binding	FlipH	NonConvert
+expect_binding	FlipH	Shift+NonConvert
+expect_binding	FlipV	Convert
+expect_binding	FlipV	Ctrl+変換
+expect_menu_key	FlipH	NonConvert
+expect_menu_key	FlipV	Convert
+expect	error_count	0
+persisted
+snapshot	jis-shortcuts.png
+click	OK
+settings
+tab	Keys
+function	FlipH
+expect	key_slots	2
+function	FlipV
+expect	key_slots	2
+click	Cancel
+open	${fixtures}/alpha.png
+wait
+remember	original
+key	NonConvert
+expect_same	original	false
+key	NonConvert
+expect_same	original	true
+key	Convert
+expect_same	original	false
+key	Ctrl+変換
+expect_same	original	true
+key	Shift+NonConvert
+expect_same	original	false
+key	Shift+NonConvert
+expect_same	original	true
+pixel_copy

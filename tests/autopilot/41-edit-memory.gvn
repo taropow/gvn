@@ -1,0 +1,189 @@
+settings
+tab	FileOperations
+set	SaveAsRetarget	true
+click	OK
+expect	settings.allow_physical_overflow	false
+copy_fixture	alpha.png	files/source.png
+open	${output}/files/source.png
+wait
+remember	source
+command	SelectAll
+edit_budget	23
+native_command	Resize
+resize_set	KeepAspect	false
+resize_set	Width	3
+resize_set	Height	2
+expect	resize.valid	false
+expect	resize.ok_enabled	false
+resize_click	Cancel
+expect	error_count	0
+expect_same	source	true
+expect	selection_w	3
+expect	selection_h	2
+expect	modified	false
+native_command	Canvas
+canvas_set	KeepAspect	false
+canvas_set	Width	3
+canvas_set	Height	2
+expect	canvas.valid	false
+expect	canvas.ok_enabled	false
+canvas_click	Cancel
+expect	error_count	0
+expect_same	source	true
+native_command	NewImage
+prompt_text	3, 2
+prompt_accept
+expect	error_count	1
+expect_same	source	true
+native_command	Canvas
+canvas_set	KeepAspect	false
+canvas_set	Width	65536
+canvas_set	Height	1
+expect	canvas.valid	false
+expect	canvas.ok_enabled	false
+canvas_click	Cancel
+expect	error_count	1
+expect_same	source	true
+settings
+tab	General
+set	AllowPhysicalOverflow	true
+snapshot	memory-allowed.png
+click	OK
+expect	settings.allow_physical_overflow	true
+persisted
+native_command	Canvas
+canvas_set	KeepAspect	false
+canvas_set	Width	3
+canvas_set	Height	2
+canvas_click	OK
+expect	error_count	1
+expect_same	source	true
+expect	modified	true
+command	Undo
+expect_same	source	true
+native_command	NewImage
+prompt_text	3, 2
+prompt_accept
+expect_location	image	empty
+expect_pixel	0	0	0	0	0	0
+expect	width	3
+expect	height	2
+command	Undo
+expect_same	source	true
+native_command	Resize
+resize_set	KeepAspect	false
+resize_set	Width	6
+resize_set	Height	4
+resize_click	OK
+expect	width	6
+expect	height	4
+remember	resized
+command	Copy
+command	Paste
+expect_same	resized	true
+open	${output}/files/source.png
+wait
+command	SelectAll
+edit_fail_alloc	true
+native_command	Resize
+resize_set	KeepAspect	false
+resize_set	Width	5
+resize_set	Height	4
+resize_click	OK
+expect	error_count	2
+ack_error	bad allocation
+expect_same	source	true
+expect	selection_w	3
+expect	selection_h	2
+native_command	Canvas
+canvas_set	KeepAspect	false
+canvas_set	Width	5
+canvas_set	Height	4
+canvas_click	OK
+expect	error_count	3
+ack_error	bad allocation
+expect_same	source	true
+native_command	NewImage
+prompt_text	5, 4
+prompt_accept
+expect	error_count	4
+expect_same	source	true
+expect	modified	false
+ack_error	bad allocation
+edit_fail_alloc	false
+settings
+tab	General
+set	AllowPhysicalOverflow	false
+click	OK
+expect	settings.allow_physical_overflow	false
+native_command	Canvas
+canvas_set	KeepAspect	false
+canvas_set	Width	2
+canvas_set	Height	2
+canvas_click	OK
+expect	width	2
+expect	height	2
+expect	error_count	4
+command	Undo
+expect_same	source	true
+edit_budget	real
+native_command	Canvas
+canvas_set	KeepAspect	false
+canvas_set	Width	65535
+canvas_set	Height	1
+canvas_click	OK
+expect	width	65535
+expect	height	1
+expect_pixel	32766	0	255	0	0	255
+expect_pixel	32767	0	0	255	0	128
+expect_pixel	32768	0	0	0	255	0
+snapshot	memory-maximum-width.png
+command	Undo
+expect_same	source	true
+native_command	Canvas
+canvas_set	KeepAspect	false
+canvas_set	Width	1
+canvas_set	Height	65535
+canvas_click	OK
+expect	width	1
+expect	height	65535
+expect_pixel	0	32766	0	255	0	128
+expect_pixel	0	32767	250	240	230	255
+snapshot	memory-maximum-height.png
+remember	axis
+save_target	pixels/maximum-axis.png
+native_command	SaveAs
+save_accept
+expect	modified	false
+command	Copy
+command	Paste
+expect_same	axis	true
+settings
+tab	Background
+set	Cell	12
+click	OK
+settings
+tab	General
+set	AllowPhysicalOverflow	true
+click	Cancel
+expect	settings.allow_physical_overflow	false
+settings
+tab	General
+set	AllowPhysicalOverflow	true
+click	OK
+expect	settings.allow_physical_overflow	true
+persisted
+settings
+tab	General
+click	Reset
+click	Cancel
+expect	settings.allow_physical_overflow	true
+settings
+tab	General
+click	Reset
+snapshot	memory-reset.png
+click	OK
+expect	settings.allow_physical_overflow	false
+expect	settings.checker_size	12
+expect_same	axis	true
+persisted

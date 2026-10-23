@@ -1,0 +1,45 @@
+settings
+tab	Zoom
+set	ZoomMode	0
+set	ZoomStep	75
+tab	Background
+set	Cell	14
+click	Reset
+click	ApplyButton
+expect	settings.zoom_step	75
+expect	settings.checker_size	8
+tab	General
+set	Grid	0
+click	ApplyButton
+expect	error_count	1
+expect	settings.grid	1
+expect	settings_open	true
+set	Grid	16
+click	ApplyButton
+expect	settings.grid	16
+tab	Keys
+row	KeyList	0
+set	KeyEdit	Ctrl+S
+click	ApplyButton
+expect	error_count	2
+expect	settings_open	true
+set	KeyEdit	Ctrl+Alt+O
+click	ApplyButton
+expect_binding	Open	Ctrl+Alt+O
+expect_empty_checker
+persisted
+snapshot	keys-applied.png
+set	KeyEdit	Ctrl+Alt+P
+click	Cancel
+expect_binding	Open	Ctrl+Alt+O
+settings
+tab	Keys
+expect_text	KeyEdit	Ctrl+Alt+O
+tab	Background
+set	Light	ZZZZZZ
+click	ApplyButton
+expect	error_count	3
+expect	settings_open	true
+set	Light	EEEEEE
+click	Cancel
+expect	settings_open	false

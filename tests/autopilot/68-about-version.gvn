@@ -1,0 +1,55 @@
+# Operate the real native About dialog on this autopilot's private desktop.
+expect	has_image	false
+menu	About
+expect	about_open	true
+about_expect	GVN Image Viewer
+about_expect	バージョン 0.41.0
+about_expect	licenses
+about_snapshot	about-empty.png
+about_close
+expect	about_open	false
+expect	has_image	false
+open	${fixtures}/alpha.png
+wait
+remember	original
+command	Negative
+remember	edited
+expect	modified	true
+expect	undo_available	true
+menu	About
+expect	about_open	true
+about_close
+expect	about_open	false
+expect_same	edited	true
+expect	modified	true
+expect	undo_available	true
+command	Undo
+expect_same	original	true
+pixel_copy
+settings
+tab	Keys
+expect	key_functions	238
+function	About
+set	KeyEdit	Ctrl+Alt+V
+click	KeyAdd
+click	OK
+persisted
+expect_binding	About	Ctrl+Alt+V
+key	Ctrl+Alt+V
+expect	about_open	true
+about_expect	バージョン 0.41.0
+about_close
+open	${fixtures}/disposal.gif
+wait
+command	StopAnimation
+command	FrameNext
+remember	frame
+expect	playing	false
+menu	About
+about_expect	バージョン 0.41.0
+about_snapshot	about-animation.png
+about_close
+expect_same	frame	true
+expect	playing	false
+pixel_copy
+expect	error_count	0

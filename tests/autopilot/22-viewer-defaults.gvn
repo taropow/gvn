@@ -1,0 +1,47 @@
+expect	settings.confirm_unsaved	false
+open	${fixtures}/display-alpha.png
+wait
+command	Actual
+pointer	wheel	120	100	100	0
+expect	scale	1.25
+pointer	wheel	-120	100	100	0
+expect	scale	1
+command	Negative
+expect	modified	true
+open	${fixtures}/alpha.png
+wait
+expect	width	3
+expect	modified	false
+settings
+tab	FileOperations
+scroll_page	bottom
+expect_no_overlap	ConfirmUnsaved	DestinationList
+set	ConfirmUnsaved	true
+click	OK
+persisted
+command	Negative
+answer	Cancel
+command	CloseImage
+expect	modified	true
+expect	width	3
+answer	No
+command	CloseImage
+expect_empty_checker
+settings
+tab	Mouse
+set	Wheel	0
+click	ApplyButton
+expect_mouse	WheelUp	0	0	Previous
+click	Reset
+click	ApplyButton
+expect_mouse	WheelUp	0	0	MouseZoomIn
+expect_mouse	WheelDown	0	0	MouseZoomOut
+tab	FileOperations
+scroll_page	bottom
+expect_no_overlap	ConfirmUnsaved	DestinationList
+click	Reset
+click	ApplyButton
+expect	settings.confirm_unsaved	false
+snapshot	unsaved-confirm-option.png
+click	OK
+persisted

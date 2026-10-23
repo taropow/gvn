@@ -1,0 +1,68 @@
+# Actual native color dialogs and viewport-preview scrolling, with transaction boundaries.
+settings
+tab	Background
+click	BackgroundFirstPick
+color_expect	32	32	32
+color_set	1	2	3
+color_close	Cancel
+expect_text	BackgroundFirst	202020
+click	BackgroundFirstPick
+color_expect	32	32	32
+color_set	16	64	96
+color_close	OK
+expect_text	BackgroundFirst	104060
+click	BackgroundSecondPick
+color_expect	48	48	48
+color_set	224	192	160
+color_snapshot	background-color-picker.png
+color_close	OK
+expect_text	BackgroundSecond	E0C0A0
+expect	settings.scrollbar	true
+scroll_page	bottom
+expect_no_overlap	Cell	Preview
+snapshot	background-preview-scrolled.png
+scroll_page	top
+set	BackgroundTiled	false
+expect	enabled.BackgroundPattern	false
+expect	enabled.BackgroundSecond	false
+expect	enabled.BackgroundSecondPick	false
+expect	enabled.BackgroundFirstPick	true
+click	ApplyButton
+expect	settings.background_first	1065056
+expect	settings.background_second	14729376
+expect_view_background
+persisted
+set	BackgroundTiled	true
+click	BackgroundSecondPick
+color_expect	224	192	160
+color_set	4	5	6
+color_close	Cancel
+expect_text	BackgroundSecond	E0C0A0
+click	BackgroundFirstPick
+color_expect	16	64	96
+color_set	7	8	9
+color_close	OK
+expect_text	BackgroundFirst	070809
+click	Cancel
+expect	settings.background_first	1065056
+expect	settings.background_tiled	false
+expect_view_background
+settings
+tab	Background
+expect_text	BackgroundFirst	104060
+expect_text	BackgroundSecond	E0C0A0
+click	Reset
+expect_text	BackgroundFirst	202020
+expect_text	BackgroundSecond	303030
+expect	enabled.BackgroundPattern	true
+expect	enabled.BackgroundSecondPick	true
+click	Cancel
+expect	settings.background_tiled	false
+expect_view_background
+settings
+tab	Background
+click	Reset
+click	OK
+expect_empty_checker
+persisted
+snapshot	background-reset-after-color.png

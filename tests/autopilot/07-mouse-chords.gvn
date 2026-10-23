@@ -1,0 +1,75 @@
+copy_fixture	alpha.png	pages/1.png
+copy_fixture	alpha.png	pages/2.png
+copy_fixture	alpha.png	pages/3.png
+settings
+tab	Mouse
+set	Wheel	0
+set	Middle	0
+set	SlowWheel	true
+tab	MouseCustom
+mouse_assign	LeftClick	2	0	Next
+mouse_assign	X1Click	0	0	Last
+mouse_assign	X2Double	0	0	Previous
+click	OK
+open	${output}/pages/1.png
+wait
+pointer	down	Right	100	100	0
+expect	pointer_buttons	2
+pointer	down	Left	100	100	0
+expect	pointer_buttons	3
+pointer	up	Left	100	100	0
+wait
+expect	index	1
+pointer	up	Right	100	100	0
+expect	popup_count	0
+pointer	down	X1	100	100	0
+pointer	up	X1	100	100	0
+wait
+expect	index	2
+command	Previous
+wait
+pointer	down	X2	100	100	0
+pointer	up	X2	100	100	0
+wait
+expect	index	2
+pointer	double	X2	100	100	0
+pointer	up	X2	100	100	0
+wait
+expect	index	1
+pointer	wheel	120	100	100	0
+expect	index	1
+pointer	wheel	120	100	100	0
+wait
+expect	index	0
+expect	popup_count	0
+settings
+tab	MouseCustom
+mouse_assign	LeftDrag	0	0	MouseWindow
+mouse_context	LeftClick	0	0
+expect	mouse_assign_enabled	false
+mouse_context	WheelUp	1	0
+expect	mouse_assign_enabled	false
+mouse_assign	LeftDrag	0	0	MousePan
+mouse_context	LeftClick	0	0
+expect	mouse_assign_enabled	true
+snapshot	window-drag-exclusions.png
+click	Cancel
+persisted
+settings
+tab	Zoom
+set	ZoomMode	0
+set	ZoomStep	75
+tab	Mouse
+set	WheelScroll	0
+click	ApplyButton
+expect	error_count	1
+set	WheelScroll	300
+click	Reset
+click	ApplyButton
+expect	mouse.wheel_scroll	60
+expect	mouse.slow_wheel	false
+expect	settings.zoom_step	75
+expect_mouse	X1Click	0	0	Last
+expect_mouse	MiddleClick	0	0	Exit
+click	Cancel
+persisted

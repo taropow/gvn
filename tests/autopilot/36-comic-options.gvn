@@ -1,0 +1,401 @@
+copy_fixture	comic/first.png	pages/01.png
+copy_fixture	comic/second-17.png	pages/02.png
+open	${output}/pages/01.png
+wait
+command	Comic
+wait
+expect_image	${fixtures}/comic/method-00-height-17-mode-0.png	0
+pixel_copy
+settings
+tab	Display
+expect	visible.ComicFill	true
+expect	visible.ComicDown	false
+expect	visible.ComicUp	false
+click	ComicFillPick
+color_expect	0	0	0
+color_set	18	52	86
+color_close	OK
+expect_text	ComicFill	123456
+snapshot	comic-padding-settings.png
+click	OK
+wait
+expect_pixel	5	0	18	52	86	255
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	1
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	true
+expect	visible.ComicUp	false
+set	ComicDown	0
+snapshot	comic-mode-1-method-0-settings.png
+click	OK
+wait
+expect	settings.comic_down	0
+expect	settings.comic_mode	1
+expect_image	${fixtures}/comic/method-00-height-17-mode-1.png	0
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	1
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	true
+expect	visible.ComicUp	false
+set	ComicDown	1
+click	OK
+wait
+expect	settings.comic_down	1
+expect	settings.comic_mode	1
+expect_image	${fixtures}/comic/method-01-height-17-mode-1.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	1
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	true
+expect	visible.ComicUp	false
+set	ComicDown	2
+click	OK
+wait
+expect	settings.comic_down	2
+expect	settings.comic_mode	1
+expect_image	${fixtures}/comic/method-02-height-17-mode-1.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	1
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	true
+expect	visible.ComicUp	false
+set	ComicDown	3
+click	OK
+wait
+expect	settings.comic_down	3
+expect	settings.comic_mode	1
+expect_image	${fixtures}/comic/method-03-height-17-mode-1.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	1
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	true
+expect	visible.ComicUp	false
+set	ComicDown	4
+click	OK
+wait
+expect	settings.comic_down	4
+expect	settings.comic_mode	1
+expect_image	${fixtures}/comic/method-04-height-17-mode-1.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	1
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	true
+expect	visible.ComicUp	false
+set	ComicDown	5
+click	OK
+wait
+expect	settings.comic_down	5
+expect	settings.comic_mode	1
+expect_image	${fixtures}/comic/method-05-height-17-mode-1.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	1
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	true
+expect	visible.ComicUp	false
+set	ComicDown	6
+click	OK
+wait
+expect	settings.comic_down	6
+expect	settings.comic_mode	1
+expect_image	${fixtures}/comic/method-06-height-17-mode-1.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	1
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	true
+expect	visible.ComicUp	false
+set	ComicDown	7
+click	OK
+wait
+expect	settings.comic_down	7
+expect	settings.comic_mode	1
+expect_image	${fixtures}/comic/method-07-height-17-mode-1.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	1
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	true
+expect	visible.ComicUp	false
+set	ComicDown	8
+click	OK
+wait
+expect	settings.comic_down	8
+expect	settings.comic_mode	1
+expect_image	${fixtures}/comic/method-08-height-17-mode-1.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	1
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	true
+expect	visible.ComicUp	false
+set	ComicDown	9
+click	OK
+wait
+expect	settings.comic_down	9
+expect	settings.comic_mode	1
+expect_image	${fixtures}/comic/method-09-height-17-mode-1.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	1
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	true
+expect	visible.ComicUp	false
+set	ComicDown	10
+snapshot	comic-mode-1-method-10-settings.png
+click	OK
+wait
+expect	settings.comic_down	10
+expect	settings.comic_mode	1
+expect_image	${fixtures}/comic/method-10-height-17-mode-1.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	2
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	false
+expect	visible.ComicUp	true
+set	ComicUp	0
+snapshot	comic-mode-2-method-0-settings.png
+click	OK
+wait
+expect	settings.comic_up	0
+expect	settings.comic_mode	2
+expect_image	${fixtures}/comic/method-00-height-17-mode-2.png	0
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	2
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	false
+expect	visible.ComicUp	true
+set	ComicUp	1
+click	OK
+wait
+expect	settings.comic_up	1
+expect	settings.comic_mode	2
+expect_image	${fixtures}/comic/method-01-height-17-mode-2.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	2
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	false
+expect	visible.ComicUp	true
+set	ComicUp	2
+click	OK
+wait
+expect	settings.comic_up	2
+expect	settings.comic_mode	2
+expect_image	${fixtures}/comic/method-02-height-17-mode-2.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	2
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	false
+expect	visible.ComicUp	true
+set	ComicUp	3
+click	OK
+wait
+expect	settings.comic_up	3
+expect	settings.comic_mode	2
+expect_image	${fixtures}/comic/method-03-height-17-mode-2.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	2
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	false
+expect	visible.ComicUp	true
+set	ComicUp	4
+click	OK
+wait
+expect	settings.comic_up	4
+expect	settings.comic_mode	2
+expect_image	${fixtures}/comic/method-04-height-17-mode-2.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	2
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	false
+expect	visible.ComicUp	true
+set	ComicUp	5
+click	OK
+wait
+expect	settings.comic_up	5
+expect	settings.comic_mode	2
+expect_image	${fixtures}/comic/method-05-height-17-mode-2.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	2
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	false
+expect	visible.ComicUp	true
+set	ComicUp	6
+click	OK
+wait
+expect	settings.comic_up	6
+expect	settings.comic_mode	2
+expect_image	${fixtures}/comic/method-06-height-17-mode-2.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	2
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	false
+expect	visible.ComicUp	true
+set	ComicUp	7
+click	OK
+wait
+expect	settings.comic_up	7
+expect	settings.comic_mode	2
+expect_image	${fixtures}/comic/method-07-height-17-mode-2.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	2
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	false
+expect	visible.ComicUp	true
+set	ComicUp	8
+click	OK
+wait
+expect	settings.comic_up	8
+expect	settings.comic_mode	2
+expect_image	${fixtures}/comic/method-08-height-17-mode-2.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	2
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	false
+expect	visible.ComicUp	true
+set	ComicUp	9
+click	OK
+wait
+expect	settings.comic_up	9
+expect	settings.comic_mode	2
+expect_image	${fixtures}/comic/method-09-height-17-mode-2.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	2
+expect	visible.ComicFill	false
+expect	visible.ComicFillPick	false
+expect	visible.ComicDown	false
+expect	visible.ComicUp	true
+set	ComicUp	10
+snapshot	comic-mode-2-method-10-settings.png
+click	OK
+wait
+expect	settings.comic_up	10
+expect	settings.comic_mode	2
+expect_image	${fixtures}/comic/method-10-height-17-mode-2.png	2
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicHeightMode	0
+expect_text	ComicFill	123456
+set	ComicHeightMode	1
+expect_text	ComicDown	Lanczos3
+set	ComicHeightMode	2
+expect_text	ComicUp	Lanczos3
+click	Cancel
+expect	settings.comic_mode	2
+persisted
+settings
+tab	Display
+click	Reset
+expect	visible.ComicFill	true
+expect	visible.ComicDown	false
+expect	visible.ComicUp	false
+expect_text	ComicFill	000000
+click	OK
+wait
+expect	settings.comic_mode	0
+expect	settings.comic_down	2
+expect	settings.comic_up	1
+expect_image	${fixtures}/comic/method-00-height-17-mode-0.png	0
+pixel_copy
+persisted
+snapshot	comic-reset.png
+command	ComicHeight
+wait
+expect	settings.comic_mode	1
+expect_image	${fixtures}/comic/method-02-height-17-mode-1.png	2
+pixel_copy
+command	ComicHeight
+wait
+expect	settings.comic_mode	2
+expect_image	${fixtures}/comic/method-01-height-17-mode-2.png	2
+pixel_copy
+command	ComicHeight
+wait
+expect	settings.comic_mode	0
+expect_image	${fixtures}/comic/method-00-height-17-mode-0.png	0
+pixel_copy
+snapshot	comic-cycle.png

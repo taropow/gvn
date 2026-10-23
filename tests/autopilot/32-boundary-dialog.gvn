@@ -1,0 +1,170 @@
+copy_fixture	alpha.png	end/a/1.png
+copy_fixture	rgb.bmp	end/a/2.bmp
+copy_fixture	alpha.png	end/b/1.png
+copy_fixture	rgb.bmp	end/b/2.bmp
+navigation_root	end
+expect	settings.end_action	1
+open	${output}/end/a/2.bmp
+wait
+command	Next
+expect	boundary_open	true
+boundary_expect	forward
+boundary_snapshot	next-confirm.png
+boundary_click	Cancel
+expect	boundary_open	false
+wait
+expect_location	image	${output}/end/a/2.bmp
+expect	boundary.count	1
+expect	boundary.beeps	0
+command	Next
+expect	boundary_open	true
+boundary_expect	forward
+boundary_click	End
+expect	boundary_open	false
+wait
+expect_location	image	${output}/end/a/1.png
+command	Previous
+expect	boundary_open	true
+boundary_expect	backward
+boundary_snapshot	previous-confirm.png
+boundary_click	End
+expect	boundary_open	false
+wait
+expect_location	image	${output}/end/a/2.bmp
+settings
+tab	Move
+set	BoundarySound	true
+set	PreviousFolderFirst	true
+click	ApplyButton
+persisted
+click	OK
+open	${output}/end/b/1.png
+wait
+command	Previous
+expect	boundary_open	true
+boundary_expect	backward
+boundary_snapshot	previous-folder.png
+boundary_click	Folder
+expect	boundary_open	false
+wait
+expect_location	image	${output}/end/a/2.bmp
+expect	boundary.beeps	1
+command	Next
+expect	boundary_open	true
+boundary_expect	forward
+boundary_click	Folder
+expect	boundary_open	false
+wait
+expect_location	image	${output}/end/b/1.png
+expect	boundary.beeps	2
+command	Previous
+expect	boundary_open	true
+boundary_expect	backward
+boundary_click	Cancel
+expect	boundary_open	false
+wait
+expect_location	image	${output}/end/b/1.png
+expect	boundary.beeps	3
+expect	boundary.count	6
+settings
+tab	Move
+set	ListLoop	2
+click	ApplyButton
+persisted
+click	OK
+command	Previous
+wait
+expect_location	requested	${output}/end/b/2.bmp
+expect_location	image	${output}/end/b/2.bmp
+expect	boundary.beeps	4
+command	SkipNext
+wait
+expect_location	requested	${output}/end/b/1.png
+expect_location	image	${output}/end/b/1.png
+expect	boundary.beeps	5
+command	SkipBack
+wait
+expect_location	requested	${output}/end/b/2.bmp
+expect_location	image	${output}/end/b/2.bmp
+expect	boundary.beeps	6
+open	${output}/end/a/1.png
+wait
+command	SkipNext
+wait
+expect_location	requested	${output}/end/a/2.bmp
+expect_location	image	${output}/end/a/2.bmp
+expect	boundary.beeps	6
+command	SkipNext
+wait
+expect_location	requested	${output}/end/a/1.png
+expect_location	image	${output}/end/a/1.png
+expect	boundary.beeps	7
+settings
+tab	Move
+set	ListLoop	0
+click	ApplyButton
+persisted
+click	OK
+command	Previous
+wait
+expect_location	requested	${output}/end/a/1.png
+expect_location	image	${output}/end/a/1.png
+expect	boundary.beeps	8
+expect	boundary.count	6
+settings
+tab	Move
+set	BoundarySound	false
+click	ApplyButton
+persisted
+click	OK
+command	Previous
+wait
+expect_location	requested	${output}/end/a/1.png
+expect_location	image	${output}/end/a/1.png
+expect	boundary.beeps	8
+settings
+tab	Move
+set	ListLoop	3
+click	ApplyButton
+persisted
+click	OK
+open	${output}/end/a/2.bmp
+wait
+command	Next
+wait
+expect_location	requested	${output}/end/b/1.png
+expect_location	image	${output}/end/b/1.png
+command	Previous
+wait
+expect_location	requested	${output}/end/a/2.bmp
+expect_location	image	${output}/end/a/2.bmp
+open	${output}/end/b/2.bmp
+wait
+answer	OK
+command	Next
+wait
+expect_location	requested	${output}/end/b/2.bmp
+expect_location	image	${output}/end/b/2.bmp
+expect	slideshow	false
+settings
+tab	Move
+set	ListLoop	1
+click	ApplyButton
+persisted
+click	OK
+open	${output}/end/a/1.png
+wait
+command	Previous
+expect	boundary_open	true
+boundary_expect	backward
+boundary_snapshot	boundary-restored.png
+boundary_click	Cancel
+expect	boundary_open	false
+wait
+expect_location	image	${output}/end/a/1.png
+expect	boundary.count	7
+expect	boundary.beeps	8
+expect	error_count	0
+persisted
+pixel_copy
+snapshot	boundary-final.png

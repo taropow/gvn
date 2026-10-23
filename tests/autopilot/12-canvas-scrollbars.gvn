@@ -1,0 +1,90 @@
+# Native image scrollbars, keyboard routing, alpha and bottom animation-player geometry.
+resize	900	700
+settings
+tab	Loading
+set	Autoplay	false
+tab	Bars
+set	Scrollbars	true
+set	FullScrollbars	false
+snapshot	canvas-scroll-settings.png
+click	OK
+persisted
+open	${fixtures}/display-alpha.png
+wait
+remember	source
+command	Actual
+command	ZoomIn
+command	ZoomIn
+command	ZoomIn
+command	ZoomIn
+expect	scroll.horizontal	true
+expect	scroll.vertical	true
+expect	scroll.no_overlap	true
+canvas_key	horizontal	Home
+canvas_key	vertical	Home
+expect	scroll.left	true
+expect	scroll.top	true
+canvas_key	horizontal	Right
+expect_positive	scroll.x
+canvas_key	vertical	Down
+expect_positive	scroll.y
+canvas_key	horizontal	End
+canvas_key	vertical	End
+expect	scroll.right	true
+expect	scroll.bottom	true
+snapshot	image-bottom-right.png
+expect_same	source	true
+pixel_copy
+command	Fullscreen
+expect	scroll.horizontal	false
+expect	scroll.vertical	false
+command	ToggleScrollbars
+expect	settings.full_scrollbars	true
+expect	settings.scrollbars	true
+command	FitImage
+command	ZoomIn
+command	ZoomIn
+command	ZoomIn
+command	ZoomIn
+expect	scroll.horizontal	true
+expect	scroll.vertical	true
+canvas_key	horizontal	End
+expect	scroll.right	true
+snapshot	fullscreen-scrollbars.png
+command	Fullscreen
+command	FitImage
+expect	scroll.horizontal	false
+expect	scroll.vertical	false
+open	${fixtures}/canvas/scroll.apng
+wait
+expect	playing	false
+remember	frame
+command	Actual
+command	ZoomIn
+command	ZoomIn
+command	ZoomIn
+command	ZoomIn
+resize	420	400
+expect	scroll.horizontal	true
+expect	scroll.vertical	true
+expect	scroll.no_overlap	true
+expect	player.no_overlap	true
+expect	player.bottom	true
+canvas_key	vertical	End
+expect	scroll.bottom	true
+snapshot	animation-scrollbars-player.png
+expect_same	frame	true
+pixel_copy
+player	FrameNext
+expect	frame	1
+expect	scroll.no_overlap	true
+settings
+tab	Bars
+click	Reset
+click	ApplyButton
+expect	settings.scrollbars	false
+expect	settings.full_scrollbars	false
+expect	scroll.horizontal	false
+expect	scroll.vertical	false
+persisted
+click	Cancel

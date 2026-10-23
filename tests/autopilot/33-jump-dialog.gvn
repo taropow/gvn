@@ -1,0 +1,198 @@
+copy_fixture	alpha.png	pages/1.png
+copy_fixture	rgb.bmp	pages/2.bmp
+copy_fixture	disposal.gif	pages/3.gif
+copy_fixture	blend.apng	formats/1.apng
+copy_fixture	psd-16-3.psd	formats/2.psd
+copy_fixture	images.zip	archive/images.zip
+copy_fixture	display-alpha.png	large/a.png
+expect	settings.comic_jump_reverse	true
+expect	settings.jump_preview	true
+expect	settings.jump_quality	1
+open	${output}/pages/1.png
+wait
+remember	initial
+key	J
+expect	jump_open	true
+expect	jump.index	0
+expect	jump.preview	true
+expect	jump.quality	1
+jump_expect	Name	1.png
+jump_expect	Total	総数: 3
+jump_expect	Order	1
+jump_expect	Direction	先頭 ← → 末尾
+wait_jump
+jump_rgba	alpha.png
+jump_snapshot	jump-alpha.png
+jump_set	Order	empty
+expect	jump.valid	false
+expect	jump.ok_enabled	false
+expect	jump.has_image	false
+jump_set	Order	0
+expect	jump.valid	false
+jump_set	Order	4
+expect	jump.valid	false
+jump_set	Order	99999999999999999999
+expect	jump.valid	false
+jump_set	Order	2
+expect	jump.valid	true
+expect	jump.ok_enabled	true
+jump_expect	Name	2.bmp
+expect	jump.position	2
+jump_scroll	Right
+jump_expect	Order	3
+jump_expect	Name	3.gif
+wait_jump
+jump_rgba	disposal.gif
+jump_set	Quality	0
+expect	jump.quality	0
+jump_snapshot	jump-low.png
+jump_set	Quality	1
+expect	jump.quality	1
+jump_set	Quality	2
+expect	jump.quality	2
+jump_snapshot	jump-high.png
+jump_click	Cancel
+expect	jump_open	false
+expect_same	initial	true
+expect_location	image	${output}/pages/1.png
+expect	settings.jump_preview	true
+expect	settings.jump_quality	1
+command	Jump
+wait_jump
+jump_set	Quality	2
+jump_set	Enabled	false
+expect	jump.has_image	false
+expect	jump.loading	false
+jump_set	Order	2
+jump_snapshot	jump-off.png
+jump_key	Order	Enter
+wait
+expect	jump_open	false
+expect_location	image	${output}/pages/2.bmp
+expect	settings.jump_preview	false
+expect	settings.jump_quality	2
+persisted
+remember	second
+command	Jump
+expect	jump.preview	false
+expect	jump.quality	2
+jump_set	Enabled	true
+wait_jump
+jump_rgba	rgb.bmp
+jump_set	Quality	0
+jump_key	Order	Esc
+expect	jump_open	false
+expect_same	second	true
+expect	settings.jump_preview	false
+expect	settings.jump_quality	2
+settings
+tab	Move
+set	ComicJumpReverse	false
+click	ApplyButton
+persisted
+expect	settings.comic_jump_reverse	false
+snapshot	jump-direction-off.png
+click	OK
+command	Comic
+wait
+expect	comic	true
+command	Jump
+jump_expect	Direction	先頭 ← → 末尾
+jump_scroll	Left
+expect	jump.index	0
+jump_expect	Order	1
+jump_click	Cancel
+settings
+tab	Move
+set	ComicJumpReverse	true
+click	ApplyButton
+persisted
+click	OK
+command	Jump
+jump_expect	Direction	末尾 ← → 先頭
+jump_scroll	Left
+expect	jump.index	2
+jump_expect	Order	3
+expect	jump.position	1
+jump_set	Enabled	true
+wait_jump
+jump_rgba	disposal.gif
+jump_snapshot	jump-rtl.png
+jump_click	Cancel
+expect_location	image	${output}/pages/2.bmp
+settings
+tab	Display
+set	ComicRTL	false
+click	ApplyButton
+click	OK
+wait
+command	Jump
+jump_expect	Direction	先頭 ← → 末尾
+jump_click	Cancel
+settings
+tab	Move
+set	ComicJumpReverse	false
+click	ApplyButton
+click	Reset
+click	Cancel
+expect	settings.comic_jump_reverse	false
+settings
+tab	Move
+click	Reset
+click	ApplyButton
+persisted
+expect	settings.comic_jump_reverse	true
+click	OK
+command	Comic
+wait
+expect	comic	false
+open	${output}/formats/1.apng
+wait
+command	Jump
+jump_set	Enabled	true
+wait_jump
+jump_rgba	blend.apng
+jump_set	Order	2
+wait_jump
+jump_rgba	psd-16-3.psd
+jump_snapshot	jump-psd.png
+jump_click	Cancel
+open	${output}/archive/images.zip
+wait
+command	Jump
+jump_set	Enabled	true
+jump_expect	Total	総数: 3
+jump_set	Order	2
+wait_jump
+jump_expect	Name	画像/2.png
+jump_rgba	alpha.png
+jump_set	Order	3
+wait_jump
+jump_expect	Name	画像/10.psd
+jump_rgba	psd-16-3.psd
+jump_set	Quality	1
+jump_snapshot	jump-archive.png
+jump_click	OK
+wait
+expect	index	2
+expect	settings.jump_preview	true
+expect	settings.jump_quality	1
+persisted
+open	${output}/large/a.png
+wait
+command	Jump
+wait_jump
+jump_rgba	display-alpha.png
+jump_snapshot	jump-large-alpha.png
+jump_set	Quality	0
+jump_snapshot	jump-large-low.png
+jump_set	Quality	2
+jump_snapshot	jump-large-high.png
+jump_click	Cancel
+wait_preview
+expect	preview.present	false
+command	CloseImage
+command	Jump
+expect	jump_open	false
+expect	has_image	false
+snapshot	jump-final.png

@@ -1,0 +1,167 @@
+{
+  "reference": "Official MassiGra0.45 owned private processes, source generated independently. RGB samples only, no user image/clipboard.",
+  "reference_sha256": "c23b73887a3a98833f9318e7e3321a6a5b9825ad442b88e8bd3b0333ba28a3e5",
+  "source_sha256": "9eabcf1ed834e37d2eb816e07403e7055d8d12136eb0574ef5c2ff652b1a0dde",
+  "cases": [
+    {
+      "name": "identity",
+      "hue": 0,
+      "saturation": 0,
+      "lightness": 0,
+      "unified": false,
+      "gray": 2,
+      "sha256": "9eabcf1ed834e37d2eb816e07403e7055d8d12136eb0574ef5c2ff652b1a0dde",
+      "reference_report": "docs/verification/0.51.0-color-adjustment-foundation/stage2/reference/result.json"
+    },
+    {
+      "name": "hue90",
+      "hue": 90,
+      "saturation": 0,
+      "lightness": 0,
+      "unified": false,
+      "gray": 2,
+      "sha256": "983ec08e51efc0fb5ef03c77cdd5a37e4d310d37b797f7aab99c2ce0b2485731",
+      "reference_report": "docs/verification/0.51.0-color-adjustment-foundation/stage2/reference/result.json"
+    },
+    {
+      "name": "saturation50",
+      "hue": 0,
+      "saturation": 50,
+      "lightness": 0,
+      "unified": false,
+      "gray": 2,
+      "sha256": "8b41e9dede26f0926475d9f58bbe5a0fdd9a677408fdc4e83c2a9549d25489ac",
+      "reference_report": "docs/verification/0.51.0-color-adjustment-foundation/stage2/reference/result.json"
+    },
+    {
+      "name": "light25",
+      "hue": 0,
+      "saturation": 0,
+      "lightness": 25,
+      "unified": false,
+      "gray": 2,
+      "sha256": "6709489d422daa5b23d5859a31135809851d5fc1599e515fd9de6f1aeaa2f50b",
+      "reference_report": "docs/verification/0.51.0-color-adjustment-foundation/stage2/reference/result.json"
+    },
+    {
+      "name": "light-minus25",
+      "hue": 0,
+      "saturation": 0,
+      "lightness": -25,
+      "unified": false,
+      "gray": 2,
+      "sha256": "de74431cb89cbafb643e0bdd7fe54cd7a75011b9aa6ddf2834e6ef69e7f0e211",
+      "reference_report": "docs/verification/0.51.0-color-adjustment-foundation/stage2/reference/result.json"
+    },
+    {
+      "name": "gray-middle",
+      "hue": 0,
+      "saturation": -100,
+      "lightness": 0,
+      "unified": false,
+      "gray": 0,
+      "sha256": "ba7bde8b2a51705bdeb270fb1dd0c1963ae2a983260d38e08039e21a2be4996b",
+      "reference_report": "docs/verification/0.51.0-color-adjustment-foundation/stage2/reference/result.json"
+    },
+    {
+      "name": "gray-mean",
+      "hue": 0,
+      "saturation": -100,
+      "lightness": 0,
+      "unified": false,
+      "gray": 1,
+      "sha256": "739fddc333b77d5a80dc8662c160c3a477e7d392f6e4f7aa19072302aede0aeb",
+      "reference_report": "docs/verification/0.51.0-color-adjustment-foundation/stage2/reference/result.json"
+    },
+    {
+      "name": "gray-luma",
+      "hue": 0,
+      "saturation": -100,
+      "lightness": 0,
+      "unified": false,
+      "gray": 2,
+      "sha256": "ae46aea6a8cfa1d5322c16a4ba2300a768f662413d070cbbbdedc822903c5d8e",
+      "reference_report": "docs/verification/0.51.0-color-adjustment-foundation/stage2/reference/result.json"
+    },
+    {
+      "name": "unify-red",
+      "hue": 0,
+      "saturation": 50,
+      "lightness": 0,
+      "unified": true,
+      "gray": 2,
+      "sha256": "3c27b885b200f564d13d5051e68040c6022eef14252076a9845d1c271ea085f7",
+      "reference_report": "docs/verification/0.51.0-color-adjustment-foundation/stage2/reference/result.json"
+    },
+    {
+      "name": "unify-blue",
+      "hue": 240,
+      "saturation": 100,
+      "lightness": 0,
+      "unified": true,
+      "gray": 2,
+      "sha256": "7ca22b7f900e529a8812a54591f137a7a01f766e1e39b0cbfa3449d41453ab38",
+      "reference_report": "docs/verification/0.51.0-color-adjustment-foundation/stage2/reference/result.json"
+    },
+    {
+      "name": "combined",
+      "hue": -45,
+      "saturation": 35,
+      "lightness": -20,
+      "unified": false,
+      "gray": 1,
+      "sha256": "de9dfab67031d3dfed1e0c287dc0f72cc00f4001b667d8b34b2addc87a4bcc2b",
+      "reference_report": "docs/verification/0.51.0-color-adjustment-foundation/stage2/reference/result.json"
+    },
+    {
+      "name": "unify-gray",
+      "hue": 120,
+      "saturation": 0,
+      "lightness": 0,
+      "unified": true,
+      "gray": 0,
+      "sha256": "a3fedfb745d1e7765759e9906a7729a697d871de391ffde4f5d3651fe0ca7159",
+      "reference_report": "docs/verification/0.51.0-color-adjustment-foundation/stage2/reference/result.json"
+    },
+    {
+      "name": "reset-buttons",
+      "hue": 0,
+      "saturation": 0,
+      "lightness": 0,
+      "unified": false,
+      "gray": 2,
+      "sha256": "9eabcf1ed834e37d2eb816e07403e7055d8d12136eb0574ef5c2ff652b1a0dde",
+      "reference_report": "docs/verification/0.51.0-color-adjustment-foundation/stage2/reference/result.json"
+    },
+    {
+      "name": "persist-gray-mean",
+      "hue": 0,
+      "saturation": -100,
+      "lightness": 0,
+      "unified": false,
+      "gray": 1,
+      "sha256": "739fddc333b77d5a80dc8662c160c3a477e7d392f6e4f7aa19072302aede0aeb",
+      "reference_report": "docs/verification/0.51.0-color-adjustment-foundation/stage2/reference/result.json"
+    },
+    {
+      "name": "combined-desaturate",
+      "hue": 75,
+      "saturation": -40,
+      "lightness": 15,
+      "unified": false,
+      "gray": 2,
+      "sha256": "9ef38685511a6e892f1d32109631b70a86f27a83be2a40bc1f2e3fde9308112f",
+      "reference_report": "docs/verification/0.51.0-color-adjustment-foundation/stage3/reference/result.json"
+    },
+    {
+      "name": "unify-light",
+      "hue": 45,
+      "saturation": 60,
+      "lightness": 20,
+      "unified": true,
+      "gray": 1,
+      "sha256": "a9773d1a5c259bd97706d025aa1ab82010f73b051d3ce949775a528b03b5d46f",
+      "reference_report": "docs/verification/0.51.0-color-adjustment-foundation/stage3/reference/result.json"
+    }
+  ]
+}

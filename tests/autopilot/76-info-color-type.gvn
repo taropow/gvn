@@ -1,0 +1,34 @@
+open	${fixtures}/palette/png-4-alpha.png
+wait
+remember	original
+image_info
+info_expect	4 BPP (パレット)
+info_expect	RGBA 32 BPP
+info_copy	FullPath
+expect_clipboard_text	${fixtures}/palette/png-4-alpha.png	path
+info_close
+expect_same	original	true
+command	Negative
+image_info
+info_expect	4 BPP (パレット)
+info_snapshot	info-origin-palette-after-edit.png
+info_close
+command	Undo
+expect_same	original	true
+open	${fixtures}/loading/alpha-v4.bmp
+wait
+image_info
+info_expect	32 BPP (ビットフィールド)
+info_close
+open	${fixtures}/metadata/gray16-100x50.tiff
+wait
+image_info
+info_expect	16 BPP (グレースケール)
+info_close
+open	${fixtures}/info/cmyk.tiff
+wait
+image_info
+info_expect	32 BPP (CMYK)
+info_snapshot	info-origin-cmyk.png
+info_close
+expect	error_count	0

@@ -1,0 +1,30 @@
+{
+  "cases": 56,
+  "alpha_cases": 42,
+  "native_permutation_cases": 8,
+  "native_full_order": 9215,
+  "reference": "docs/verification/remaining-mask-reference-0.45.json",
+  "alpha_rule": "Source alpha is pixel index modulo256; expected alpha comes from actual native RGB, undoing native RGB inversion before looking up source coordinates.",
+  "files": {
+    "boundary-remaining-000.u16": "b3374c244a2292f1a9512a1703782502c712ab21cdb2fe2747a8e21e02dddbcc",
+    "boundary-remaining-001.u16": "508eb5fcbe1c121956d05be55271b2e7a7aa25f2f7ea89610a2b1204996146fe",
+    "cases.tsv": "19f0f9c1ef379fad0c3685db9146f5b39e74fe7b33a263584089bf090944da7b",
+    "extra-remaining-000.u16": "cdf610bd1dfb3205948a6c1bed03b50eed29dd75c466260cdd16dbd68ffb6e1a",
+    "extra-remaining-001.u16": "558688bc93160812cdd1616959c2d41f5e48df5d4107e65008370de7c24dd616",
+    "extra-remaining-002.u16": "e671bd1c2715fe61d02a5836f25b44dd72ba47d1559e42c1cfed4fbf0df5fd56",
+    "extra-remaining-005.u16": "ebf31e9f3c1776de321597c44fa72d7af6b614bb121c3a356ad6d16843e8e430",
+    "extra-remaining-006.u16": "df726b2a4cea3aa7832ffd0c5c9975e948e4c7c1a87a37307ac8580348edf101",
+    "extra-remaining-007.u16": "0c825ad6d0ccb4815f8147b54d6b27423eda9970d0ec4f72736f4dbab71d9f47",
+    "order-9215.u16": "b3374c244a2292f1a9512a1703782502c712ab21cdb2fe2747a8e21e02dddbcc",
+    "permutations.tsv": "85da010686d0daed7bf7585789b6c3a2fe6652a0c7d59b87545fad6a83f3877c",
+    "pixels.bin": "a9355246bc70d95c4490594906f54ecba9e3d85d8173a607c20c6df1a715755b",
+    "png/meko-forward-expected.png": "453e35adaf95c8d9c8d15519d4cd96ef9efff31eb380f902071abf150d908a41",
+    "png/meko-forward-source.png": "bdef4904be42042a5423e029d7e88ca66b7e5700e18261a5c3ced555c91332ec",
+    "png/meko-reverse-expected.png": "7c15220f15a3d72527b30d41c09a5e464eb1ddfbf795ebbabb3ec32a5d10b09f",
+    "png/meko-reverse-source.png": "bdef4904be42042a5423e029d7e88ca66b7e5700e18261a5c3ced555c91332ec",
+    "png/meko-forward-selected-source.png": "a4d34d354dd4680cf46aa7368d122946dd5ebb8caa693b83a95ca748af5dd0e5",
+    "png/meko-forward-selected-expected.png": "7e02e79a8d380ae10a515e5fca1fe9064746b821096a39a7a674793e57d75bfe",
+    "png/meko-reverse-selected-source.png": "a4d34d354dd4680cf46aa7368d122946dd5ebb8caa693b83a95ca748af5dd0e5",
+    "png/meko-reverse-selected-expected.png": "256a7e8eefe277ee5d6fe9f09b3628dedb3c92c2e278c001b4fbb79df0adc529"
+  }
+}

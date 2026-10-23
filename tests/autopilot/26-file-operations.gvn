@@ -1,0 +1,87 @@
+expect	settings.save_dialog	true
+expect	settings.remember_save_folder	true
+expect	settings.rename_resort	true
+expect	settings.recycle_deleted	true
+expect	settings.next_after_fileop	false
+expect	settings.confirm_move	true
+expect	settings.confirm_copy	true
+settings
+tab	FileOperations
+scroll_page	top
+set	SaveDialog	false
+set	ConfirmOverwrite	false
+set	RememberSaveFolder	false
+set	RenameResort	false
+set	ConfirmDelete	false
+set	RecycleDeleted	false
+set	NextAfterFileop	true
+set	ConfirmMove	false
+scroll_page	bottom
+set	ConfirmCopy	false
+set	ConfirmUnsaved	true
+expect_no_overlap	ConfirmUnsaved	DestinationList
+snapshot	file-operations-bottom.png
+click	ApplyButton
+expect	settings.save_dialog	false
+expect	settings.remember_save_folder	false
+expect	settings.rename_resort	false
+expect	settings.recycle_deleted	false
+expect	settings.next_after_fileop	true
+expect	settings.confirm_move	false
+expect	settings.confirm_copy	false
+click	OK
+persisted
+settings
+tab	FileOperations
+click	Reset
+click	ApplyButton
+expect	settings.save_dialog	true
+expect	settings.confirm_overwrite	true
+expect	settings.confirm_delete	true
+expect	settings.remember_save_folder	true
+expect	settings.rename_resort	true
+expect	settings.recycle_deleted	true
+expect	settings.next_after_fileop	false
+expect	settings.confirm_move	true
+expect	settings.confirm_copy	true
+expect	settings.confirm_unsaved	false
+scroll_page	top
+snapshot	file-operations-top.png
+set	SaveDialog	false
+click	Cancel
+expect	settings.save_dialog	true
+persisted
+copy_fixture	alpha.png	files/a.png
+copy_fixture	alpha.png	files/b.png
+open	${output}/files/a.png
+wait
+save_target	pixels/saved.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/saved.png
+settings
+tab	FileOperations
+set	ConfirmDelete	false
+set	RecycleDeleted	false
+click	OK
+open	${output}/files/a.png
+wait
+command	FileDelete
+expect	removed_current	true
+expect	list.count	1
+pixel_copy
+snapshot	deleted-image-retained.png
+command	Next
+wait
+expect	removed_current	false
+expect_text	title	b.png
+settings
+tab	FileOperations
+set	NextAfterFileop	true
+click	OK
+command	FileDelete
+expect	list.count	0
+expect_empty_checker
+persisted
+expect	error_count	0

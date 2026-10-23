@@ -1,0 +1,291 @@
+# Native controls and actual decoded pixels; only scenario-owned files/attributes.
+resize	900	700
+open	${fixtures}/loading/rgba-background.png
+wait
+remember	raw
+pixel_copy
+expect_pixel	2	0	0	0	255	0
+settings
+tab	Background
+set	Checker	false
+tab	Loading
+set	TransparencyBackground	123456
+click	TransparencyBackgroundPick
+color_expect	18	52	86
+color_set	160	176	192
+color_snapshot	loading-color-dialog.png
+color_close	OK
+click	TransparencyBackgroundPick
+color_set	1	2	3
+color_close	Cancel
+expect_text	TransparencyBackground	A0B0C0
+set	PreserveAlpha	false
+snapshot	loading-options.png
+click	OK
+wait
+expect_pixel	2	0	160	176	192	255
+pixel_copy
+settings
+tab	Loading
+set	PngBackground	true
+click	OK
+wait
+expect_pixel	2	0	18	52	86	255
+settings
+tab	Loading
+set	PngTransparency	false
+click	OK
+wait
+expect_pixel	2	0	0	0	255	255
+settings
+tab	Loading
+set	PreserveAlpha	true
+set	PngTransparency	true
+click	OK
+wait
+expect_same	raw	true
+pixel_copy
+open	${fixtures}/loading/alpha-v4.bmp
+wait
+expect_pixel	2	0	0	0	255	0
+settings
+tab	Loading
+set	PreserveAlpha	false
+click	OK
+wait
+expect_pixel	2	0	160	176	192	255
+settings
+tab	Loading
+set	BmpTransparency	false
+click	OK
+wait
+expect_pixel	2	0	0	0	255	255
+settings
+tab	Loading
+set	PreserveAlpha	true
+set	BmpTransparency	true
+click	OK
+wait
+open	${fixtures}/loading/alpha-v5.bmp
+wait
+expect_pixel	2	0	0	0	255	0
+pixel_copy
+open	${fixtures}/loading/static-background.gif
+wait
+pixel_copy
+settings
+tab	Loading
+set	GifTransparency	false
+click	OK
+wait
+expect_pixel	0	0	10	20	30	255
+settings
+tab	Loading
+set	GifTransparency	true
+set	PreserveAlpha	false
+click	OK
+wait
+expect_pixel	0	0	160	176	192	255
+settings
+tab	Loading
+set	GifBackground	true
+click	OK
+wait
+expect_pixel	0	0	18	52	86	255
+settings
+tab	Loading
+set	PreserveAlpha	true
+set	GifTransparency	false
+set	Autoplay	false
+click	OK
+wait
+open	${fixtures}/loading/animated-background.gif
+wait
+expect	frames	2
+expect	player.visible	true
+pixel_copy
+settings
+tab	Loading
+set	GifAnimation	false
+click	OK
+wait
+expect	frames	1
+expect	player.visible	false
+expect_pixel	0	0	10	20	30	255
+settings
+tab	Loading
+set	GifTransparency	true
+click	OK
+wait
+pixel_copy
+settings
+tab	Loading
+set	GifAnimation	true
+click	OK
+wait
+expect	frames	2
+expect	player.visible	true
+pixel_copy
+snapshot	loading-animation.png
+open	${fixtures}/loading/exif-6.jpg
+wait
+expect	width	2
+expect	height	3
+settings
+tab	Loading
+set	ExifOrientation	false
+click	OK
+wait
+expect	width	3
+expect	height	2
+settings
+tab	Loading
+set	ExifOrientation	true
+click	OK
+wait
+expect	width	2
+expect	height	3
+open	${fixtures}/loading/exif-5.jpg
+wait
+expect	width	2
+expect	height	3
+pixel_copy
+open	${fixtures}/loading/exif-7.jpg
+wait
+expect	width	2
+expect	height	3
+pixel_copy
+settings
+tab	Loading
+set	GifAnimation	false
+click	OK
+wait
+open	${fixtures}/blend.apng
+wait
+expect	frames	4
+expect	player.visible	true
+pixel_copy
+copy_fixture	alpha.png	attributes/0.png
+attributes	attributes/0.png	128
+copy_fixture	alpha.png	attributes/1.png
+attributes	attributes/1.png	2
+copy_fixture	alpha.png	attributes/2.png
+attributes	attributes/2.png	4
+copy_fixture	alpha.png	attributes/3.png
+attributes	attributes/3.png	6
+open	${output}/attributes/0.png
+wait
+expect	list.count	1
+settings
+tab	Loading
+set	Hidden	false
+set	SystemFiles	false
+set	ProtectedFiles	false
+click	OK
+wait
+expect	list.count	1
+persisted
+settings
+tab	Loading
+set	Hidden	true
+set	SystemFiles	false
+set	ProtectedFiles	false
+click	OK
+wait
+expect	list.count	2
+persisted
+settings
+tab	Loading
+set	Hidden	false
+set	SystemFiles	true
+set	ProtectedFiles	false
+click	OK
+wait
+expect	list.count	2
+persisted
+settings
+tab	Loading
+set	Hidden	true
+set	SystemFiles	true
+set	ProtectedFiles	false
+click	OK
+wait
+expect	list.count	3
+persisted
+settings
+tab	Loading
+set	Hidden	false
+set	SystemFiles	false
+set	ProtectedFiles	true
+click	OK
+wait
+expect	list.count	2
+persisted
+settings
+tab	Loading
+set	Hidden	true
+set	SystemFiles	false
+set	ProtectedFiles	true
+click	OK
+wait
+expect	list.count	3
+persisted
+settings
+tab	Loading
+set	Hidden	false
+set	SystemFiles	true
+set	ProtectedFiles	true
+click	OK
+wait
+expect	list.count	3
+persisted
+settings
+tab	Loading
+set	Hidden	true
+set	SystemFiles	true
+set	ProtectedFiles	true
+click	OK
+wait
+expect	list.count	4
+persisted
+settings
+tab	Loading
+set	GifAnimation	true
+set	GifTransparency	true
+click	OK
+wait
+open	${fixtures}/loading/rgba-background.png
+wait
+remember	clipboard
+command	Copy
+settings
+tab	Loading
+set	PreserveAlpha	false
+set	PngTransparency	false
+click	OK
+wait
+command	NewPaste
+expect_same	clipboard	true
+pixel_copy
+snapshot	clipboard-alpha-preserved.png
+settings
+tab	Loading
+click	Reset
+click	ApplyButton
+expect	settings.preserve_alpha	true
+expect	settings.bmp_transparency	true
+expect	settings.gif_transparency	true
+expect	settings.png_transparency	true
+expect	settings.gif_background	false
+expect	settings.png_background	false
+expect	settings.gif_animation	true
+expect	settings.exif_orientation	true
+expect	settings.hidden	false
+expect	settings.system_files	false
+expect	settings.protected_files	false
+expect	settings.transparency_background	16777215
+expect	settings.checker	false
+snapshot	loading-defaults.png
+click	OK
+persisted
+expect_same	clipboard	true

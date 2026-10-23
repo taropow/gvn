@@ -1,0 +1,27 @@
+{
+  "reference": "Official MassiGra0.45, owned private-desktop capture with virtual system setters.",
+  "cases": 40,
+  "opaque_pixel_comparison": true,
+  "alpha_matte": 8421504,
+  "alpha_divisor": 255,
+  "alpha_rounding": "floor",
+  "files": {
+    "cases.tsv": "10b70c10f3c9424e6fc14e933777b314e07d1b2ab0f9019275acc8ac85a7f8d7",
+    "alpha/expected.bmp": "9fde9aa9eac9504d9c85ff2bf90d361fb923a33c58a978d3d2d24ad1c29cce83",
+    "alpha/source.png": "f0964fe235a0512f5d337d5e41df1b37ec0b95237f667fd2537deb32672d4f11",
+    "close-image/expected.bmp": "85ee54460d4a36e3786aeec2c4ff176f012eb64dd052cf24d163fae498b220fa",
+    "close-image/source.png": "3e2d64346f04913afa0c3ac995899142f0e24439729a35056e3c1147ee43bcae",
+    "indexed/expected.bmp": "441358bdc0149c1924cc480041e1535b63f099f9f4babe9143cc1cbb1bd0f68f",
+    "indexed/source.png": "cf349a34877176b2760fb207aeb5baca2a1f12bab88c4f396d52db8b038acb6e",
+    "opaque/expected.bmp": "85ee54460d4a36e3786aeec2c4ff176f012eb64dd052cf24d163fae498b220fa",
+    "opaque/source.png": "3e2d64346f04913afa0c3ac995899142f0e24439729a35056e3c1147ee43bcae",
+    "portrait/expected.bmp": "a7e2d1cdb9c3fe9e554a1ff00bb96a4a25dea34d22c931e9ca4b8a48177d5110",
+    "portrait/source.png": "867f81f728c8221759754ceb4d927803f4c3a64c2b02a3d5d9c9e591d114b6b8",
+    "selection/expected.bmp": "85ee54460d4a36e3786aeec2c4ff176f012eb64dd052cf24d163fae498b220fa",
+    "selection/source.png": "3e2d64346f04913afa0c3ac995899142f0e24439729a35056e3c1147ee43bcae",
+    "square/expected.bmp": "e54a5b0418e0ed0173d7b238836cc23ccb07a49a3cd7c825ca47e724731c26d4",
+    "square/source.png": "2c66e13f73325497630e8013a6a87bc7453b8e2be2422de18267e0fd1568faa0",
+    "wide/expected.bmp": "a949a5eaef73199a39969ea5be72c49e95385574e7edc5ee194e9f570d8968ee",
+    "wide/source.png": "9925b1cff6bee9bf276c03a11149239ce04bda11fae1309bdbcc250098dc99c5"
+  }
+}

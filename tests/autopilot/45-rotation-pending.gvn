@@ -1,0 +1,82 @@
+copy_fixture	alpha.png	pages/a/source.png
+copy_fixture	view-rotation/single/landscape.png	pages/b/target.png
+open_hold
+open	${output}/pages/b/target.png
+wait_open_blocked
+expect	has_image	false
+command	ViewRotateRight
+expect	settings.view_rotation	2
+expect	open.pending	true
+expect	open.blocked	true
+expect	has_image	false
+command	ViewRotateHalf
+expect	settings.view_rotation	7
+expect	open.pending	true
+expect	open.blocked	true
+expect	has_image	false
+command	ViewRotateLeft
+expect	settings.view_rotation	1
+expect	open.pending	true
+expect	open.blocked	true
+expect	has_image	false
+snapshot	rotation-blank-during-listing.png
+open_release
+wait
+wait_cache
+expect	open.forced_release	false
+expect_image	${fixtures}/view-rotation/single/expected-009.png	0
+expect_location	image	${output}/pages/b/target.png
+pixel_copy
+command	ViewRotateNone
+wait
+open	${output}/pages/a/source.png
+wait
+command	Negative
+remember	edited
+open_hold
+open	${output}/pages/b/target.png
+wait_open_blocked
+command	ViewRotateRight
+expect	open.pending	true
+expect	open.blocked	true
+expect	modified	true
+expect_same	edited	true
+key	Esc
+expect	open.pending	false
+expect	open.loading	false
+expect_same	edited	true
+expect_location	image	${output}/pages/a/source.png
+open_release
+wait_cache
+expect	open.forced_release	false
+expect_same	edited	true
+snapshot	rotation-cancelled-edited-source.png
+command	ViewRotateNone
+wait
+expect_image	${fixtures}/alpha.png	0
+command	Copy
+open_hold
+open	${output}/pages/b/target.png
+wait_open_blocked
+command	ViewRotateLeft
+expect	open.pending	true
+command	NewPaste
+expect	open.pending	false
+expect	open.loading	false
+expect_location	requested	empty
+expect_image	${fixtures}/alpha.png	0
+open_release
+wait_cache
+expect	open.forced_release	false
+expect_image	${fixtures}/alpha.png	0
+command	Undo
+expect_image	${fixtures}/alpha.png	0
+expect_location	image	${output}/pages/a/source.png
+expect_location	requested	${output}/pages/a/source.png
+expect	settings.view_rotation	1
+expect	modified	false
+pixel_copy
+snapshot	rotation-undo-after-pending-paste.png
+expect	error_count	0
+expect_file	pages/a/source.png	alpha.png
+expect_file	pages/b/target.png	view-rotation/single/landscape.png

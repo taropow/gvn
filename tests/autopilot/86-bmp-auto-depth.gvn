@@ -1,0 +1,69 @@
+settings
+tab	Loading
+set	BitfieldTo24	false
+click	OK
+copy_fixture	auto-bmp/rgb565.bmp	source/rgb565.bmp
+copy_fixture	auto-bmp/rgb555.bmp	source/rgb555.bmp
+open	${output}/source/rgb565.bmp
+wait
+pixel_copy
+save_target	pixels/565-reference.png
+command	SaveAs
+save_type	Png
+save_accept
+wait_save
+save_target	pixels/565-auto.bmp
+command	SaveAs
+save_type	Bmp
+save_set	BmpBits	4
+save_expect_control	BmpBits	4
+save_set	BmpTopDown	true
+save_set	BmpRle	true
+save_layout
+save_snapshot	bmp-auto-options.png
+save_accept
+wait_save
+persisted
+pixel_copy
+command	RotateRight
+save_target	pixels/565-rotate.bmp
+command	SaveAs
+save_type	Bmp
+save_expect_control	BmpBits	4
+save_accept
+wait_save
+pixel_copy
+command	Undo
+save_target	pixels/565-undo.bmp
+command	SaveAs
+save_type	Bmp
+save_set	BmpTopDown	false
+save_accept
+wait_save
+pixel_copy
+command	Gray
+save_target	pixels/gray-reference.png
+command	SaveAs
+save_type	Png
+save_accept
+wait_save
+save_target	pixels/gray24.bmp
+command	SaveAs
+save_type	Bmp
+save_expect_control	BmpBits	4
+save_accept
+wait_save
+persisted
+pixel_copy
+open	${output}/source/rgb555.bmp
+wait
+save_target	pixels/555-auto.bmp
+command	SaveAs
+save_type	Bmp
+save_expect_control	BmpBits	4
+save_accept
+wait_save
+persisted
+expect_file	source/rgb565.bmp	auto-bmp/rgb565.bmp
+expect_file	source/rgb555.bmp	auto-bmp/rgb555.bmp
+expect	error_count	0

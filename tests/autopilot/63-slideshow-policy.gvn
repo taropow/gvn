@@ -1,0 +1,147 @@
+copy_fixture	alpha.png	slides/flat/flat-0.png
+copy_fixture	alpha.png	slides/flat/flat-1.png
+copy_fixture	alpha.png	slides/flat/flat-2.png
+copy_fixture	alpha.png	slides/flat/flat-3.png
+copy_fixture	alpha.png	slides/tree/root-0.png
+copy_fixture	alpha.png	slides/tree/a/a-0.png
+copy_fixture	alpha.png	slides/tree/a/a-1.png
+copy_fixture	alpha.png	slides/tree/b/b-0.png
+navigation_root	slides
+open	${output}/slides/flat/flat-0.png
+wait
+settings
+tab	Slideshow
+expect_checked	SlideLoop	true
+expect_checked	SlideNextFolder	false
+expect_checked	SlideSubtree	false
+expect	enabled.SlideSubtree	false
+set	SlideNextFolder	true
+expect	enabled.SlideSubtree	true
+set	SlideSubtree	true
+set	SlideRandom	true
+set	SlideLoop	false
+click	Cancel
+expect	settings.slide_loop	true
+expect	settings.slide_next_folder	false
+expect	settings.slide_subtree	false
+expect	settings.slide_random	false
+settings
+tab	Slideshow
+set	SlideNextFolder	true
+set	SlideSubtree	true
+set	SlideNextFolder	false
+expect	enabled.SlideSubtree	false
+expect_checked	SlideSubtree	true
+set	SlideFullscreen	false
+set	SlideLoop	false
+set	Interval	600
+click	ApplyButton
+persisted
+snapshot	slideshow-policy-options.png
+click	OK
+command	Slideshow
+expect	slideshow	true
+expect	full	false
+slideshow_timer
+wait
+expect_location	image	${output}/slides/flat/flat-1.png
+slideshow_timer
+wait
+expect_location	image	${output}/slides/flat/flat-2.png
+slideshow_timer
+wait
+expect_location	image	${output}/slides/flat/flat-3.png
+expect	slideshow	true
+slideshow_timer
+wait
+expect	slideshow	false
+expect_location	image	${output}/slides/flat/flat-3.png
+expect	boundary.count	0
+expect	boundary.beeps	0
+settings
+tab	Slideshow
+set	SlideLoop	true
+set	SlideRandom	true
+click	OK
+command	Slideshow
+expect	settings.sort	4
+settings
+tab	Slideshow
+set	SlideFullscreen	true
+click	ApplyButton
+persisted
+click	OK
+slideshow_timer
+wait
+slideshow_timer
+wait
+slideshow_timer
+wait
+slideshow_timer
+wait
+expect	slideshow	true
+expect	settings.sort	4
+command	Slideshow
+expect	slideshow	false
+expect	settings.sort	0
+expect	full	false
+pixel_copy
+settings
+tab	Slideshow
+set	SlideFullscreen	false
+set	SlideRandom	false
+set	SlideLoop	false
+set	SlideNextFolder	true
+expect	enabled.SlideSubtree	true
+expect_checked	SlideSubtree	true
+click	OK
+open	${output}/slides/tree/root-0.png
+wait
+command	Slideshow
+slideshow_timer
+wait
+expect_location	image	${output}/slides/tree/a/a-0.png
+slideshow_timer
+wait
+expect_location	image	${output}/slides/tree/a/a-1.png
+slideshow_timer
+wait
+expect_location	image	${output}/slides/tree/b/b-0.png
+expect	slideshow	true
+slideshow_timer
+wait
+expect	slideshow	false
+expect	boundary.count	0
+settings
+tab	Slideshow
+set	SlideLoop	true
+click	ApplyButton
+persisted
+click	OK
+open	${output}/slides/tree/root-0.png
+wait
+command	Slideshow
+slideshow_timer
+wait
+slideshow_timer
+wait
+slideshow_timer
+wait
+slideshow_timer
+wait
+expect	slideshow	true
+expect_location	image	${output}/slides/tree/root-0.png
+snapshot	slideshow-subtree-loop.png
+command	Slideshow
+settings
+tab	Slideshow
+click	Reset
+click	ApplyButton
+expect	settings.slide_fullscreen	true
+expect	settings.slide_loop	true
+expect	settings.slide_next_folder	false
+expect	settings.slide_subtree	false
+expect	settings.slide_random	false
+expect	enabled.SlideSubtree	false
+persisted
+click	OK

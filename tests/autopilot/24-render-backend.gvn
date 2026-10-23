@@ -1,0 +1,35 @@
+command	DisplayImageWindow
+render
+expect	renderer.software_target	true
+open	${fixtures}/display-alpha.png
+wait
+render
+remember	rgba
+expect	renderer.software_target	true
+expect	renderer.source_bytes	0
+sizing	begin
+resize	2500	1600
+render
+expect	renderer.software_target	true
+expect_positive	renderer.source_bytes
+sizing	end
+render
+expect	renderer.software_target	false
+expect	renderer.source_bytes	0
+expect_same	rgba	true
+pixel_copy
+snapshot	large-system-target.png
+resize	1000	720
+render
+expect	renderer.software_target	false
+expect_same	rgba	true
+open	${fixtures}/disposal.gif
+wait
+player	FirstFrame
+player	FrameNext
+render
+pixel_copy
+snapshot	animation-after-backend-change.png
+command	CloseImage
+expect_empty_checker
+expect	renderer.source_bytes	0

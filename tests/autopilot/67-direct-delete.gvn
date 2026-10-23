@@ -1,0 +1,86 @@
+# Delete only scenario-owned copies. Normal recycle preference stays enabled.
+expect_binding	FileDeleteDirect	Shift+Delete
+copy_fixture	alpha.png	files/a.png
+copy_fixture	alpha.png	files/b.png
+copy_fixture	alpha.png	files/c.png
+open	${output}/files/a.png
+wait
+remember	rgba
+settings
+tab	Keys
+expect	key_functions	238
+function	FileDeleteDirect
+expect	key_slots	1
+expect_text	KeyEdit	Shift+Delete
+tab	FileOperations
+set	ConfirmDelete	true
+set	RecycleDeleted	true
+set	NextAfterFileop	false
+tab	MouseCustom
+mouse_assign	MiddleClick	0	0	FileDeleteDirect
+snapshot	direct-delete-assignment.png
+click	OK
+persisted
+answer	No
+key	Shift+Delete
+expect_file	files/a.png	alpha.png
+expect	delete.calls	0
+expect	removed_current	false
+answer	Yes
+pointer	down	Middle	100	100	0
+pointer	up	Middle	100	100	0
+expect_file	files/a.png	absent
+expect	delete.calls	1
+expect	delete.recycle	false
+expect	settings.recycle_deleted	true
+expect	removed_current	true
+expect_same	rgba	true
+pixel_copy
+command	Next
+wait
+expect_caption	b.png
+answer	No
+command	FileDelete
+expect_file	files/b.png	alpha.png
+expect	delete.calls	1
+answer	Yes
+key	Shift+Delete
+expect_file	files/b.png	absent
+expect	delete.calls	2
+expect	delete.recycle	false
+expect	settings.recycle_deleted	true
+command	Next
+wait
+settings
+tab	FileOperations
+set	ConfirmDelete	false
+click	OK
+key	Shift+Delete
+expect_file	files/c.png	absent
+expect	delete.calls	3
+expect_same	rgba	true
+pixel_copy
+command	NewPaste
+key	Shift+Delete
+expect	delete.calls	3
+expect_same	rgba	true
+copy_fixture	alpha.png	advance/a.png
+copy_fixture	alpha.png	advance/b.png
+open	${output}/advance/a.png
+wait
+settings
+tab	FileOperations
+set	NextAfterFileop	true
+click	OK
+key	Shift+Delete
+wait
+expect_file	advance/a.png	absent
+expect_file	advance/b.png	alpha.png
+expect_location	image	${output}/advance/b.png
+expect	delete.calls	4
+expect	delete.recycle	false
+expect	settings.recycle_deleted	true
+pixel_copy
+snapshot	direct-delete-next.png
+persisted
+expect	error_count	0

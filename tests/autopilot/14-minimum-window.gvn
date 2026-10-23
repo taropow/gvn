@@ -1,0 +1,63 @@
+# Reproduce narrow, short windows with large/wrapped bars and animation controls.
+resize	900	700
+settings
+tab	Loading
+set	Autoplay	false
+tab	Bars
+set	ToolbarLarge	true
+set	ToolbarLine	true
+set	Scrollbars	true
+click	OK
+open	${fixtures}/canvas/scroll.apng
+wait
+command	Actual
+resize	340	240
+snapshot	minimum-large-animation.png
+expect	layout.no_overlap	true
+expect	toolbar.no_clip	true
+expect	player.bottom	true
+expect	player.no_overlap	true
+expect	scroll.no_overlap	true
+remember	apng
+pixel_copy
+expect_same	apng	true
+resize	360	240
+expect	layout.no_overlap	true
+expect	player.no_overlap	true
+resize	420	240
+expect	layout.no_overlap	true
+expect	toolbar.no_clip	true
+resize	560	240
+expect	layout.no_overlap	true
+resize	900	240
+expect	layout.no_overlap	true
+command	ToggleCaption
+command	ToggleInnerFrame
+resize	340	240
+command	ToggleMenu
+snapshot	minimum-menu-captionless.png
+expect	layout.no_overlap	true
+expect	player.bottom	true
+expect	player.no_overlap	true
+expect	toolbar.no_clip	true
+command	CloseImage
+resize	340	240
+open	${fixtures}/disposal.gif
+wait
+expect	layout.no_overlap	true
+snapshot	minimum-gif-after-open.png
+command	Fullscreen
+expect	full.bounds	true
+expect	layout.no_overlap	true
+command	Fullscreen
+expect	layout.no_overlap	true
+settings
+tab	Bars
+set	ToolbarLarge	false
+set	ToolbarLine	false
+click	OK
+resize	340	240
+expect	layout.no_overlap	true
+expect	player.bottom	true
+expect	player.no_overlap	true
+snapshot	minimum-small-icons.png

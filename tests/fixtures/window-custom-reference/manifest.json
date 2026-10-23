@@ -1,0 +1,82 @@
+{
+  "files": {
+    "inputs.tsv": "6359aba7641c2b23eff896b7c32ed234a8e28b249703f1cd159a963de3be2717",
+    "geometry.tsv": "824bbb02c888002861967f404a098fc0ad3aae0eea902ee676458ca1b252e951"
+  },
+  "source_report": "docs/verification/window-limits-reference-0.45.json",
+  "source_report_sha256": "c1742e474514c8372580778436b735a74cb80fa8a0c5180fad41b0acfb5f1f1d",
+  "monitor_context": [
+    {
+      "monitor": [
+        0,
+        0,
+        3840,
+        2160
+      ],
+      "work": [
+        0,
+        0,
+        3840,
+        2112
+      ],
+      "primary": true
+    },
+    {
+      "monitor": [
+        0,
+        -1440,
+        2560,
+        0
+      ],
+      "work": [
+        0,
+        -1440,
+        2560,
+        0
+      ],
+      "primary": false
+    },
+    {
+      "monitor": [
+        -1200,
+        -589,
+        0,
+        1331
+      ],
+      "work": [
+        -1200,
+        -589,
+        0,
+        1331
+      ],
+      "primary": false
+    },
+    {
+      "monitor": [
+        0,
+        2160,
+        2560,
+        3760
+      ],
+      "work": [
+        0,
+        2160,
+        2560,
+        3760
+      ],
+      "primary": false
+    }
+  ],
+  "virtual_screen": [
+    -1200,
+    -1440,
+    5040,
+    5200
+  ],
+  "geometry_rows": 28,
+  "input_rows": 15,
+  "reference_rect_overflow_rows": [
+    "signed-extremes"
+  ],
+  "gvn_implementation_complete": false
+}

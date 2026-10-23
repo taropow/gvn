@@ -1,0 +1,876 @@
+copy_fixture	saving/rgba.png	assets/rgba.png
+copy_fixture	saving/runs.png	assets/runs.png
+open	${output}/assets/rgba.png
+wait
+remember_saving	initial
+save_target	pixels/cancelled.png
+command	SaveAs
+save_layout
+save_expect_control	PngCompression	6
+save_enabled	PngColor	false
+save_enabled	PngMatte	false
+save_set	PngCompression	3
+save_set	PngInterlaced	true
+save_type	Jpeg
+save_visible	Png	false
+save_visible	Jpeg	true
+save_set	JpegQuality	91
+save_set	JpegProgressive	true
+save_type	Bmp
+save_set	BmpBits	2
+save_enabled	BmpRle	true
+save_set	BmpRle	true
+save_type	Gif
+save_set	GifTransparency	1
+save_enabled	GifIndex	true
+save_set	GifIndex	5
+save_type	Png
+save_expect_control	PngCompression	3
+save_expect_control	PngInterlaced	true
+save_layout
+save_cancel
+wait_save
+expect_saving	initial
+persisted
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-filter-0.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngTransparency	0
+save_expect_control	PngTransparency	0
+save_set	PngInterlaced	false
+save_expect_control	PngInterlaced	false
+save_set	PngFilter	0
+save_expect_control	PngFilter	0
+save_set	PngCompression	6
+save_expect_control	PngCompression	6
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-filter-1.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngTransparency	0
+save_expect_control	PngTransparency	0
+save_set	PngInterlaced	false
+save_expect_control	PngInterlaced	false
+save_set	PngFilter	1
+save_expect_control	PngFilter	1
+save_set	PngCompression	6
+save_expect_control	PngCompression	6
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-filter-2.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngTransparency	0
+save_expect_control	PngTransparency	0
+save_set	PngInterlaced	false
+save_expect_control	PngInterlaced	false
+save_set	PngFilter	2
+save_expect_control	PngFilter	2
+save_set	PngCompression	6
+save_expect_control	PngCompression	6
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-filter-3.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngTransparency	0
+save_expect_control	PngTransparency	0
+save_set	PngInterlaced	false
+save_expect_control	PngInterlaced	false
+save_set	PngFilter	3
+save_expect_control	PngFilter	3
+save_set	PngCompression	6
+save_expect_control	PngCompression	6
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-filter-4.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngTransparency	0
+save_expect_control	PngTransparency	0
+save_set	PngInterlaced	false
+save_expect_control	PngInterlaced	false
+save_set	PngFilter	4
+save_expect_control	PngFilter	4
+save_set	PngCompression	6
+save_expect_control	PngCompression	6
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-filter-5.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngTransparency	0
+save_expect_control	PngTransparency	0
+save_set	PngInterlaced	false
+save_expect_control	PngInterlaced	false
+save_set	PngFilter	5
+save_expect_control	PngFilter	5
+save_set	PngCompression	6
+save_expect_control	PngCompression	6
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-filter-6.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngTransparency	0
+save_expect_control	PngTransparency	0
+save_set	PngInterlaced	false
+save_expect_control	PngInterlaced	false
+save_set	PngFilter	6
+save_expect_control	PngFilter	6
+save_set	PngCompression	6
+save_expect_control	PngCompression	6
+save_layout
+save_snapshot	save-png.png
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-level-0.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngCompression	0
+save_expect_control	PngCompression	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-level-1.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngCompression	1
+save_expect_control	PngCompression	1
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-level-2.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngCompression	2
+save_expect_control	PngCompression	2
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-level-3.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngCompression	3
+save_expect_control	PngCompression	3
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-level-4.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngCompression	4
+save_expect_control	PngCompression	4
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-level-5.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngCompression	5
+save_expect_control	PngCompression	5
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-level-6.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngCompression	6
+save_expect_control	PngCompression	6
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-level-7.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngCompression	7
+save_expect_control	PngCompression	7
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-level-8.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngCompression	8
+save_expect_control	PngCompression	8
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-level-9.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngCompression	9
+save_expect_control	PngCompression	9
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-trans-0.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngCompression	6
+save_expect_control	PngCompression	6
+save_set	PngFilter	6
+save_expect_control	PngFilter	6
+save_set	PngInterlaced	true
+save_expect_control	PngInterlaced	true
+save_set	PngTransparency	0
+save_expect_control	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-trans-1.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngCompression	6
+save_expect_control	PngCompression	6
+save_set	PngFilter	6
+save_expect_control	PngFilter	6
+save_set	PngInterlaced	true
+save_expect_control	PngInterlaced	true
+save_set	PngTransparency	1
+save_expect_control	PngTransparency	1
+save_set	PngMatte	123456
+save_expect_control	PngMatte	123456
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-trans-2.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngCompression	6
+save_expect_control	PngCompression	6
+save_set	PngFilter	6
+save_expect_control	PngFilter	6
+save_set	PngInterlaced	true
+save_expect_control	PngInterlaced	true
+save_set	PngTransparency	2
+save_expect_control	PngTransparency	2
+save_set	PngMatte	123456
+save_expect_control	PngMatte	123456
+save_set	PngColor	FF0000
+save_expect_control	PngColor	FF0000
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-trans-3.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngCompression	6
+save_expect_control	PngCompression	6
+save_set	PngFilter	6
+save_expect_control	PngFilter	6
+save_set	PngInterlaced	true
+save_expect_control	PngInterlaced	true
+save_set	PngTransparency	3
+save_expect_control	PngTransparency	3
+save_set	PngMatte	123456
+save_expect_control	PngMatte	123456
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-trans-4.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngCompression	6
+save_expect_control	PngCompression	6
+save_set	PngFilter	6
+save_expect_control	PngFilter	6
+save_set	PngInterlaced	true
+save_expect_control	PngInterlaced	true
+save_set	PngTransparency	4
+save_expect_control	PngTransparency	4
+save_set	PngMatte	123456
+save_expect_control	PngMatte	123456
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-trans-5.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngCompression	6
+save_expect_control	PngCompression	6
+save_set	PngFilter	6
+save_expect_control	PngFilter	6
+save_set	PngInterlaced	true
+save_expect_control	PngInterlaced	true
+save_set	PngTransparency	5
+save_expect_control	PngTransparency	5
+save_set	PngMatte	123456
+save_expect_control	PngMatte	123456
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/png-trans-6.png
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngCompression	6
+save_expect_control	PngCompression	6
+save_set	PngFilter	6
+save_expect_control	PngFilter	6
+save_set	PngInterlaced	true
+save_expect_control	PngInterlaced	true
+save_set	PngTransparency	6
+save_expect_control	PngTransparency	6
+save_set	PngMatte	123456
+save_expect_control	PngMatte	123456
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/jpeg-0.jpg
+command	SaveAs
+save_type	Jpeg
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	JpegQuality	0
+save_expect_control	JpegQuality	0
+save_set	JpegProgressive	false
+save_expect_control	JpegProgressive	false
+save_set	JpegMatte	123456
+save_expect_control	JpegMatte	123456
+save_layout
+answer	OK
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/jpeg-90.jpg
+command	SaveAs
+save_type	Jpeg
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	JpegQuality	90
+save_expect_control	JpegQuality	90
+save_set	JpegProgressive	true
+save_expect_control	JpegProgressive	true
+save_set	JpegMatte	123456
+save_expect_control	JpegMatte	123456
+save_layout
+save_snapshot	save-jpeg.png
+answer	OK
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/jpeg-100.jpg
+command	SaveAs
+save_type	Jpeg
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	JpegQuality	100
+save_expect_control	JpegQuality	100
+save_set	JpegProgressive	false
+save_expect_control	JpegProgressive	false
+save_set	JpegMatte	123456
+save_expect_control	JpegMatte	123456
+save_layout
+answer	OK
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/runs.png
+wait
+save_target	pixels/bmp-24.bmp
+command	SaveAs
+save_type	Bmp
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	BmpBits	0
+save_expect_control	BmpBits	0
+save_set	BmpTopDown	true
+save_expect_control	BmpTopDown	true
+save_set	BmpMatte	123456
+save_expect_control	BmpMatte	123456
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/runs.png
+wait
+save_target	pixels/bmp-8.bmp
+command	SaveAs
+save_type	Bmp
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	BmpBits	1
+save_expect_control	BmpBits	1
+save_set	BmpTopDown	true
+save_expect_control	BmpTopDown	true
+save_set	BmpMatte	123456
+save_expect_control	BmpMatte	123456
+save_set	BmpRle	true
+save_expect_control	BmpRle	true
+save_set	Dither	false
+save_expect_control	Dither	false
+save_layout
+save_snapshot	save-bmp.png
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/runs.png
+wait
+save_target	pixels/bmp-4.bmp
+command	SaveAs
+save_type	Bmp
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	BmpBits	2
+save_expect_control	BmpBits	2
+save_set	BmpTopDown	true
+save_expect_control	BmpTopDown	true
+save_set	BmpMatte	123456
+save_expect_control	BmpMatte	123456
+save_set	BmpRle	true
+save_expect_control	BmpRle	true
+save_set	Dither	false
+save_expect_control	Dither	false
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/runs.png
+wait
+save_target	pixels/bmp-1.bmp
+command	SaveAs
+save_type	Bmp
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	BmpBits	3
+save_expect_control	BmpBits	3
+save_set	BmpTopDown	true
+save_expect_control	BmpTopDown	true
+save_set	BmpMatte	123456
+save_expect_control	BmpMatte	123456
+save_set	Dither	false
+save_expect_control	Dither	false
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/runs.png
+wait
+save_target	pixels/gif-trans-0.gif
+command	SaveAs
+save_type	Gif
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	GifTransparency	0
+save_expect_control	GifTransparency	0
+save_set	GifInterlaced	false
+save_expect_control	GifInterlaced	false
+save_set	GifUncompressed	false
+save_expect_control	GifUncompressed	false
+save_set	GifMatte	123456
+save_expect_control	GifMatte	123456
+save_set	Dither	false
+save_expect_control	Dither	false
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/runs.png
+wait
+save_target	pixels/gif-trans-1.gif
+command	SaveAs
+save_type	Gif
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	GifTransparency	1
+save_expect_control	GifTransparency	1
+save_set	GifInterlaced	true
+save_expect_control	GifInterlaced	true
+save_set	GifUncompressed	true
+save_expect_control	GifUncompressed	true
+save_set	GifMatte	123456
+save_expect_control	GifMatte	123456
+save_set	Dither	false
+save_expect_control	Dither	false
+save_set	GifIndex	5
+save_expect_control	GifIndex	5
+save_layout
+save_snapshot	save-gif.png
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/runs.png
+wait
+save_target	pixels/gif-trans-2.gif
+command	SaveAs
+save_type	Gif
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	GifTransparency	2
+save_expect_control	GifTransparency	2
+save_set	GifInterlaced	false
+save_expect_control	GifInterlaced	false
+save_set	GifUncompressed	false
+save_expect_control	GifUncompressed	false
+save_set	GifMatte	123456
+save_expect_control	GifMatte	123456
+save_set	Dither	false
+save_expect_control	Dither	false
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/runs.png
+wait
+save_target	pixels/gif-trans-3.gif
+command	SaveAs
+save_type	Gif
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	GifTransparency	3
+save_expect_control	GifTransparency	3
+save_set	GifInterlaced	true
+save_expect_control	GifInterlaced	true
+save_set	GifUncompressed	true
+save_expect_control	GifUncompressed	true
+save_set	GifMatte	123456
+save_expect_control	GifMatte	123456
+save_set	Dither	false
+save_expect_control	Dither	false
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/runs.png
+wait
+save_target	pixels/gif-trans-4.gif
+command	SaveAs
+save_type	Gif
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	GifTransparency	4
+save_expect_control	GifTransparency	4
+save_set	GifInterlaced	false
+save_expect_control	GifInterlaced	false
+save_set	GifUncompressed	false
+save_expect_control	GifUncompressed	false
+save_set	GifMatte	123456
+save_expect_control	GifMatte	123456
+save_set	Dither	false
+save_expect_control	Dither	false
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/runs.png
+wait
+save_target	pixels/gif-trans-5.gif
+command	SaveAs
+save_type	Gif
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	GifTransparency	5
+save_expect_control	GifTransparency	5
+save_set	GifInterlaced	true
+save_expect_control	GifInterlaced	true
+save_set	GifUncompressed	true
+save_expect_control	GifUncompressed	true
+save_set	GifMatte	123456
+save_expect_control	GifMatte	123456
+save_set	Dither	false
+save_expect_control	Dither	false
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/runs.png
+wait
+remember_saving	before-invalid
+save_target	pixels/jpeg-corrected.jpg
+command	SaveAs
+save_type	Jpeg
+save_set	JpegQuality	101
+save_accept
+save_error_contains	JPEG画質
+expect_saving	before-invalid
+save_set	JpegQuality	-1
+save_accept
+save_error_contains	JPEG画質
+save_set	JpegQuality	50
+save_set	JpegMatte	notrgb
+save_accept
+save_error_contains	6桁
+save_set	JpegMatte	123456
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/runs.png
+wait
+remember_saving	before-extension
+save_target	pixels/mismatch.png
+command	SaveAs
+save_filename	typed.jpeg
+save_accept
+save_error_contains	拡張子
+save_visible	Jpeg	true
+save_expect_type	Jpeg
+expect_saving	before-extension
+save_set	JpegQuality	75
+save_set	JpegProgressive	true
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/runs.png
+wait
+remember_saving	before-index
+save_target	pixels/gif-unused.gif
+command	SaveAs
+save_set	GifTransparency	1
+save_set	GifIndex	256
+save_accept
+save_error_contains	透過色番号
+expect_saving	before-index
+save_set	GifIndex	255
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/bmp-1-plain.bmp
+command	SaveAs
+save_type	Bmp
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	BmpBits	3
+save_expect_control	BmpBits	3
+save_set	BmpTopDown	true
+save_expect_control	BmpTopDown	true
+save_set	BmpMatte	123456
+save_expect_control	BmpMatte	123456
+save_set	Dither	false
+save_expect_control	Dither	false
+save_layout
+answer	OK
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/bmp-1-dither.bmp
+command	SaveAs
+save_type	Bmp
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	BmpBits	3
+save_expect_control	BmpBits	3
+save_set	BmpTopDown	true
+save_expect_control	BmpTopDown	true
+save_set	BmpMatte	123456
+save_expect_control	BmpMatte	123456
+save_set	Dither	true
+save_expect_control	Dither	true
+save_layout
+answer	OK
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/auto
+command	SaveAs
+save_expect_type	Bmp
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	PngTransparency	0
+save_expect_control	PngTransparency	0
+save_set	Uppercase	true
+save_expect_control	Uppercase	true
+save_set	KeepTimes	true
+save_expect_control	KeepTimes	true
+save_layout
+save_filename	auto
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/rgba.png
+wait
+save_target	pixels/mixed.pNg
+command	SaveAs
+save_type	Png
+save_set	KeepTimes	false
+save_set	Uppercase	false
+save_set	Uppercase	true
+save_expect_control	Uppercase	true
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+expect	error_count	0

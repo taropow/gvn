@@ -1,0 +1,78 @@
+open	${fixtures}/alpha.png
+wait
+remember	original
+command	Resize
+resize_set	Resample	false
+expect	resize.pixel_controls_enabled	false
+expect	resize.filters_enabled	false
+resize_set	DpiX	0
+expect	resize.valid	false
+expect	resize.ok_enabled	false
+resize_set	DpiX	100
+resize_set	DpiY	200
+resize_set	PrintUnit	0
+resize_set	PrintWidth	0.03
+expect	resize.dpi_x	100
+expect	resize.width	3
+expect	resize.height	2
+resize_set	DpiUnit	1
+expect	resize.dpi_x	100
+expect	resize.dpi_y	200
+resize_set	PrintUnit	2
+expect	resize.valid	true
+resize_snapshot	resolution-only-mm.png
+resize_click	OK
+expect_same	original	true
+expect	dpi_x	100
+expect	dpi_y	200
+expect	modified	true
+expect	settings.resize_resample	false
+expect	settings.resize_print_unit	4
+expect	settings.resize_density_unit	1
+persisted
+image_info
+info_expect	100.000 × 200.000 DPI
+info_close
+command	Undo
+expect	dpi_x	72
+expect	modified	false
+command	Undo
+expect	dpi_x	100
+command	Canvas
+canvas_set	Unit	2
+canvas_set	Width	0.06
+canvas_set	Height	0.02
+expect	canvas.width	6
+expect	canvas.height	4
+expect	canvas.dpi_x	100
+expect	canvas.dpi_y	200
+canvas_snapshot	canvas-inch.png
+canvas_click	OK
+expect	width	6
+expect	height	4
+expect	dpi_x	100
+expect	settings.canvas_unit	2
+command	Undo
+expect_same	original	true
+expect	dpi_y	200
+pixel_copy
+open	${fixtures}/disposal.gif
+wait
+player	StopAnimation
+player	FrameNext
+expect	frame	1
+command	Resize
+expect	resize.resample	false
+resize_set	DpiX	118.110236220472
+resize_set	DpiY	78.740157480315
+resize_click	OK
+expect	frames	4
+expect	frame	1
+expect	playing	false
+expect	dpi_x	300
+expect	dpi_y	200
+command	Undo
+expect	dpi_x	72
+expect	frame	1
+pixel_copy
+expect	error_count	0

@@ -1,0 +1,28 @@
+{
+  "cases": 107,
+  "alpha_cases": 99,
+  "code_file": "codes.tsv follows cases.tsv order; empty lines mean empty code.",
+  "alpha_rule": "Recover source coordinates only from each actual native RGB output by reversing its fixed R/G swap and negative; Alpha equals that native source index mod256. No product/permutation model generates expected alpha.",
+  "reference": "docs/verification/cp-reference-0.45.json",
+  "files": {
+    "cases.tsv": "3a69aa00d3732889031e3efa9cfb2722734ca7c0c652f7261bec86ca132e48c5",
+    "codes.tsv": "b722eba570d95f266a3cfc5de4136fb17d65ea120da18e8f5cc3995b4738c279",
+    "pixels.bin": "fef4a1381f6542a5bbd509ac2dba82159bfd1a0657e816d2c73070af95a67460",
+    "png/full-a-expected.png": "7c69623ed20fad23f7cab28fbe5bfbf1f4c03ce0fb07c51ee2b64d6abbcf74d9",
+    "png/full-a-source.png": "be577b46a612f03fdbf39ed85117db02df134b3e8c6a3c543776bed2e253914b",
+    "png/full-ab-expected.png": "bac92bc8051f645c430d53bb2e2160fda152489cea6fc346e9ba5144d21ffd96",
+    "png/full-ab-source.png": "be577b46a612f03fdbf39ed85117db02df134b3e8c6a3c543776bed2e253914b",
+    "png/full-empty-expected.png": "be577b46a612f03fdbf39ed85117db02df134b3e8c6a3c543776bed2e253914b",
+    "png/full-empty-source.png": "be577b46a612f03fdbf39ed85117db02df134b3e8c6a3c543776bed2e253914b",
+    "png/indexed-ab-expected.png": "12eb9034221e24451c19845a0495ea68396dfe43f76f9b31086dd531e19afa81",
+    "png/indexed-ab-source.png": "b39ba6e369614be8a1691c9e87b0a0571b86f19c70e5954356e5bbeefa65b487",
+    "png/odd-Q-expected.png": "abfba73fa2ef3d8ca13dd87e4b2d0b31fd1d751d928ceec28faf77887369ac4a",
+    "png/odd-Q-source.png": "5b7d1f1fa008fa5defae2642f9d9c93f11c603f4e36a6583dde880c604e9fca1",
+    "png/selected-a-expected.png": "e9644be2926ef2e5a3c08fe537f0deba0f845039eac136b080aa791060b5ac5c",
+    "png/selected-a-source.png": "a4d34d354dd4680cf46aa7368d122946dd5ebb8caa693b83a95ca748af5dd0e5",
+    "png/sixteen-expected.png": "c2ebe9e7977ece5b68882110338b415941df87adfcf737ca942827bf73278f7f",
+    "png/sixteen-source.png": "bdef4904be42042a5423e029d7e88ca66b7e5700e18261a5c3ced555c91332ec",
+    "png/tiny-a-expected.png": "9f35db39320402cc34847fe632d2654e391ca213bc58231dc94464793b87ab49",
+    "png/tiny-a-source.png": "9f35db39320402cc34847fe632d2654e391ca213bc58231dc94464793b87ab49"
+  }
+}

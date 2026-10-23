@@ -1,0 +1,178 @@
+copy_owned_executable	Apps 日本語/エディタ.exe
+copy_owned_executable	Apps 日本語/Drop 日本語.EXE
+settings
+tab	External
+expect_choice_count	ExternalList	9
+expect_choice_count	ExternalSend	5
+expect_choice_count	ExternalShow	3
+expect_selection	ExternalList	0
+expect_value	ExternalName	empty
+expect_value	ExternalEdit	empty
+expect_selection	ExternalSend	1
+expect_selection	ExternalShow	0
+expect	enabled.ExternalUp	false
+expect	enabled.ExternalDown	true
+snapshot	01-external-default.png
+expect_missing_combo_capture_rejected	ExternalList	negative-blank-combo.png
+preferences_resize	1000	760
+set	ExternalName	第一登録 日本語
+set	ExternalEdit	"C:\External Apps\app.exe" /open "($f)" "($d)"
+set	ExternalSend	3
+set	ExternalShow	2
+set	ExternalVerb	edit
+set	ExternalQuit	true
+set	ExternalSeparator	true
+set	ExternalArchiveMember	true
+set	ExternalArchiveFolder	true
+set	ExternalList	1
+expect_value	ExternalName	empty
+expect_value	ExternalEdit	empty
+expect_checked	ExternalQuit	false
+set	ExternalName	第二登録
+set	ExternalEdit	D:\Second Editor\app.exe
+set	ExternalSend	2
+set	ExternalVerb	open
+click	ExternalUp
+expect_selection	ExternalList	0
+expect_value	ExternalName	第二登録
+expect_selection	ExternalSend	2
+expect_value	ExternalVerb	open
+expect	enabled.ExternalUp	false
+set	ExternalList	1
+expect_value	ExternalName	第一登録 日本語
+expect_value	ExternalEdit	"C:\External Apps\app.exe" /open "($f)" "($d)"
+expect_selection	ExternalSend	3
+expect_selection	ExternalShow	2
+expect_value	ExternalVerb	edit
+expect_checked	ExternalQuit	true
+expect_checked	ExternalSeparator	true
+expect_checked	ExternalArchiveMember	true
+expect_checked	ExternalArchiveFolder	true
+click	ExternalDown
+expect_selection	ExternalList	2
+expect_value	ExternalName	第一登録 日本語
+snapshot	02-external-configured.png
+click	ApplyButton
+expect_external	1	name	第二登録
+expect_external	1	send	2
+expect_external	1	verb	open
+expect_external	3	name	第一登録 日本語
+expect_external	3	executable	"C:\External Apps\app.exe" /open "($f)" "($d)"
+expect_external	3	send	3
+expect_external	3	show	2
+expect_external	3	verb	edit
+expect_external	3	quit	1
+expect_external	3	separator	1
+expect_external	3	archive_member	1
+expect_external	3	archive_folder	1
+remember_external	second	1
+remember_external	first	3
+persisted
+click	ExternalReset
+expect_value	ExternalName	empty
+expect_value	ExternalEdit	empty
+expect_value	ExternalVerb	empty
+expect_selection	ExternalSend	1
+expect_selection	ExternalShow	0
+expect_checked	ExternalQuit	false
+expect_checked	ExternalSeparator	false
+expect_checked	ExternalArchiveMember	false
+expect_checked	ExternalArchiveFolder	false
+click	ApplyButton
+expect_external_equal	second	1
+expect_external	3	name	empty
+expect_external	3	executable	empty
+set	ExternalList	7
+expect_value	ExternalName	現在の ファイル を開く
+expect_value	ExternalVerb	open
+set	ExternalName	changed 8
+set	ExternalSend	0
+set	ExternalShow	1
+set	ExternalQuit	true
+click	Reset
+expect_value	ExternalName	現在の ファイル を開く
+expect_value	ExternalVerb	open
+expect_value	ExternalEdit	empty
+expect_selection	ExternalSend	1
+expect_selection	ExternalShow	0
+expect_checked	ExternalQuit	false
+set	ExternalList	8
+expect	enabled.ExternalDown	false
+expect_value	ExternalName	現在の フォルダ を開く
+expect_selection	ExternalSend	2
+expect_value	ExternalVerb	empty
+set	ExternalName	changed 9
+set	ExternalSend	3
+set	ExternalVerb	edit
+click	ExternalReset
+expect_value	ExternalName	現在の フォルダ を開く
+expect_selection	ExternalSend	2
+expect_value	ExternalVerb	empty
+click	ApplyButton
+persisted
+set	ExternalList	0
+set	ExternalName	取り消す変更
+set	ExternalList	8
+set	ExternalName	これも取り消す
+click	Cancel
+expect_external_equal	second	1
+expect_external	9	name	現在の フォルダ を開く
+settings
+tab	External
+preferences_resize	1000	760
+set	ExternalList	4
+set	ExternalSend	4
+set	ExternalShow	1
+set	ExternalVerb	edit
+set	ExternalArchiveMember	true
+external_browse	Apps 日本語/エディタ.exe
+expect_value	ExternalName	エディタ
+expect_selection	ExternalSend	4
+expect_selection	ExternalShow	1
+expect_value	ExternalVerb	edit
+expect_checked	ExternalArchiveMember	true
+external_browse	cancel
+expect_value	ExternalName	エディタ
+set	ExternalList	5
+external_drop	${output}/Apps 日本語/Drop 日本語.EXE
+expect_value	ExternalName	Drop 日本語
+expect_selection	ExternalSend	1
+external_drop	${fixtures}/display-alpha.png
+expect_value	ExternalName	Drop 日本語
+click	ApplyButton
+expect_external	5	name	エディタ
+expect_external	5	path	${output}/Apps 日本語/エディタ.exe
+expect_external	5	send	4
+expect_external	5	show	1
+expect_external	5	verb	edit
+expect_external	5	archive_member	1
+expect_external	6	name	Drop 日本語
+expect_external	6	path	${output}/Apps 日本語/Drop 日本語.EXE
+remember_external	browse	5
+remember_external	drop	6
+persisted
+click	OK
+reload_external_settings
+expect_external_equal	second	1
+expect_external_equal	browse	5
+expect_external_equal	drop	6
+settings
+tab	External
+set	ExternalList	4
+expect_value	ExternalName	エディタ
+expect_selection	ExternalSend	4
+expect_selection	ExternalShow	1
+expect_value	ExternalVerb	edit
+expect_checked	ExternalArchiveMember	true
+preferences_resize	660	510
+expect	settings.scrollbar	true
+set	ExternalArchiveFolder	true
+click	ExternalReset
+expect_value	ExternalName	empty
+set	ExternalList	5
+expect_value	ExternalName	Drop 日本語
+preferences_resize	1000	760
+snapshot	03-external-reloaded.png
+click	Cancel
+expect_external_equal	browse	5
+expect_external_equal	drop	6

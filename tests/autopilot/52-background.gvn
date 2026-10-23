@@ -1,0 +1,444 @@
+# Viewport background controls and actual WM_PRINTCLIENT pixels; private owned windows.
+resize	900	700
+expect_view_background
+settings
+set	Grid	23
+tab	Background
+set	BackgroundTiled	true
+set	BackgroundPattern	0
+set	BackgroundFirst	202020
+set	BackgroundSecond	303030
+set	BackgroundTiled	true
+expect	enabled.BackgroundPattern	true
+expect	enabled.BackgroundSecond	true
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	true
+expect	settings.background_pattern	0
+expect	renderer.background_pattern	0
+expect	renderer.background_first	2105376
+expect	renderer.background_second	3158064
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	0
+set	BackgroundFirst	202020
+set	BackgroundSecond	303030
+set	BackgroundTiled	false
+expect	enabled.BackgroundPattern	false
+expect	enabled.BackgroundSecond	false
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	false
+expect	settings.background_pattern	0
+expect	renderer.background_pattern	0
+expect	renderer.background_first	2105376
+expect	renderer.background_second	3158064
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	1
+set	BackgroundFirst	202020
+set	BackgroundSecond	303030
+set	BackgroundTiled	true
+expect	enabled.BackgroundPattern	true
+expect	enabled.BackgroundSecond	true
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	true
+expect	settings.background_pattern	1
+expect	renderer.background_pattern	1
+expect	renderer.background_first	2105376
+expect	renderer.background_second	3158064
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	1
+set	BackgroundFirst	202020
+set	BackgroundSecond	303030
+set	BackgroundTiled	false
+expect	enabled.BackgroundPattern	false
+expect	enabled.BackgroundSecond	false
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	false
+expect	settings.background_pattern	1
+expect	renderer.background_pattern	1
+expect	renderer.background_first	2105376
+expect	renderer.background_second	3158064
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	2
+set	BackgroundFirst	202020
+set	BackgroundSecond	303030
+set	BackgroundTiled	true
+expect	enabled.BackgroundPattern	true
+expect	enabled.BackgroundSecond	true
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	true
+expect	settings.background_pattern	2
+expect	renderer.background_pattern	2
+expect	renderer.background_first	2105376
+expect	renderer.background_second	3158064
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	2
+set	BackgroundFirst	202020
+set	BackgroundSecond	303030
+set	BackgroundTiled	false
+expect	enabled.BackgroundPattern	false
+expect	enabled.BackgroundSecond	false
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	false
+expect	settings.background_pattern	2
+expect	renderer.background_pattern	2
+expect	renderer.background_first	2105376
+expect	renderer.background_second	3158064
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	3
+set	BackgroundFirst	202020
+set	BackgroundSecond	303030
+set	BackgroundTiled	true
+expect	enabled.BackgroundPattern	true
+expect	enabled.BackgroundSecond	true
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	true
+expect	settings.background_pattern	3
+expect	renderer.background_pattern	3
+expect	renderer.background_first	2105376
+expect	renderer.background_second	3158064
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	3
+set	BackgroundFirst	202020
+set	BackgroundSecond	303030
+set	BackgroundTiled	false
+expect	enabled.BackgroundPattern	false
+expect	enabled.BackgroundSecond	false
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	false
+expect	settings.background_pattern	3
+expect	renderer.background_pattern	3
+expect	renderer.background_first	2105376
+expect	renderer.background_second	3158064
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	4
+set	BackgroundFirst	202020
+set	BackgroundSecond	303030
+set	BackgroundTiled	true
+expect	enabled.BackgroundPattern	true
+expect	enabled.BackgroundSecond	true
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	true
+expect	settings.background_pattern	4
+expect	renderer.background_pattern	4
+expect	renderer.background_first	2105376
+expect	renderer.background_second	3158064
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	4
+set	BackgroundFirst	202020
+set	BackgroundSecond	303030
+set	BackgroundTiled	false
+expect	enabled.BackgroundPattern	false
+expect	enabled.BackgroundSecond	false
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	false
+expect	settings.background_pattern	4
+expect	renderer.background_pattern	4
+expect	renderer.background_first	2105376
+expect	renderer.background_second	3158064
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	0
+set	BackgroundFirst	172D43
+set	BackgroundSecond	596571
+set	BackgroundTiled	true
+expect	enabled.BackgroundPattern	true
+expect	enabled.BackgroundSecond	true
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	true
+expect	settings.background_pattern	0
+expect	renderer.background_pattern	0
+expect	renderer.background_first	1518915
+expect	renderer.background_second	5858673
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	0
+set	BackgroundFirst	172D43
+set	BackgroundSecond	596571
+set	BackgroundTiled	false
+expect	enabled.BackgroundPattern	false
+expect	enabled.BackgroundSecond	false
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	false
+expect	settings.background_pattern	0
+expect	renderer.background_pattern	0
+expect	renderer.background_first	1518915
+expect	renderer.background_second	5858673
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	1
+set	BackgroundFirst	172D43
+set	BackgroundSecond	596571
+set	BackgroundTiled	true
+expect	enabled.BackgroundPattern	true
+expect	enabled.BackgroundSecond	true
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	true
+expect	settings.background_pattern	1
+expect	renderer.background_pattern	1
+expect	renderer.background_first	1518915
+expect	renderer.background_second	5858673
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	1
+set	BackgroundFirst	172D43
+set	BackgroundSecond	596571
+set	BackgroundTiled	false
+expect	enabled.BackgroundPattern	false
+expect	enabled.BackgroundSecond	false
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	false
+expect	settings.background_pattern	1
+expect	renderer.background_pattern	1
+expect	renderer.background_first	1518915
+expect	renderer.background_second	5858673
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	2
+set	BackgroundFirst	172D43
+set	BackgroundSecond	596571
+set	BackgroundTiled	true
+expect	enabled.BackgroundPattern	true
+expect	enabled.BackgroundSecond	true
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	true
+expect	settings.background_pattern	2
+expect	renderer.background_pattern	2
+expect	renderer.background_first	1518915
+expect	renderer.background_second	5858673
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	2
+set	BackgroundFirst	172D43
+set	BackgroundSecond	596571
+set	BackgroundTiled	false
+expect	enabled.BackgroundPattern	false
+expect	enabled.BackgroundSecond	false
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	false
+expect	settings.background_pattern	2
+expect	renderer.background_pattern	2
+expect	renderer.background_first	1518915
+expect	renderer.background_second	5858673
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	3
+set	BackgroundFirst	172D43
+set	BackgroundSecond	596571
+set	BackgroundTiled	true
+expect	enabled.BackgroundPattern	true
+expect	enabled.BackgroundSecond	true
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	true
+expect	settings.background_pattern	3
+expect	renderer.background_pattern	3
+expect	renderer.background_first	1518915
+expect	renderer.background_second	5858673
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	3
+set	BackgroundFirst	172D43
+set	BackgroundSecond	596571
+set	BackgroundTiled	false
+expect	enabled.BackgroundPattern	false
+expect	enabled.BackgroundSecond	false
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	false
+expect	settings.background_pattern	3
+expect	renderer.background_pattern	3
+expect	renderer.background_first	1518915
+expect	renderer.background_second	5858673
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	4
+set	BackgroundFirst	172D43
+set	BackgroundSecond	596571
+set	BackgroundTiled	true
+expect	enabled.BackgroundPattern	true
+expect	enabled.BackgroundSecond	true
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	true
+expect	settings.background_pattern	4
+expect	renderer.background_pattern	4
+expect	renderer.background_first	1518915
+expect	renderer.background_second	5858673
+expect_view_background
+persisted
+set	BackgroundTiled	true
+set	BackgroundPattern	4
+set	BackgroundFirst	172D43
+set	BackgroundSecond	596571
+set	BackgroundTiled	false
+expect	enabled.BackgroundPattern	false
+expect	enabled.BackgroundSecond	false
+expect	enabled.BackgroundFirst	true
+click	ApplyButton
+expect	error_count	0
+expect	settings.grid	23
+expect	settings.background_tiled	false
+expect	settings.background_pattern	4
+expect	renderer.background_pattern	4
+expect	renderer.background_first	1518915
+expect	renderer.background_second	5858673
+expect_view_background
+persisted
+snapshot	background-custom-controls.png
+set	BackgroundTiled	true
+set	BackgroundPattern	4
+click	OK
+expect_view_background
+open	${fixtures}/alpha.png
+wait
+command	Actual
+expect_view_background
+pixel_copy
+command	ZoomIn
+expect_view_background
+command	Fullscreen
+command	Actual
+expect_view_background
+snapshot	background-alpha-fullscreen.png
+command	Fullscreen
+command	CloseImage
+expect_view_background
+resize	340	260
+expect_view_background
+resize	900	700
+settings
+tab	Background
+click	Reset
+click	Cancel
+expect	settings.background_pattern	4
+expect_view_background
+open	${fixtures}/disposal.gif
+wait
+player	StopAnimation
+seek	2
+command	Actual
+settings
+tab	Background
+set	BackgroundPattern	0
+set	BackgroundFirst	234567
+set	BackgroundSecond	89ABCD
+click	ApplyButton
+expect	frame	2
+expect	playing	false
+expect_view_background
+click	Cancel
+pixel_copy
+player	FrameNext
+expect	frame	3
+expect_view_background
+pixel_copy
+snapshot	background-gif-frame.png
+open	${fixtures}/blend.apng
+wait
+player	StopAnimation
+seek	1
+command	Actual
+settings
+tab	Background
+set	BackgroundTiled	false
+click	OK
+expect	frame	1
+expect	playing	false
+expect_view_background
+pixel_copy
+snapshot	background-apng-frame.png
+command	CloseImage
+expect_view_background
+settings
+tab	Background
+click	Reset
+click	ApplyButton
+expect	settings.background_tiled	true
+expect	settings.background_pattern	2
+expect	renderer.background_first	2105376
+expect	renderer.background_second	3158064
+expect_view_background
+persisted
+click	OK
+expect_empty_checker
+snapshot	background-reset-empty.png

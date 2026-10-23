@@ -1,0 +1,77 @@
+open	${fixtures}/alpha.png
+wait
+remember	original
+command	Canvas
+expect	canvas.anchor	4
+expect	canvas.keep_aspect	false
+expect	canvas.transparent	true
+expect	canvas.colors_enabled	false
+canvas_set	Anchor	8
+canvas_set	Transparent	false
+expect	canvas.colors_enabled	true
+canvas_set	Red	256
+expect	canvas.valid	false
+expect	canvas.ok_enabled	false
+canvas_set	Red	17
+canvas_set	Green	39
+canvas_set	Blue	61
+canvas_set	Alpha	33
+expect	canvas.valid	true
+canvas_click	Color
+color_expect	17	39	61
+color_set	50	60	70
+color_close	Cancel
+expect	canvas.color	1124157
+canvas_click	Color
+color_set	50	60	70
+color_close	OK
+expect	canvas.color	3292230
+expect	canvas.alpha	33
+canvas_set	Red	17
+canvas_set	Green	39
+canvas_set	Blue	61
+canvas_set	Width	5
+canvas_set	Height	4
+canvas_snapshot	canvas-bottom-right-alpha.png
+canvas_click	Cancel
+expect_same	original	true
+expect	settings.canvas_anchor	4
+expect	settings.canvas_transparent	true
+command	Canvas
+canvas_set	Anchor	8
+canvas_set	Transparent	false
+canvas_set	Red	17
+canvas_set	Green	39
+canvas_set	Blue	61
+canvas_set	Alpha	33
+canvas_set	Width	5
+canvas_set	Height	4
+canvas_click	OK
+expect	width	5
+expect	height	4
+expect_pixel	0	0	17	39	61	33
+expect_pixel	2	2	255	0	0	255
+expect	settings.canvas_anchor	8
+expect	settings.canvas_color	1124157
+expect	settings.canvas_alpha	33
+persisted
+pixel_copy
+command	Undo
+expect_same	original	true
+command	Canvas
+expect	canvas.anchor	8
+expect	canvas.alpha	33
+canvas_set	Anchor	0
+canvas_set	Transparent	true
+canvas_set	KeepAspect	true
+canvas_set	WidthPercent	200
+expect	canvas.width	6
+expect	canvas.height	4
+canvas_snapshot	canvas-top-left-transparent.png
+canvas_click	OK
+expect_pixel	0	0	255	0	0	255
+expect_pixel	5	3	0	0	0	0
+pixel_copy
+command	Undo
+expect_same	original	true
+expect	error_count	0

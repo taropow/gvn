@@ -1,0 +1,51 @@
+copy_fixture	info/rgb.png	files/01.png
+copy_fixture	info/rgba-low.png	files/02.png
+copy_fixture	info/palette-unused.png	files/03.png
+open	${output}/files/02.png
+wait
+remember	original
+image_info
+expect	info_open	true
+expect	info.automatic	false
+expect	info.pending	false
+expect	info.count	-1
+info_expect	ファイル名: 02.png
+expect	info.filename_first_visible	0
+info_expect	${output}/files/02.png
+info_expect	フォルダ内の順番: 2 / 3
+info_set	Auto	true
+info_wait
+expect	info.count	3
+info_snapshot	info-colors-low-alpha.png
+info_set	Auto	false
+expect	info.count	3
+info_set	Auto	true
+info_close
+expect	info_open	false
+expect	settings.info_auto_colors	true
+persisted
+expect_same	original	true
+pixel_copy
+open	${output}/files/03.png
+wait
+image_info
+info_wait
+expect	info.count	1
+info_expect	フォルダ内の順番: 3 / 3
+info_close
+open	${fixtures}/disposal.gif
+wait
+player	StopAnimation
+player	FrameNext
+image_info
+expect	info.colors_enabled	false
+expect	info.checked	false
+expect	info.pending	false
+expect	info.count	-1
+info_snapshot	info-animation-count-disabled.png
+info_close
+expect	frame	1
+expect	playing	false
+expect	frames	4
+expect	settings.info_auto_colors	true
+expect	error_count	0

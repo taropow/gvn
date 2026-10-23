@@ -1,0 +1,8 @@
+/.cache/
+/build/
+/dist/
+/app/
+/out/
+/.vs/
+*.user
+__pycache__/

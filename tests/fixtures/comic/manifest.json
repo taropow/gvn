@@ -1,0 +1,372 @@
+{
+  "scope": "Own official 0.45 child; synthetic opaque 7x11 and 5x17 or 5x16 pages; real comic options and copy command on private station/clipboard. No startup benchmark or user imagery.",
+  "reference_executable_sha256": "c23b73887a3a98833f9318e7e3321a6a5b9825ad442b88e8bd3b0333ba28a3e5",
+  "probe_source_sha256": "a549f1a509b809677affa148fdff6e4b5b155e19a08d8c7fbf88923e89df8937",
+  "inputs": {
+    "first.png": "712080d77ad728046cf520dab12fbdacb5b8062673fb2d8f4019630339019be0",
+    "second-16.png": "d1beb72cf133ce738bb8b119fc2037b9c90fe0828c8164f45d48475a0a23fa15",
+    "second-17.png": "8169bfd92aa40123ae85eb9dc0cb6dc856cccdf360620e39fe016f10f19e55ec"
+  },
+  "cases": [
+    {
+      "method": 0,
+      "second_height": 16,
+      "mode": 0,
+      "path": "method-00-height-16-mode-0.png",
+      "width": 12,
+      "height": 16,
+      "sha256": "357476680bef540f49435366567818da1e260af830cb9203dc92288f027cbb53",
+      "report": "reference-00-16.json"
+    },
+    {
+      "method": 0,
+      "second_height": 16,
+      "mode": 1,
+      "path": "method-00-height-16-mode-1.png",
+      "width": 10,
+      "height": 11,
+      "sha256": "10d27c3ff07b32c01b2f151ab487fa452db516afa5f049c0ce54b832b847402b",
+      "report": "reference-00-16.json"
+    },
+    {
+      "method": 0,
+      "second_height": 16,
+      "mode": 2,
+      "path": "method-00-height-16-mode-2.png",
+      "width": 15,
+      "height": 16,
+      "sha256": "4a2d74614852d99f5e569631f1ab83824551d311b6ac4222f7610b170b408933",
+      "report": "reference-00-16.json"
+    },
+    {
+      "method": 0,
+      "second_height": 17,
+      "mode": 0,
+      "path": "method-00-height-17-mode-0.png",
+      "width": 12,
+      "height": 17,
+      "sha256": "69a9f22bb2e6febbdb1b18f7cdd0f5ed6dff81abb92e002982c3720050947f25",
+      "report": "reference-00-17.json"
+    },
+    {
+      "method": 0,
+      "second_height": 17,
+      "mode": 1,
+      "path": "method-00-height-17-mode-1.png",
+      "width": 10,
+      "height": 11,
+      "sha256": "356a68da9ffe75ab97a86ac114ce7d5af0d42e2876413c50e4d3ea4bde89ea58",
+      "report": "reference-00-17.json"
+    },
+    {
+      "method": 0,
+      "second_height": 17,
+      "mode": 2,
+      "path": "method-00-height-17-mode-2.png",
+      "width": 16,
+      "height": 17,
+      "sha256": "16199b6b7dd1a03828daaa80ee0b3ce5a0fe2cb87d8f9ebeddc2d851e70ae485",
+      "report": "reference-00-17.json"
+    },
+    {
+      "method": 1,
+      "second_height": 17,
+      "mode": 0,
+      "path": "method-01-height-17-mode-0.png",
+      "width": 12,
+      "height": 17,
+      "sha256": "69a9f22bb2e6febbdb1b18f7cdd0f5ed6dff81abb92e002982c3720050947f25",
+      "report": "reference-01-17.json"
+    },
+    {
+      "method": 1,
+      "second_height": 17,
+      "mode": 1,
+      "path": "method-01-height-17-mode-1.png",
+      "width": 10,
+      "height": 11,
+      "sha256": "70cea8071ec5f0db0107507b51339ac79b920e3548e03cbd6679033bf06794f2",
+      "report": "reference-01-17.json"
+    },
+    {
+      "method": 1,
+      "second_height": 17,
+      "mode": 2,
+      "path": "method-01-height-17-mode-2.png",
+      "width": 16,
+      "height": 17,
+      "sha256": "d3ed3f0c8781508e7f6ea26d28158c800a4569a7668c72461343b6a8436de838",
+      "report": "reference-01-17.json"
+    },
+    {
+      "method": 2,
+      "second_height": 17,
+      "mode": 0,
+      "path": "method-02-height-17-mode-0.png",
+      "width": 12,
+      "height": 17,
+      "sha256": "69a9f22bb2e6febbdb1b18f7cdd0f5ed6dff81abb92e002982c3720050947f25",
+      "report": "reference-02-17.json"
+    },
+    {
+      "method": 2,
+      "second_height": 17,
+      "mode": 1,
+      "path": "method-02-height-17-mode-1.png",
+      "width": 10,
+      "height": 11,
+      "sha256": "356a68da9ffe75ab97a86ac114ce7d5af0d42e2876413c50e4d3ea4bde89ea58",
+      "report": "reference-02-17.json"
+    },
+    {
+      "method": 2,
+      "second_height": 17,
+      "mode": 2,
+      "path": "method-02-height-17-mode-2.png",
+      "width": 16,
+      "height": 17,
+      "sha256": "16199b6b7dd1a03828daaa80ee0b3ce5a0fe2cb87d8f9ebeddc2d851e70ae485",
+      "report": "reference-02-17.json"
+    },
+    {
+      "method": 3,
+      "second_height": 17,
+      "mode": 0,
+      "path": "method-03-height-17-mode-0.png",
+      "width": 12,
+      "height": 17,
+      "sha256": "69a9f22bb2e6febbdb1b18f7cdd0f5ed6dff81abb92e002982c3720050947f25",
+      "report": "reference-03-17.json"
+    },
+    {
+      "method": 3,
+      "second_height": 17,
+      "mode": 1,
+      "path": "method-03-height-17-mode-1.png",
+      "width": 10,
+      "height": 11,
+      "sha256": "356a68da9ffe75ab97a86ac114ce7d5af0d42e2876413c50e4d3ea4bde89ea58",
+      "report": "reference-03-17.json"
+    },
+    {
+      "method": 3,
+      "second_height": 17,
+      "mode": 2,
+      "path": "method-03-height-17-mode-2.png",
+      "width": 16,
+      "height": 17,
+      "sha256": "16199b6b7dd1a03828daaa80ee0b3ce5a0fe2cb87d8f9ebeddc2d851e70ae485",
+      "report": "reference-03-17.json"
+    },
+    {
+      "method": 4,
+      "second_height": 17,
+      "mode": 0,
+      "path": "method-04-height-17-mode-0.png",
+      "width": 12,
+      "height": 17,
+      "sha256": "69a9f22bb2e6febbdb1b18f7cdd0f5ed6dff81abb92e002982c3720050947f25",
+      "report": "reference-04-17.json"
+    },
+    {
+      "method": 4,
+      "second_height": 17,
+      "mode": 1,
+      "path": "method-04-height-17-mode-1.png",
+      "width": 10,
+      "height": 11,
+      "sha256": "356a68da9ffe75ab97a86ac114ce7d5af0d42e2876413c50e4d3ea4bde89ea58",
+      "report": "reference-04-17.json"
+    },
+    {
+      "method": 4,
+      "second_height": 17,
+      "mode": 2,
+      "path": "method-04-height-17-mode-2.png",
+      "width": 16,
+      "height": 17,
+      "sha256": "16199b6b7dd1a03828daaa80ee0b3ce5a0fe2cb87d8f9ebeddc2d851e70ae485",
+      "report": "reference-04-17.json"
+    },
+    {
+      "method": 5,
+      "second_height": 17,
+      "mode": 0,
+      "path": "method-05-height-17-mode-0.png",
+      "width": 12,
+      "height": 17,
+      "sha256": "69a9f22bb2e6febbdb1b18f7cdd0f5ed6dff81abb92e002982c3720050947f25",
+      "report": "reference-05-17.json"
+    },
+    {
+      "method": 5,
+      "second_height": 17,
+      "mode": 1,
+      "path": "method-05-height-17-mode-1.png",
+      "width": 10,
+      "height": 11,
+      "sha256": "356a68da9ffe75ab97a86ac114ce7d5af0d42e2876413c50e4d3ea4bde89ea58",
+      "report": "reference-05-17.json"
+    },
+    {
+      "method": 5,
+      "second_height": 17,
+      "mode": 2,
+      "path": "method-05-height-17-mode-2.png",
+      "width": 16,
+      "height": 17,
+      "sha256": "16199b6b7dd1a03828daaa80ee0b3ce5a0fe2cb87d8f9ebeddc2d851e70ae485",
+      "report": "reference-05-17.json"
+    },
+    {
+      "method": 6,
+      "second_height": 17,
+      "mode": 0,
+      "path": "method-06-height-17-mode-0.png",
+      "width": 12,
+      "height": 17,
+      "sha256": "69a9f22bb2e6febbdb1b18f7cdd0f5ed6dff81abb92e002982c3720050947f25",
+      "report": "reference-06-17.json"
+    },
+    {
+      "method": 6,
+      "second_height": 17,
+      "mode": 1,
+      "path": "method-06-height-17-mode-1.png",
+      "width": 10,
+      "height": 11,
+      "sha256": "356a68da9ffe75ab97a86ac114ce7d5af0d42e2876413c50e4d3ea4bde89ea58",
+      "report": "reference-06-17.json"
+    },
+    {
+      "method": 6,
+      "second_height": 17,
+      "mode": 2,
+      "path": "method-06-height-17-mode-2.png",
+      "width": 16,
+      "height": 17,
+      "sha256": "16199b6b7dd1a03828daaa80ee0b3ce5a0fe2cb87d8f9ebeddc2d851e70ae485",
+      "report": "reference-06-17.json"
+    },
+    {
+      "method": 7,
+      "second_height": 17,
+      "mode": 0,
+      "path": "method-07-height-17-mode-0.png",
+      "width": 12,
+      "height": 17,
+      "sha256": "69a9f22bb2e6febbdb1b18f7cdd0f5ed6dff81abb92e002982c3720050947f25",
+      "report": "reference-07-17.json"
+    },
+    {
+      "method": 7,
+      "second_height": 17,
+      "mode": 1,
+      "path": "method-07-height-17-mode-1.png",
+      "width": 10,
+      "height": 11,
+      "sha256": "356a68da9ffe75ab97a86ac114ce7d5af0d42e2876413c50e4d3ea4bde89ea58",
+      "report": "reference-07-17.json"
+    },
+    {
+      "method": 7,
+      "second_height": 17,
+      "mode": 2,
+      "path": "method-07-height-17-mode-2.png",
+      "width": 16,
+      "height": 17,
+      "sha256": "16199b6b7dd1a03828daaa80ee0b3ce5a0fe2cb87d8f9ebeddc2d851e70ae485",
+      "report": "reference-07-17.json"
+    },
+    {
+      "method": 8,
+      "second_height": 17,
+      "mode": 0,
+      "path": "method-08-height-17-mode-0.png",
+      "width": 12,
+      "height": 17,
+      "sha256": "69a9f22bb2e6febbdb1b18f7cdd0f5ed6dff81abb92e002982c3720050947f25",
+      "report": "reference-08-17.json"
+    },
+    {
+      "method": 8,
+      "second_height": 17,
+      "mode": 1,
+      "path": "method-08-height-17-mode-1.png",
+      "width": 10,
+      "height": 11,
+      "sha256": "356a68da9ffe75ab97a86ac114ce7d5af0d42e2876413c50e4d3ea4bde89ea58",
+      "report": "reference-08-17.json"
+    },
+    {
+      "method": 8,
+      "second_height": 17,
+      "mode": 2,
+      "path": "method-08-height-17-mode-2.png",
+      "width": 16,
+      "height": 17,
+      "sha256": "16199b6b7dd1a03828daaa80ee0b3ce5a0fe2cb87d8f9ebeddc2d851e70ae485",
+      "report": "reference-08-17.json"
+    },
+    {
+      "method": 9,
+      "second_height": 17,
+      "mode": 0,
+      "path": "method-09-height-17-mode-0.png",
+      "width": 12,
+      "height": 17,
+      "sha256": "69a9f22bb2e6febbdb1b18f7cdd0f5ed6dff81abb92e002982c3720050947f25",
+      "report": "reference-09-17.json"
+    },
+    {
+      "method": 9,
+      "second_height": 17,
+      "mode": 1,
+      "path": "method-09-height-17-mode-1.png",
+      "width": 10,
+      "height": 11,
+      "sha256": "356a68da9ffe75ab97a86ac114ce7d5af0d42e2876413c50e4d3ea4bde89ea58",
+      "report": "reference-09-17.json"
+    },
+    {
+      "method": 9,
+      "second_height": 17,
+      "mode": 2,
+      "path": "method-09-height-17-mode-2.png",
+      "width": 16,
+      "height": 17,
+      "sha256": "16199b6b7dd1a03828daaa80ee0b3ce5a0fe2cb87d8f9ebeddc2d851e70ae485",
+      "report": "reference-09-17.json"
+    },
+    {
+      "method": 10,
+      "second_height": 17,
+      "mode": 0,
+      "path": "method-10-height-17-mode-0.png",
+      "width": 12,
+      "height": 17,
+      "sha256": "69a9f22bb2e6febbdb1b18f7cdd0f5ed6dff81abb92e002982c3720050947f25",
+      "report": "reference-10-17.json"
+    },
+    {
+      "method": 10,
+      "second_height": 17,
+      "mode": 1,
+      "path": "method-10-height-17-mode-1.png",
+      "width": 10,
+      "height": 11,
+      "sha256": "356a68da9ffe75ab97a86ac114ce7d5af0d42e2876413c50e4d3ea4bde89ea58",
+      "report": "reference-10-17.json"
+    },
+    {
+      "method": 10,
+      "second_height": 17,
+      "mode": 2,
+      "path": "method-10-height-17-mode-2.png",
+      "width": 16,
+      "height": 17,
+      "sha256": "16199b6b7dd1a03828daaa80ee0b3ce5a0fe2cb87d8f9ebeddc2d851e70ae485",
+      "report": "reference-10-17.json"
+    }
+  ]
+}

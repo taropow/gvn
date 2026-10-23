@@ -1,0 +1,54 @@
+command	DisplayImageWindow
+open	${fixtures}/display-alpha.png
+wait
+command	FitImage
+render
+expect	renderer.source_bytes	0
+expect_positive	renderer.sample_bytes
+remember	rgba
+pixel_copy
+command	Actual
+render
+expect_positive	renderer.source_bytes
+command	FitImage
+render
+expect	renderer.source_bytes	0
+expect_same	rgba	true
+snapshot	borrowed-fit.png
+sizing	begin
+resize	900	640
+render
+expect	renderer.resizing	true
+expect_positive	renderer.source_bytes
+sizing	end
+render
+expect	renderer.source_bytes	0
+sizing	begin
+resize	980	720
+render
+expect_positive	renderer.source_bytes
+sizing	cancel
+render
+expect	renderer.resizing	false
+expect	renderer.source_bytes	0
+settings
+tab	Display
+set	DisplayDown	10
+set	DisplayUp	10
+click	OK
+render
+expect	renderer.source_bytes	0
+expect	renderer.sample_budget	true
+pixel_copy
+open	${fixtures}/disposal.gif
+wait
+player	FirstFrame
+player	FrameNext
+render
+expect	renderer.source_bytes	0
+pixel_copy
+snapshot	borrowed-animation.png
+command	CloseImage
+expect_empty_checker
+expect	renderer.source_bytes	0
+expect	renderer.sample_bytes	0

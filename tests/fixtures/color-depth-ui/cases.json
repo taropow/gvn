@@ -1,0 +1,51 @@
+{
+  "outputs": [
+    {
+      "file": "alpha8.png",
+      "reference": "palette/png-4-alpha.png",
+      "bits": 8,
+      "palette": true
+    },
+    {
+      "file": "alpha24.png",
+      "reference": "palette/png-4-alpha.png",
+      "bits": 8,
+      "palette": false
+    },
+    {
+      "file": "rgb555.bmp",
+      "reference": "color-depth/reference-555.bmp",
+      "bpp": 16
+    },
+    {
+      "file": "rgb565.bmp",
+      "reference": "color-depth/reference-565.bmp",
+      "bpp": 16
+    },
+    {
+      "file": "optimal.png",
+      "reference": "color-depth-ui/two-colors.png",
+      "bits": 1,
+      "palette": true
+    },
+    {
+      "file": "rgba-reduced.png",
+      "reference": "color-depth-ui/rgba-gradient.png",
+      "reduction": true
+    },
+    {
+      "file": "animation-frame.png",
+      "reference": "color-depth-ui/animation-frame.png",
+      "bits": 8,
+      "palette": true
+    }
+  ],
+  "source_sha256": {
+    "palette/png-4-alpha.png": "dc374a1e225b0b398ac05b59eeea158de4be754c5e05be7fa33ce6839134b5e5",
+    "color-depth/reference-555.bmp": "540eab2376d99deb3cb792eecde5dbff8100a40d4232b41670807e38446324da",
+    "color-depth/reference-565.bmp": "bf018c2c3f2a1e9778baae2036cfde9b2a1f5701ed8a176e80ab5beb1c9983ec",
+    "color-depth-ui/two-colors.png": "8cf6c927c06a4594ed441e4d2a0417d18d14ca81d41dea51876533a9afd7f1c3",
+    "color-depth-ui/rgba-gradient.png": "968314ef1b87bfce07486a22b6a461e5ecfda51c702eca762d9eda9793d6adcb",
+    "color-depth-ui/animation-frame.png": "2bd15cf5136ba56db51489351a8c288937a41897a811985e8941a9b605974ac7"
+  }
+}

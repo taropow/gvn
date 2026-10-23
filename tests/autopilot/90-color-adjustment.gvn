@@ -1,0 +1,145 @@
+expect_menu_enabled	ColorAdjust	false
+open	${fixtures}/color-adjustment-ui/source-alpha.png
+wait
+remember	original
+menu	ColorAdjust
+expect	adjust.hue	0
+expect	adjust.gray	2
+adjust_range	Hue	-180	180	0
+adjust_range	Saturation	-100	100	0
+adjust_set	Hue	empty
+expect	adjust.valid	false
+expect	adjust.ok_enabled	false
+adjust_set	Hue	0
+adjust_scroll	Hue	75
+adjust_scroll	Saturation	-40
+adjust_scroll	Lightness	15
+adjust_range	Hue	-180	180	75
+adjust_range	Saturation	-100	100	-40
+adjust_range	Lightness	-100	100	15
+adjust_snapshot	adjust-alpha.png
+adjust_cancel
+expect_same	original	true
+expect	modified	false
+menu	ColorAdjust
+adjust_scroll	Hue	75
+adjust_scroll	Saturation	-40
+adjust_scroll	Lightness	15
+adjust_preview	previews/combined.png
+adjust_accept
+expect_image	${fixtures}/color-adjustment-ui/combined.png	1
+pixel_copy
+save_target	pixels/combined.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_accept
+wait_save
+expect_saved	pixels/combined.png
+persisted
+command	Undo
+expect_same	original	true
+rect_dialog
+rect_set	Left	5
+rect_set	Top	4
+rect_set	Width	11
+rect_set	Height	7
+rect_click	OK
+menu	ColorAdjust
+adjust_set	Hue	90
+adjust_preview	previews/selected.png
+adjust_accept
+expect	selection_w	11
+expect	selection_h	7
+expect_image	${fixtures}/color-adjustment-ui/selected.png	1
+command	ClearSelection
+pixel_copy
+save_target	pixels/selected.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_accept
+wait_save
+expect_saved	pixels/selected.png
+persisted
+command	Undo
+expect_same	original	true
+menu	ColorAdjust
+adjust_unified	true
+expect	adjust.hue	0
+expect	adjust.saturation	25
+adjust_range	Hue	0	360	0
+adjust_range	Saturation	0	100	25
+adjust_set	Hue	45
+adjust_set	Saturation	60
+adjust_set	Lightness	20
+adjust_gray	1
+adjust_preview	previews/unified.png
+adjust_snapshot	adjust-unified.png
+adjust_accept
+expect_image	${fixtures}/color-adjustment-ui/unified.png	1
+pixel_copy
+save_target	pixels/unified.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_accept
+wait_save
+expect_saved	pixels/unified.png
+persisted
+remember	unified
+menu	ColorAdjust
+expect	adjust.unified	true
+expect	adjust.hue	45
+expect	adjust.saturation	60
+expect	adjust.lightness	20
+expect	adjust.gray	1
+adjust_unified	false
+adjust_set	Hue	90
+adjust_reset	Hue
+adjust_gray	0
+adjust_accept
+expect_same	unified	true
+persisted
+expect	settings.color_adjust_unified	false
+expect	settings.color_adjust_hue	45
+expect	settings.color_adjust_saturation	60
+expect	settings.color_adjust_lightness	20
+menu	ColorAdjust
+expect	adjust.hue	0
+expect	adjust.saturation	0
+expect	adjust.lightness	0
+expect	adjust.gray	0
+adjust_cancel
+command	Undo
+expect_same	original	true
+open	${fixtures}/disposal.gif
+wait
+command	Play
+seek	1
+answer	Cancel
+menu	ColorAdjust
+expect	adjust.open	false
+expect	frames	4
+expect	frame	1
+answer	OK
+menu	ColorAdjust
+adjust_scroll	Hue	90
+adjust_accept
+expect	frames	1
+expect_image	${fixtures}/color-adjustment-ui/animation.png	1
+pixel_copy
+save_target	pixels/animation.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_accept
+wait_save
+expect_saved	pixels/animation.png
+persisted
+command	Undo
+expect	frames	4
+expect	frame	1
+expect	playing	false
+expect	error_count	0
+snapshot	adjust-animation-undo.png

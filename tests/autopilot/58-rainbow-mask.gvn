@@ -1,0 +1,127 @@
+open	${fixtures}/rainbow-reference/png/full-1-source.png
+wait
+remember	original
+menu	RainbowMask
+expect	rainbow.size	8
+expect	rainbow.preview	true
+rainbow_size	1
+expect	rainbow.presented	true
+rainbow_expect	${fixtures}/rainbow-reference/png/full-1-expected.png
+expect_same	original	true
+expect	modified	false
+rainbow_size	2
+expect	rainbow.presented	true
+rainbow_expect	${fixtures}/rainbow-reference/png/full-2-expected.png
+expect_same	original	true
+expect	modified	false
+rainbow_size	4
+expect	rainbow.presented	true
+rainbow_expect	${fixtures}/rainbow-reference/png/full-4-expected.png
+expect_same	original	true
+expect	modified	false
+rainbow_size	8
+expect	rainbow.presented	true
+rainbow_expect	${fixtures}/rainbow-reference/png/full-8-expected.png
+expect_same	original	true
+expect	modified	false
+rainbow_size	16
+expect	rainbow.presented	true
+rainbow_expect	${fixtures}/rainbow-reference/png/full-16-expected.png
+expect_same	original	true
+expect	modified	false
+rainbow_size	32
+expect	rainbow.presented	true
+rainbow_expect	${fixtures}/rainbow-reference/png/full-32-expected.png
+expect_same	original	true
+expect	modified	false
+rainbow_snapshot	rainbow-preview.png
+rainbow_preview	false
+expect	rainbow.presented	false
+rainbow_expect	${fixtures}/rainbow-reference/png/full-1-source.png
+rainbow_cancel
+expect_same	original	true
+expect	settings.rainbow_size	8
+expect	settings.rainbow_preview	true
+menu	RainbowMask
+rainbow_size	4
+rainbow_preview	false
+rainbow_accept
+expect_image	${fixtures}/rainbow-reference/png/full-4-expected.png	0
+expect	settings.rainbow_size	4
+expect	settings.rainbow_preview	false
+persisted
+pixel_copy
+save_target	pixels/rainbow.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/rainbow.png
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	1
+expect	export_temporary	true
+snapshot	rainbow-accepted.png
+menu	RainbowMask
+expect	rainbow.size	4
+expect	rainbow.preview	false
+rainbow_accept
+expect_image	${fixtures}/rainbow-reference/png/full-1-source.png	0
+command	Undo
+expect	scale	1
+expect_image	${fixtures}/rainbow-reference/png/full-4-expected.png	0
+open	${fixtures}/rainbow-reference/png/full-1-source.png
+wait
+native_command	SelectNumbers
+prompt_text	3, 2, 29, 19
+prompt_accept
+menu	RainbowMask
+rainbow_preview	true
+rainbow_size	1
+rainbow_expect	${fixtures}/rainbow-reference/png/selected-1-expected.png
+expect	selection_w	29
+expect	selection_h	19
+rainbow_size	2
+rainbow_expect	${fixtures}/rainbow-reference/png/selected-2-expected.png
+expect	selection_w	29
+expect	selection_h	19
+rainbow_size	4
+rainbow_expect	${fixtures}/rainbow-reference/png/selected-4-expected.png
+expect	selection_w	29
+expect	selection_h	19
+rainbow_size	8
+rainbow_expect	${fixtures}/rainbow-reference/png/selected-8-expected.png
+expect	selection_w	29
+expect	selection_h	19
+rainbow_size	16
+rainbow_expect	${fixtures}/rainbow-reference/png/selected-16-expected.png
+expect	selection_w	29
+expect	selection_h	19
+rainbow_size	32
+rainbow_expect	${fixtures}/rainbow-reference/png/selected-32-expected.png
+expect	selection_w	29
+expect	selection_h	19
+rainbow_size	4
+rainbow_accept
+expect_image	${fixtures}/rainbow-reference/png/selected-4-expected.png	0
+pixel_copy
+command	Undo
+expect	scale	1
+expect_image	${fixtures}/rainbow-reference/png/full-1-source.png	0
+expect	selection_w	29
+expect	selection_h	19
+menu	RainbowMask
+rainbow_size	1
+rainbow_preview	false
+rainbow_cancel
+expect	settings.rainbow_size	4
+expect	settings.rainbow_preview	true
+edit_budget	1
+menu	RainbowMask
+expect	rainbow.valid	false
+expect	rainbow.presented	false
+rainbow_snapshot	rainbow-memory-error.png
+rainbow_cancel
+edit_budget	real
+expect_image	${fixtures}/rainbow-reference/png/full-1-source.png	0
+expect	modified	false
+persisted

@@ -1,0 +1,103 @@
+resize	800	600
+settings
+tab	Window
+set	StartupPosition	2
+expect	enabled.WindowX	true
+set	WindowX	120
+set	WindowY	80
+set	WindowWidth	640
+set	WindowHeight	480
+scroll_page	top
+snapshot	window-startup-top.png
+click	WindowCurrent
+click	ApplyButton
+expect	window.settings_match	true
+set	WindowX	130
+set	WindowY	90
+set	WindowWidth	640
+set	WindowHeight	480
+set	StartupState	0
+scroll_page	bottom
+expect_positive	settings.scroll
+expect	settings.scrollbar	true
+snapshot	window-startup-bottom.png
+click	OK
+startup
+expect	window.width	640
+expect	window.height	480
+remember_window
+expect	settings.last_window_valid	true
+expect	settings.last_state	0
+settings
+tab	Window
+set	WindowCenter	true
+click	OK
+startup
+expect	window.centered	true
+settings
+tab	Window
+set	WindowCenter	false
+set	StartupPosition	1
+expect	enabled.WindowX	false
+set	StartupState	2
+expect	enabled.RestoreMaximized	false
+click	OK
+startup
+expect	window.maximized	true
+remember_window
+expect	settings.last_state	1
+settings
+tab	Window
+set	StartupState	0
+set	RestoreMaximized	true
+click	OK
+startup
+expect	window.maximized	true
+command	WindowRestore
+expect	window.maximized	false
+settings
+tab	Window
+set	StartupState	1
+click	OK
+startup
+expect	window.minimized	true
+command	WindowMinimize
+expect	window.minimized	false
+settings
+tab	Window
+set	StartupState	3
+click	OK
+startup
+expect	full	true
+remember_window
+expect	settings.last_state	2
+settings
+tab	Window
+set	StartupState	0
+set	RestoreFullscreen	true
+click	OK
+startup
+expect	full	true
+command	Fullscreen
+settings
+tab	Window
+set	Caption	false
+expect	enabled.OuterFrame	true
+set	OuterFrame	false
+set	InnerFrame	true
+click	ApplyButton
+expect	window.caption	false
+expect	window.outer	false
+expect	window.inner	true
+snapshot	window-frame-settings.png
+click	Reset
+click	ApplyButton
+expect	settings.startup_position	1
+expect	settings.restore_maximized	true
+expect	settings.restore_fullscreen	false
+expect	settings.window_width	480
+expect	settings.window_height	360
+expect	window.caption	true
+expect	window.inner	false
+click	Cancel
+persisted

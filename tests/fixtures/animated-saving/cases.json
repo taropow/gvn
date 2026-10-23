@@ -1,0 +1,8 @@
+{
+  "source": "Independently generated2frame GIF with duplicate0/1RGB, actual MassiGra animation-off first-frame copy/PNG validated separately.",
+  "reference": "docs/verification/0.52.0-animated-saving-related/stage4/reference/result.json",
+  "sha256": {
+    "first-frame.png": "4ff133ee4ee3cf90169c3ce029633268751cc0c4e86d75743d44f359ba91a49d",
+    "source.gif": "340d87e916c831f97900c65043c1d652b2d48869b17e5d7559f6a53ffb97e9aa"
+  }
+}

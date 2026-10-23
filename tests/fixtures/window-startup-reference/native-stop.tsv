@@ -1,0 +1,7 @@
+# name automatic_fullscreen prior_state started_state stopped_state
+end_command_auto0_from_normal	0	0	0	0
+end_command_auto0_from_maximized	0	1	1	1
+end_command_auto0_from_fullscreen	0	2	2	2
+end_command_auto1_from_normal	1	0	2	0
+end_command_auto1_from_maximized	1	1	2	1
+end_command_auto1_from_fullscreen	1	2	2	2

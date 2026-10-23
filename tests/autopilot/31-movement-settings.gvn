@@ -1,0 +1,327 @@
+command	ComicSingleWide
+copy_fixture	alpha.png	pages/1.png
+copy_fixture	rgb.bmp	pages/2.bmp
+copy_fixture	alpha.png	pages/a/1.png
+copy_fixture	rgb.bmp	pages/a/2.bmp
+copy_fixture	display-alpha.png	pages/a/child/1.png
+copy_fixture	alpha.png	pages/a/child/2.png
+copy_fixture	rgb.bmp	pages/c/1.bmp
+copy_fixture	alpha.png	pages/c/2.png
+mkdir	pages/b-empty
+navigation_root	pages
+expect	settings.end_action	1
+expect	settings.folder_history	false
+expect	settings.previous_folder_first	false
+expect	settings.adjacent_previous_first	false
+expect	settings.parent_first	false
+expect	settings.boundary_sound	false
+expect	settings.comic_toolbar_reverse	true
+settings
+tab	Move
+expect_choice_count	ListLoop	4
+snapshot	move-defaults.png
+set	FolderHistory	true
+set	PreviousFolderFirst	true
+set	AdjacentPreviousFirst	true
+set	ParentFirst	true
+set	BoundarySound	true
+set	ComicToolbarReverse	false
+set	Sort	2
+set	Natural	false
+set	Reverse	true
+set	SkipCount	2
+set	ListLoop	0
+click	ApplyButton
+persisted
+expect	settings.folder_history	true
+expect	settings.previous_folder_first	true
+expect	settings.adjacent_previous_first	true
+expect	settings.parent_first	true
+expect	settings.boundary_sound	true
+expect	settings.comic_toolbar_reverse	false
+expect	settings.sort	2
+expect	settings.natural	false
+expect	settings.reverse	true
+expect	settings.skip_count	2
+expect	settings.end_action	0
+expect	settings.list_loop	false
+snapshot	move-applied.png
+set	FolderHistory	false
+set	PreviousFolderFirst	false
+set	AdjacentPreviousFirst	false
+set	ParentFirst	false
+set	BoundarySound	false
+set	ComicToolbarReverse	true
+set	Sort	3
+set	Natural	true
+set	Reverse	false
+set	SkipCount	3
+set	ListLoop	2
+click	Cancel
+expect	settings.folder_history	true
+expect	settings.previous_folder_first	true
+expect	settings.adjacent_previous_first	true
+expect	settings.parent_first	true
+expect	settings.boundary_sound	true
+expect	settings.end_action	0
+expect	settings.sort	2
+expect	settings.skip_count	2
+expect	settings.comic_toolbar_reverse	false
+persisted
+settings
+tab	Move
+set	FolderHistory	false
+set	PreviousFolderFirst	false
+set	AdjacentPreviousFirst	false
+set	ParentFirst	false
+set	BoundarySound	false
+set	ComicToolbarReverse	true
+set	Sort	0
+set	Natural	true
+set	Reverse	false
+set	SkipCount	10
+set	ListLoop	0
+click	ApplyButton
+persisted
+click	OK
+open	${output}/pages/a/1.png
+wait
+expect_history	${output}/pages/a	true
+command	NextFolder
+wait
+expect_location	requested	${output}/pages/a/child/1.png
+expect_location	image	${output}/pages/a/child/1.png
+expect_history	${output}/pages/a/child	false
+command	Next
+wait
+expect_location	requested	${output}/pages/a/child/2.png
+expect_location	image	${output}/pages/a/child/2.png
+expect_history	${output}/pages/a/child	false
+command	PreviousFolder
+wait
+expect_location	requested	${output}/pages/a/2.bmp
+expect_location	image	${output}/pages/a/2.bmp
+open	${output}/pages/c/1.bmp
+wait
+command	PreviousFolder
+wait
+expect_location	requested	${output}/pages/a/child/2.png
+expect_location	image	${output}/pages/a/child/2.png
+expect_history	${output}/pages/a/child	false
+open	${output}/pages/c/1.bmp
+wait
+expect_history	${output}/pages/a/child	true
+command	PreviousAdjacentFolder
+wait
+expect_location	folder	${output}/pages/b-empty
+expect	has_image	false
+expect	list.count	0
+expect_text	title	b-empty
+snapshot	move-empty-adjacent.png
+command	PreviousAdjacentFolder
+wait
+expect_location	requested	${output}/pages/a/2.bmp
+expect_location	image	${output}/pages/a/2.bmp
+command	NextAdjacentFolder
+wait
+expect_location	folder	${output}/pages/b-empty
+expect	has_image	false
+command	NextAdjacentFolder
+wait
+expect_location	requested	${output}/pages/c/1.bmp
+expect_location	image	${output}/pages/c/1.bmp
+command	ParentFolder
+wait
+expect_location	requested	${output}/pages/2.bmp
+expect_location	image	${output}/pages/2.bmp
+settings
+tab	Move
+set	PreviousFolderFirst	true
+click	ApplyButton
+persisted
+click	OK
+open	${output}/pages/c/1.bmp
+wait
+command	PreviousFolder
+wait
+expect_location	requested	${output}/pages/a/child/1.png
+expect_location	image	${output}/pages/a/child/1.png
+settings
+tab	Move
+set	AdjacentPreviousFirst	true
+click	ApplyButton
+persisted
+click	OK
+open	${output}/pages/c/1.bmp
+wait
+command	PreviousAdjacentFolder
+wait
+expect_location	folder	${output}/pages/b-empty
+command	PreviousAdjacentFolder
+wait
+expect_location	requested	${output}/pages/a/1.png
+expect_location	image	${output}/pages/a/1.png
+settings
+tab	Move
+set	ParentFirst	true
+click	ApplyButton
+persisted
+click	OK
+open	${output}/pages/a/child/1.png
+wait
+command	ParentFolder
+wait
+expect_location	requested	${output}/pages/a/1.png
+expect_location	image	${output}/pages/a/1.png
+command	ParentFolder
+wait
+expect_location	requested	${output}/pages/1.png
+expect_location	image	${output}/pages/1.png
+settings
+tab	Move
+set	FolderHistory	true
+click	ApplyButton
+persisted
+click	OK
+open	${output}/pages/a/1.png
+wait
+command	NextFolder
+wait
+expect_location	requested	${output}/pages/a/child/1.png
+expect_location	image	${output}/pages/a/child/1.png
+expect_history	${output}/pages/a/child	true
+settings
+tab	General
+set	History	false
+click	ApplyButton
+persisted
+click	OK
+command	PreviousFolder
+wait
+expect_location	requested	${output}/pages/a/1.png
+expect_location	image	${output}/pages/a/1.png
+expect_history	${output}/pages/a	false
+expect_history	${output}/pages/c	false
+open	${output}/pages/c/1.bmp
+wait
+command	Comic
+wait
+expect_location	requested	${output}/pages/c/1.bmp
+expect_location	image	${output}/pages/c/1.bmp
+main_button	Previous
+wait
+expect_location	image	${output}/pages/c/2.png
+main_button	Next
+wait
+expect_location	image	${output}/pages/c/1.bmp
+command	Next
+wait
+expect_location	requested	${output}/pages/c/2.png
+expect_location	image	${output}/pages/c/2.png
+key	Left
+wait
+expect_location	image	${output}/pages/c/1.bmp
+settings
+tab	Move
+set	ComicToolbarReverse	false
+click	ApplyButton
+persisted
+click	OK
+main_button	Next
+wait
+expect_location	image	${output}/pages/c/2.png
+settings
+tab	Move
+set	ComicToolbarReverse	true
+click	ApplyButton
+persisted
+click	OK
+command	ComicRTL
+wait
+expect_location	requested	${output}/pages/c/2.png
+expect_location	image	${output}/pages/c/2.png
+expect	settings.comic_rtl	false
+main_button	Previous
+wait
+expect_location	image	${output}/pages/c/1.bmp
+settings
+tab	Move
+set	FolderHistory	true
+set	PreviousFolderFirst	true
+set	AdjacentPreviousFirst	true
+set	ParentFirst	true
+set	BoundarySound	true
+set	ComicToolbarReverse	false
+set	Sort	4
+set	Natural	false
+set	Reverse	true
+set	SkipCount	37
+set	ListLoop	3
+click	ApplyButton
+persisted
+click	OK
+settings
+tab	Move
+click	Reset
+click	Cancel
+expect	settings.end_action	3
+expect	settings.sort	4
+expect	settings.skip_count	37
+expect	settings.comic_toolbar_reverse	false
+persisted
+settings
+tab	Background
+set	Cell	23
+tab	Move
+click	Reset
+click	ApplyButton
+persisted
+expect	settings.sort	0
+expect	settings.natural	true
+expect	settings.reverse	false
+expect	settings.skip_count	10
+expect	settings.end_action	1
+expect	settings.folder_history	false
+expect	settings.previous_folder_first	false
+expect	settings.adjacent_previous_first	false
+expect	settings.parent_first	false
+expect	settings.boundary_sound	false
+expect	settings.comic_toolbar_reverse	true
+expect	settings.list_loop	false
+expect	settings.checker_size	23
+expect	settings.remember_history	false
+expect	settings.comic_rtl	false
+snapshot	move-reset.png
+click	OK
+command	Comic
+wait
+expect_location	requested	${output}/pages/c/1.bmp
+expect_location	image	${output}/pages/c/1.bmp
+open	${output}/pages/a/1.png
+wait
+settings
+tab	Keys
+function	NextAdjacentFolder
+set	KeyEdit	Ctrl+Alt+PageDown
+click	KeyAdd
+function	PreviousAdjacentFolder
+set	KeyEdit	Ctrl+Alt+PageUp
+click	KeyAdd
+click	ApplyButton
+persisted
+click	Cancel
+expect_binding	NextAdjacentFolder	Ctrl+Alt+PageDown
+expect_binding	PreviousAdjacentFolder	Ctrl+Alt+PageUp
+key	Ctrl+Alt+PageDown
+wait
+expect_location	folder	${output}/pages/b-empty
+expect	has_image	false
+key	Ctrl+Alt+PageUp
+wait
+expect_location	image	${output}/pages/a/2.bmp
+open	${output}/pages/a/1.png
+wait
+pixel_copy
+expect	error_count	0
+expect	boundary.count	0
+snapshot	move-final.png

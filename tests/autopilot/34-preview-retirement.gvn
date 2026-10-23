@@ -1,0 +1,51 @@
+copy_fixture	display-alpha.png	pages/1.png
+copy_fixture	rgb.bmp	pages/2.bmp
+open	${output}/pages/1.png
+wait
+remember	first
+expect	preview.present	false
+preview_hold
+expect	preview.started	false
+command	Jump
+wait_preview_blocked
+expect	jump.loading	true
+expect	preview.blocked	true
+expect	preview.same_service	true
+expect	preview.decode_count	1
+jump_snapshot	preview-loading.png
+jump_close
+expect	jump_open	false
+expect	preview.blocked	true
+expect	preview.forced_release	false
+expect_same	first	true
+command	Next
+wait
+expect_location	image	${output}/pages/2.bmp
+expect	preview.blocked	true
+remember	second
+command	Jump
+expect	preview.same_service	true
+expect	jump.index	1
+jump_expect	Name	2.bmp
+expect	preview.blocked	true
+jump_close
+expect	jump_open	false
+expect	preview.blocked	true
+expect	preview.same_service	true
+preview_release
+wait_preview
+wait_cache
+expect	preview.present	false
+expect	preview.expired	true
+expect	preview.decode_count	1
+expect	preview.forced_release	false
+expect_same	second	true
+command	Jump
+wait_jump
+jump_rgba	rgb.bmp
+jump_snapshot	preview-fresh.png
+jump_click	Cancel
+wait_preview
+expect	preview.present	false
+expect_same	second	true
+snapshot	preview-retired.png

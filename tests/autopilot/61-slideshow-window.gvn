@@ -1,0 +1,90 @@
+resize	800	600
+open	${fixtures}/display-alpha.png
+wait
+settings
+tab	Slideshow
+expect	settings.slide_fullscreen	true
+set	SlideFullscreen	false
+click	Cancel
+expect	settings.slide_fullscreen	true
+settings
+tab	Slideshow
+set	SlideFullscreen	false
+set	Interval	600
+click	ApplyButton
+expect	settings.slide_fullscreen	false
+persisted
+click	Reset
+click	ApplyButton
+expect	settings.slide_fullscreen	true
+set	Interval	600
+snapshot	slideshow-window-options.png
+click	OK
+persisted
+command	Slideshow
+expect	slideshow	true
+expect	full	true
+remember_window
+expect	settings.last_state	0
+snapshot	slideshow-automatic-fullscreen.png
+command	Slideshow
+expect	slideshow	false
+expect	full	false
+command	WindowMaximize
+expect	window.maximized	true
+command	Slideshow
+expect	full	true
+remember_window
+expect	settings.last_state	1
+command	Slideshow
+expect	full	false
+expect	window.maximized	true
+command	WindowRestore
+command	Fullscreen
+command	Slideshow
+expect	full	true
+remember_window
+expect	settings.last_state	2
+command	Slideshow
+expect	full	true
+command	Fullscreen
+command	Slideshow
+expect	full	true
+command	Fullscreen
+expect	full	false
+command	Fullscreen
+remember_window
+expect	settings.last_state	0
+settings
+tab	Slideshow
+set	SlideFullscreen	false
+click	OK
+expect	slideshow	true
+expect	full	true
+remember_window
+expect	settings.last_state	0
+command	Slideshow
+expect	full	false
+command	Slideshow
+expect	slideshow	true
+expect	full	false
+command	Fullscreen
+settings
+tab	Slideshow
+set	SlideFullscreen	true
+click	OK
+expect	slideshow	true
+expect	full	true
+remember_window
+expect	settings.last_state	2
+command	Slideshow
+expect	slideshow	false
+expect	full	true
+command	Fullscreen
+snapshot	slideshow-normal-restored.png
+command	Slideshow
+expect	full	true
+command	CloseImage
+expect	slideshow	false
+expect	full	false
+persisted

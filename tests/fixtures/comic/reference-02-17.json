@@ -1,0 +1,304 @@
+{
+  "reference_sha256": "c23b73887a3a98833f9318e7e3321a6a5b9825ad442b88e8bd3b0333ba28a3e5",
+  "tool_sha256": "a549f1a509b809677affa148fdff6e4b5b155e19a08d8c7fbf88923e89df8937",
+  "helper_sha256": "af27695f00eeb27410733bcbf6565af8bf7d640b69187d31ec551df202932292",
+  "noninteractive": true,
+  "controlled_pid": 48820,
+  "cases": [
+    {
+      "mode": 0,
+      "state": {
+        "2002": {
+          "style_visible": true,
+          "checked": false
+        },
+        "2023": {
+          "style_visible": true,
+          "index": 0,
+          "choices": [
+            "指定色で 塗り潰す",
+            "小さい方 に合わせる",
+            "大きい方 に合わせる"
+          ]
+        },
+        "2024": {
+          "style_visible": false,
+          "index": 2,
+          "choices": [
+            "Simple",
+            "Linear",
+            "Integra",
+            "Hermite",
+            "Bell",
+            "B-Spline",
+            "Mitchell",
+            "Cubic-0.5",
+            "Lan2+0.25",
+            "Lan2+0.50",
+            "Lanczos3"
+          ]
+        },
+        "2025": {
+          "style_visible": false,
+          "index": 1,
+          "choices": [
+            "Simple",
+            "Linear",
+            "Integra",
+            "Hermite",
+            "Bell",
+            "B-Spline",
+            "Mitchell",
+            "Cubic-0.5",
+            "Lan2+0.25",
+            "Lan2+0.50",
+            "Lanczos3"
+          ]
+        },
+        "2053": {
+          "style_visible": true
+        },
+        "2063": {
+          "style_visible": true
+        },
+        "2093": {
+          "style_visible": true
+        },
+        "2094": {
+          "style_visible": false
+        },
+        "2095": {
+          "style_visible": false
+        }
+      },
+      "size": [
+        12,
+        17
+      ],
+      "red_bounds": [
+        5,
+        11
+      ],
+      "passed": true
+    },
+    {
+      "mode": 1,
+      "state": {
+        "2002": {
+          "style_visible": true,
+          "checked": false
+        },
+        "2023": {
+          "style_visible": true,
+          "index": 1,
+          "choices": [
+            "指定色で 塗り潰す",
+            "小さい方 に合わせる",
+            "大きい方 に合わせる"
+          ]
+        },
+        "2024": {
+          "style_visible": true,
+          "index": 2,
+          "choices": [
+            "Simple",
+            "Linear",
+            "Integra",
+            "Hermite",
+            "Bell",
+            "B-Spline",
+            "Mitchell",
+            "Cubic-0.5",
+            "Lan2+0.25",
+            "Lan2+0.50",
+            "Lanczos3"
+          ]
+        },
+        "2025": {
+          "style_visible": false,
+          "index": 2,
+          "choices": [
+            "Simple",
+            "Linear",
+            "Integra",
+            "Hermite",
+            "Bell",
+            "B-Spline",
+            "Mitchell",
+            "Cubic-0.5",
+            "Lan2+0.25",
+            "Lan2+0.50",
+            "Lanczos3"
+          ]
+        },
+        "2053": {
+          "style_visible": false
+        },
+        "2063": {
+          "style_visible": false
+        },
+        "2093": {
+          "style_visible": false
+        },
+        "2094": {
+          "style_visible": true
+        },
+        "2095": {
+          "style_visible": false
+        }
+      },
+      "size": [
+        10,
+        11
+      ],
+      "red_bounds": [
+        3,
+        9
+      ],
+      "passed": true
+    },
+    {
+      "mode": 2,
+      "state": {
+        "2002": {
+          "style_visible": true,
+          "checked": false
+        },
+        "2023": {
+          "style_visible": true,
+          "index": 2,
+          "choices": [
+            "指定色で 塗り潰す",
+            "小さい方 に合わせる",
+            "大きい方 に合わせる"
+          ]
+        },
+        "2024": {
+          "style_visible": false,
+          "index": 2,
+          "choices": [
+            "Simple",
+            "Linear",
+            "Integra",
+            "Hermite",
+            "Bell",
+            "B-Spline",
+            "Mitchell",
+            "Cubic-0.5",
+            "Lan2+0.25",
+            "Lan2+0.50",
+            "Lanczos3"
+          ]
+        },
+        "2025": {
+          "style_visible": true,
+          "index": 2,
+          "choices": [
+            "Simple",
+            "Linear",
+            "Integra",
+            "Hermite",
+            "Bell",
+            "B-Spline",
+            "Mitchell",
+            "Cubic-0.5",
+            "Lan2+0.25",
+            "Lan2+0.50",
+            "Lanczos3"
+          ]
+        },
+        "2053": {
+          "style_visible": false
+        },
+        "2063": {
+          "style_visible": false
+        },
+        "2093": {
+          "style_visible": false
+        },
+        "2094": {
+          "style_visible": false
+        },
+        "2095": {
+          "style_visible": true
+        }
+      },
+      "size": [
+        16,
+        17
+      ],
+      "red_bounds": [
+        5,
+        15
+      ],
+      "passed": true
+    }
+  ],
+  "method": 2,
+  "second_height": 17,
+  "initial": {
+    "2002": {
+      "style_visible": true,
+      "checked": false
+    },
+    "2023": {
+      "style_visible": true,
+      "index": 0,
+      "choices": [
+        "指定色で 塗り潰す",
+        "小さい方 に合わせる",
+        "大きい方 に合わせる"
+      ]
+    },
+    "2024": {
+      "style_visible": false,
+      "index": 2,
+      "choices": [
+        "Simple",
+        "Linear",
+        "Integra",
+        "Hermite",
+        "Bell",
+        "B-Spline",
+        "Mitchell",
+        "Cubic-0.5",
+        "Lan2+0.25",
+        "Lan2+0.50",
+        "Lanczos3"
+      ]
+    },
+    "2025": {
+      "style_visible": false,
+      "index": 1,
+      "choices": [
+        "Simple",
+        "Linear",
+        "Integra",
+        "Hermite",
+        "Bell",
+        "B-Spline",
+        "Mitchell",
+        "Cubic-0.5",
+        "Lan2+0.25",
+        "Lan2+0.50",
+        "Lanczos3"
+      ]
+    },
+    "2053": {
+      "style_visible": true
+    },
+    "2063": {
+      "style_visible": true
+    },
+    "2093": {
+      "style_visible": true
+    },
+    "2094": {
+      "style_visible": false
+    },
+    "2095": {
+      "style_visible": false
+    }
+  },
+  "passed": true
+}

@@ -1,0 +1,61 @@
+open	${fixtures}/meko-reference/png/meko-forward-source.png
+wait
+remember	original
+menu	MekoForward
+expect_image	${fixtures}/meko-reference/png/meko-forward-expected.png	0
+pixel_copy
+save_target	pixels/meko-forward.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/meko-forward.png
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	1
+expect	export_temporary	true
+snapshot	meko-forward.png
+menu	MekoReverse
+expect_image	${fixtures}/meko-reference/png/meko-forward-source.png	0
+command	Undo
+expect_image	${fixtures}/meko-reference/png/meko-forward-expected.png	0
+command	Undo
+expect_image	${fixtures}/meko-reference/png/meko-forward-source.png	0
+open	${fixtures}/meko-reference/png/meko-reverse-source.png
+wait
+menu	MekoReverse
+expect_image	${fixtures}/meko-reference/png/meko-reverse-expected.png	0
+pixel_copy
+menu	MekoForward
+expect_image	${fixtures}/meko-reference/png/meko-reverse-source.png	0
+open	${fixtures}/meko-reference/png/meko-forward-selected-source.png
+wait
+native_command	SelectNumbers
+prompt_text	3, 2, 65, 49
+prompt_accept
+menu	MekoForward
+expect_image	${fixtures}/meko-reference/png/meko-forward-selected-expected.png	0
+expect	selection_w	65
+expect	selection_h	49
+pixel_copy
+menu	MekoReverse
+expect_image	${fixtures}/meko-reference/png/meko-forward-selected-source.png	0
+expect	selection_w	65
+expect	selection_h	49
+command	Undo
+expect_image	${fixtures}/meko-reference/png/meko-forward-selected-expected.png	0
+expect	selection_w	65
+expect	selection_h	49
+snapshot	meko-selected.png
+command	ClearSelection
+native_command	Canvas
+prompt_text	1536, 1536
+prompt_accept
+remember	oversized
+menu	MekoForward
+expect	error_count	1
+ack_error	9215
+expect_same	oversized	true
+menu	MekoReverse
+expect	error_count	2
+ack_error	9215
+expect_same	oversized	true

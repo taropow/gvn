@@ -1,0 +1,39 @@
+# Chosen quality applies to automatic fit, manual zoom, selection tools and fullscreen.
+resize	800	700
+open	${fixtures}/display-alpha.png
+wait
+remember	source
+settings
+tab	Display
+set	DisplayDown	2
+set	DisplayUp	2
+snapshot	quality-settings.png
+tab	Fullscreen
+set	FullDown	2
+set	FullUp	2
+tab	Zoom
+snapshot	zoom-settings.png
+click	OK
+persisted
+command	FitImage
+expect	renderer.filter	10
+snapshot	high-quality-fit.png
+command	ZoomOut
+expect	renderer.filter	10
+snapshot	high-quality-manual.png
+command	SelectRectangle
+expect	renderer.filter	10
+snapshot	high-quality-selection-tool.png
+command	ToggleEditor
+command	Actual
+expect	renderer.filter	0
+command	ZoomIn
+expect	renderer.filter	10
+command	Fullscreen
+expect	renderer.filter	10
+render
+expect	renderer.sample_current	true
+command	Fullscreen
+expect_same	source	true
+pixel_copy
+expect	error_count	0

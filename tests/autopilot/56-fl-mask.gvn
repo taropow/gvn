@@ -1,0 +1,68 @@
+open	${fixtures}/fl-reference/png/full-rgb-49x43-invert-source.png
+wait
+remember	original
+menu	ConfigureMask
+expect_checked	FLNegative	true
+set	FLNegative	false
+click	Cancel
+expect	settings.fl_negative	true
+menu	FLMask
+expect_image	${fixtures}/fl-reference/png/full-rgb-49x43-invert-expected.png	0
+pixel_copy
+save_target	pixels/fl-negative.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/fl-negative.png
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	1
+expect	export_temporary	true
+snapshot	fl-negative.png
+command	Undo
+expect_same	original	true
+menu	ConfigureMask
+set	FLNegative	false
+click	ApplyButton
+expect	settings.fl_negative	false
+persisted
+snapshot	fl-settings.png
+click	OK
+menu	FLMask
+expect_image	${fixtures}/fl-reference/png/full-rgb-49x43-plain-expected.png	0
+pixel_copy
+command	FLMask
+expect_image	${fixtures}/fl-reference/png/full-rgb-49x43-plain-source.png	0
+command	Undo
+expect_image	${fixtures}/fl-reference/png/full-rgb-49x43-plain-expected.png	0
+open	${fixtures}/fl-reference/png/selection-selection-02-source.png
+wait
+native_command	SelectNumbers
+prompt_text	3, 2, 29, 19
+prompt_accept
+expect	selection_w	29
+expect	selection_h	19
+menu	FLMask
+expect_image	${fixtures}/fl-reference/png/selection-selection-02-expected.png	0
+expect	selection_w	29
+expect	selection_h	19
+pixel_copy
+command	FLMask
+expect_image	${fixtures}/fl-reference/png/selection-selection-02-source.png	0
+expect	selection_w	29
+expect	selection_h	19
+command	Undo
+expect_image	${fixtures}/fl-reference/png/selection-selection-02-expected.png	0
+expect	selection_w	29
+expect	selection_h	19
+menu	ConfigureMask
+click	Reset
+expect_checked	FLNegative	true
+click	Cancel
+expect	settings.fl_negative	false
+menu	ConfigureMask
+click	Reset
+click	OK
+expect	settings.fl_negative	true
+persisted
+snapshot	fl-selected-retained.png

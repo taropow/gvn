@@ -1,0 +1,48 @@
+{
+  "outputs": [
+    {
+      "file": "combined.png",
+      "reference": "combined.png",
+      "selection": null
+    },
+    {
+      "file": "selected.png",
+      "reference": "selected.png",
+      "selection": [
+        5,
+        4,
+        16,
+        11
+      ]
+    },
+    {
+      "file": "unified.png",
+      "reference": "unified.png",
+      "selection": null
+    },
+    {
+      "file": "animation.png",
+      "reference": "animation.png",
+      "selection": null
+    }
+  ],
+  "preview_files": [
+    "combined.png",
+    "selected.png",
+    "unified.png"
+  ],
+  "source_sha256": {
+    "color-adjustment-ui/source-alpha.png": "d6468c205374121029343bd3388abfc074a07a5bc5d0354cade0b6929a745b95",
+    "disposal.gif": "4fae71abf54399e0eccd27c3f900848dead58598f8c29da70490d3f69da5e163",
+    "color-adjustment/source.png": "9eabcf1ed834e37d2eb816e07403e7055d8d12136eb0574ef5c2ff652b1a0dde",
+    "color-adjustment/combined-desaturate.png": "9ef38685511a6e892f1d32109631b70a86f27a83be2a40bc1f2e3fde9308112f",
+    "color-adjustment/unify-light.png": "a9773d1a5c259bd97706d025aa1ab82010f73b051d3ce949775a528b03b5d46f",
+    "color-adjustment/hue90.png": "983ec08e51efc0fb5ef03c77cdd5a37e4d310d37b797f7aab99c2ce0b2485731",
+    "color-adjustment-ui/combined.png": "1e0f26fcf1b6adcd5323d858a8ef9024af28c23fc7b60c540b87d945152b1551",
+    "color-adjustment-ui/selected.png": "4b344bfb9dcb93356e373efb5edb972dc75566e6f94bb44b56e1aa90f467c48f",
+    "color-adjustment-ui/unified.png": "044c923068cbdb40951389a8f3424f20c1224edb257e3c6d59ead197610dd660",
+    "color-adjustment-ui/animation.png": "561047e5df0af6671e137d015d85b57bb3bcde082265f9503abdc68712ff3040"
+  },
+  "reference_rgb_max_difference": 1,
+  "alpha_and_untouched_roi_exact": true
+}

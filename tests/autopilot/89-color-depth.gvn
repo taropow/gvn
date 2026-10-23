@@ -1,0 +1,157 @@
+expect_menu_enabled	ConvertColorDepth	false
+open	${fixtures}/palette/png-4-alpha.png
+wait
+remember	original
+menu	ConvertColorDepth
+depth_current	現在: 4 BPP
+expect	depth.choice	4
+expect	depth.dither	true
+depth_set	Indexed8
+depth_dither	false
+depth_snapshot	depth-alpha.png
+depth_cancel
+expect_same	original	true
+expect	settings.color_depth_dither	true
+menu	ConvertColorDepth
+expect	depth.dither	true
+depth_set	Indexed8
+depth_dither	false
+depth_accept
+expect_indexed	8
+expect_image	${fixtures}/palette/png-4-alpha.png	0
+pixel_copy
+save_target	pixels/alpha8.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_accept
+wait_save
+persisted
+expect_saved	pixels/alpha8.png
+menu	ConvertColorDepth
+depth_current	現在: 8 BPP
+depth_enabled	Indexed8	false
+depth_set	Rgb24
+depth_accept
+expect_indexed	0
+pixel_copy
+save_target	pixels/alpha24.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_accept
+wait_save
+persisted
+expect_saved	pixels/alpha24.png
+command	Undo
+expect_indexed	8
+expect_image	${fixtures}/palette/png-4-alpha.png	0
+open	${fixtures}/color-depth/gradient.png
+wait
+menu	ConvertColorDepth
+depth_current	現在: 24 BPP
+depth_enabled	Rgb24	false
+depth_wheel	120
+expect	depth.choice	2
+depth_wheel	-120	Rgb565
+expect	depth.choice	4
+depth_set	Rgb555
+depth_dither	false
+depth_snapshot	depth-rgb555.png
+depth_accept
+expect_image	${fixtures}/color-depth-ui/rgb555.png	0
+save_target	pixels/rgb555.bmp
+command	SaveAs
+save_type	Bmp
+save_set	BmpBits	4
+save_accept
+wait_save
+persisted
+menu	ConvertColorDepth
+depth_current	現在: 16 BPP RGB555
+depth_enabled	Rgb555	false
+depth_cancel
+open	${fixtures}/color-depth/gradient.png
+wait
+menu	ConvertColorDepth
+depth_current	現在: 24 BPP
+depth_enabled	Rgb24	false
+depth_wheel	120
+expect	depth.choice	2
+depth_wheel	-120	Rgb565
+expect	depth.choice	4
+depth_set	Rgb565
+depth_dither	false
+depth_snapshot	depth-rgb565.png
+depth_accept
+expect_image	${fixtures}/color-depth-ui/rgb565.png	0
+save_target	pixels/rgb565.bmp
+command	SaveAs
+save_type	Bmp
+save_set	BmpBits	4
+save_accept
+wait_save
+persisted
+menu	ConvertColorDepth
+depth_current	現在: 16 BPP RGB565
+depth_enabled	Rgb565	false
+depth_cancel
+open	${fixtures}/color-depth-ui/two-colors.png
+wait
+menu	ConvertColorDepth
+expect	depth.choice	4
+depth_accept
+expect_indexed	1
+expect_image	${fixtures}/color-depth-ui/two-colors.png	0
+save_target	pixels/optimal.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_accept
+wait_save
+persisted
+expect_saved	pixels/optimal.png
+open	${fixtures}/color-depth-ui/rgba-gradient.png
+wait
+menu	ConvertColorDepth
+depth_set	Indexed8
+depth_dither	true
+depth_accept
+expect_indexed	0
+pixel_copy
+save_target	pixels/rgba-reduced.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_accept
+wait_save
+persisted
+expect_saved	pixels/rgba-reduced.png
+expect	settings.color_depth_dither	true
+open	${fixtures}/disposal.gif
+wait
+command	Play
+seek	1
+expect	playing	false
+expect	frame	1
+answer	OK
+menu	ConvertColorDepth
+depth_set	Indexed8
+depth_accept
+expect	frames	1
+expect_image	${fixtures}/color-depth-ui/animation-frame.png	0
+pixel_copy
+save_target	pixels/animation-frame.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_accept
+wait_save
+persisted
+expect_saved	pixels/animation-frame.png
+command	Undo
+expect	frames	4
+expect	frame	1
+expect	playing	false
+expect	error_count	0
+snapshot	depth-animation-undo.png

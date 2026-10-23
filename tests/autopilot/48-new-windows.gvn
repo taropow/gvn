@@ -1,0 +1,79 @@
+# Native menus/keys/mouse capture the process-launch boundary; actual GVN children use new_window_processes.
+new_window_capture
+clipboard_path	${output}\untouched.png
+menu	NewWindow
+expect_new_window	count	1
+expect_new_window	empty
+expect_clipboard_text	${output}/untouched.png	path
+menu	NewWindowFile
+menu	NewWindowSend
+expect_new_window	count	1
+open	${fixtures}/alpha.png
+wait
+remember	original
+menu	NewWindowFile
+expect_new_window	count	2
+expect_new_window	file	${fixtures}/alpha.png
+expect_clipboard_text	${output}/untouched.png	path
+menu	NewWindowSend
+expect_new_window	count	3
+expect_new_window	image	${fixtures}/alpha.png
+menu	NewWindowPaste
+expect_new_window	count	4
+expect_new_window	image	${fixtures}/alpha.png
+expect	modified	false
+pixel_copy
+settings
+tab	Keys
+expect	key_functions	238
+function	NewWindowFile
+expect	key_slots	0
+function	NewWindowPaste
+expect	key_slots	0
+function	NewWindowSend
+expect	key_slots	0
+set	KeyEdit	F12
+click	KeyAdd
+snapshot	new-window-keys.png
+tab	MouseCustom
+mouse_assign	MiddleClick	0	0	NewWindow
+click	OK
+persisted
+expect_menu_key	NewWindowSend	F12
+focus	Main
+key	F12
+expect_new_window	count	5
+expect_new_window	image	${fixtures}/alpha.png
+pointer	down	Middle	100	100	0
+pointer	up	Middle	100	100	0
+expect_new_window	count	6
+expect_new_window	empty
+command	Negative
+remember	edited
+key	F12
+expect_new_window	count	7
+expect_new_window	pixels	edited	3	2
+command	Undo
+expect_same	original	true
+pixel_copy
+command	NewPaste
+menu	NewWindowFile
+expect_new_window	count	7
+menu	NewWindowPaste
+expect_new_window	count	8
+expect_new_window	image	${fixtures}/alpha.png
+menu	NewWindowSend
+expect_new_window	count	9
+expect_new_window	image	${fixtures}/alpha.png
+snapshot	new-window-anonymous-source.png
+command	CloseImage
+menu	NewWindowFile
+menu	NewWindowSend
+expect_new_window	count	9
+menu	NewWindow
+expect_new_window	count	10
+expect_new_window	empty
+menu	NewWindowPaste
+expect_new_window	count	11
+expect_new_window	image	${fixtures}/alpha.png
+expect	error_count	0

@@ -1,0 +1,38 @@
+[
+  {
+    "file": "palette-duplicate.png",
+    "sha256": "07d959f09e26354355541e64ec6a9b5bcda4494ba9ee577f2b0cd9842f7de6c6",
+    "native_colors": 2,
+    "reference_report": ".cache/image-info-reference/run-73ad618182a34fa7ad1a1f15006965b3/result.json"
+  },
+  {
+    "file": "palette-unused.png",
+    "sha256": "b84464ce19a06c70acf04ec393fedff205a37dc0d7e816b75505e0387941d222",
+    "native_colors": 1,
+    "reference_report": ".cache/image-info-reference/run-73ad618182a34fa7ad1a1f15006965b3/result.json"
+  },
+  {
+    "file": "rgb.png",
+    "sha256": "4cf199846ae12dde8c8280a0368e4d76b5d18290258a11151459be0ab6d18c87",
+    "native_colors": 3,
+    "reference_report": ".cache/image-info-reference/run-73ad618182a34fa7ad1a1f15006965b3/result.json"
+  },
+  {
+    "file": "rgba-hidden.png",
+    "sha256": "b0e994467339b78e35334c2019862fbfb86370e5536f1611713efa62a295334c",
+    "native_colors": 3,
+    "reference_report": ".cache/image-info-reference/run-73ad618182a34fa7ad1a1f15006965b3/result.json"
+  },
+  {
+    "file": "rgba-same.png",
+    "sha256": "a6c9ecc47cb059547977050ce0172bbf311ba7d6b80173309f9b76a929e54df7",
+    "native_colors": 4,
+    "reference_report": ".cache/image-info-reference/run-73ad618182a34fa7ad1a1f15006965b3/result.json"
+  },
+  {
+    "file": "rgba-low.png",
+    "sha256": "8cc05337ee29edd4762767ee52d76e3bb13a91f026de7b7112b42e69b85f919b",
+    "native_colors": 3,
+    "reference_report": ".cache/image-info-reference/run-acc84cec07d14fe39b8e3c9141aae51a/result.json"
+  }
+]

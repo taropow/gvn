@@ -1,0 +1,358 @@
+# Actual native window fields, frozen official input cases and tiny RGBA-preserving startup.
+resize	800	600
+open	${fixtures}/alpha.png
+wait
+settings
+tab	Window
+expect	text_limit.WindowX	30000
+expect	text_limit.WindowY	30000
+expect	text_limit.WindowWidth	30000
+expect	text_limit.WindowHeight	30000
+expect	number_only.WindowX	false
+expect	number_only.WindowY	false
+expect	number_only.WindowWidth	true
+expect	number_only.WindowHeight	true
+set	StartupPosition	2
+set	StartupState	0
+# Official input: small
+set	WindowX	0
+set	WindowY	0
+set	WindowWidth	480
+set	WindowHeight	360
+click	ApplyButton
+set	WindowX	37
+set	WindowY	49
+set	WindowWidth	100
+set	WindowHeight	80
+click	ApplyButton
+expect	settings.window_x	37
+expect	settings.window_y	49
+expect	settings.window_width	100
+expect	settings.window_height	80
+expect_text	WindowX	37
+expect_text	WindowY	49
+expect_text	WindowWidth	100
+expect_text	WindowHeight	80
+persisted
+# Official input: zero
+set	WindowX	0
+set	WindowY	0
+set	WindowWidth	480
+set	WindowHeight	360
+click	ApplyButton
+set	WindowX	0
+set	WindowY	0
+set	WindowWidth	0
+set	WindowHeight	0
+click	ApplyButton
+expect	settings.window_x	0
+expect	settings.window_y	0
+expect	settings.window_width	480
+expect	settings.window_height	360
+expect_text	WindowX	0
+expect_text	WindowY	0
+expect_text	WindowWidth	480
+expect_text	WindowHeight	360
+persisted
+# Official input: one
+set	WindowX	0
+set	WindowY	0
+set	WindowWidth	480
+set	WindowHeight	360
+click	ApplyButton
+set	WindowX	-1
+set	WindowY	-1
+set	WindowWidth	1
+set	WindowHeight	1
+click	ApplyButton
+expect	settings.window_x	-1
+expect	settings.window_y	-1
+expect	settings.window_width	1
+expect	settings.window_height	1
+expect_text	WindowX	-1
+expect_text	WindowY	-1
+expect_text	WindowWidth	1
+expect_text	WindowHeight	1
+persisted
+# Official input: negative-size
+set	WindowX	0
+set	WindowY	0
+set	WindowWidth	480
+set	WindowHeight	360
+click	ApplyButton
+set	WindowX	0
+set	WindowY	0
+set	WindowWidth	-1
+set	WindowHeight	-1
+click	ApplyButton
+expect	settings.window_x	0
+expect	settings.window_y	0
+expect	settings.window_width	480
+expect	settings.window_height	360
+expect_text	WindowX	0
+expect_text	WindowY	0
+expect_text	WindowWidth	480
+expect_text	WindowHeight	360
+persisted
+# Official input: large-coordinates
+set	WindowX	0
+set	WindowY	0
+set	WindowWidth	480
+set	WindowHeight	360
+click	ApplyButton
+set	WindowX	1000000
+set	WindowY	-1000000
+set	WindowWidth	640
+set	WindowHeight	480
+click	ApplyButton
+expect	settings.window_x	1000000
+expect	settings.window_y	-1000000
+expect	settings.window_width	640
+expect	settings.window_height	480
+expect_text	WindowX	1000000
+expect_text	WindowY	-1000000
+expect_text	WindowWidth	640
+expect_text	WindowHeight	480
+persisted
+# Official input: empty
+set	WindowX	0
+set	WindowY	0
+set	WindowWidth	480
+set	WindowHeight	360
+click	ApplyButton
+set	WindowX	
+set	WindowY	
+set	WindowWidth	
+set	WindowHeight	
+click	ApplyButton
+expect	settings.window_x	0
+expect	settings.window_y	0
+expect	settings.window_width	480
+expect	settings.window_height	360
+expect_text	WindowX	0
+expect_text	WindowY	0
+expect_text	WindowWidth	480
+expect_text	WindowHeight	360
+persisted
+# Official input: not-number
+set	WindowX	0
+set	WindowY	0
+set	WindowWidth	480
+set	WindowHeight	360
+click	ApplyButton
+set	WindowX	abc
+set	WindowY	abc
+set	WindowWidth	abc
+set	WindowHeight	abc
+click	ApplyButton
+expect	settings.window_x	0
+expect	settings.window_y	0
+expect	settings.window_width	480
+expect	settings.window_height	360
+expect_text	WindowX	0
+expect_text	WindowY	0
+expect_text	WindowWidth	480
+expect_text	WindowHeight	360
+persisted
+# Official input: signed-extremes
+set	WindowX	0
+set	WindowY	0
+set	WindowWidth	480
+set	WindowHeight	360
+click	ApplyButton
+set	WindowX	2147483647
+set	WindowY	-2147483648
+set	WindowWidth	640
+set	WindowHeight	480
+click	ApplyButton
+# Preserve positive dimensions through the reference endpoint-overflow anomaly.
+expect	settings.window_x	2147483647
+expect	settings.window_y	0
+expect	settings.window_width	640
+expect	settings.window_height	480
+expect_text	WindowX	2147483647
+expect_text	WindowY	0
+expect_text	WindowWidth	640
+expect_text	WindowHeight	480
+persisted
+# Official input: over-signed
+set	WindowX	0
+set	WindowY	0
+set	WindowWidth	480
+set	WindowHeight	360
+click	ApplyButton
+set	WindowX	2147483648
+set	WindowY	-2147483649
+set	WindowWidth	640
+set	WindowHeight	480
+click	ApplyButton
+expect	settings.window_x	0
+expect	settings.window_y	0
+expect	settings.window_width	640
+expect	settings.window_height	480
+expect_text	WindowX	0
+expect_text	WindowY	0
+expect_text	WindowWidth	640
+expect_text	WindowHeight	480
+persisted
+# Official input: size-32768
+set	WindowX	0
+set	WindowY	0
+set	WindowWidth	480
+set	WindowHeight	360
+click	ApplyButton
+set	WindowX	0
+set	WindowY	0
+set	WindowWidth	32768
+set	WindowHeight	32768
+click	ApplyButton
+expect	settings.window_x	0
+expect	settings.window_y	0
+expect	settings.window_width	32768
+expect	settings.window_height	32768
+expect_text	WindowX	0
+expect_text	WindowY	0
+expect_text	WindowWidth	32768
+expect_text	WindowHeight	32768
+persisted
+# Official input: size-int-max
+set	WindowX	0
+set	WindowY	0
+set	WindowWidth	480
+set	WindowHeight	360
+click	ApplyButton
+set	WindowX	0
+set	WindowY	0
+set	WindowWidth	2147483647
+set	WindowHeight	2147483647
+click	ApplyButton
+expect	settings.window_x	0
+expect	settings.window_y	0
+expect	settings.window_width	2147483647
+expect	settings.window_height	2147483647
+expect_text	WindowX	0
+expect_text	WindowY	0
+expect_text	WindowWidth	2147483647
+expect_text	WindowHeight	2147483647
+persisted
+# Official input: size-over-int
+set	WindowX	0
+set	WindowY	0
+set	WindowWidth	480
+set	WindowHeight	360
+click	ApplyButton
+set	WindowX	0
+set	WindowY	0
+set	WindowWidth	2147483648
+set	WindowHeight	2147483648
+click	ApplyButton
+expect	settings.window_x	0
+expect	settings.window_y	0
+expect	settings.window_width	480
+expect	settings.window_height	360
+expect_text	WindowX	0
+expect_text	WindowY	0
+expect_text	WindowWidth	480
+expect_text	WindowHeight	360
+persisted
+# Official input: prior-size-zero
+set	WindowX	57
+set	WindowY	69
+set	WindowWidth	620
+set	WindowHeight	420
+click	ApplyButton
+set	WindowX	37
+set	WindowY	49
+set	WindowWidth	0
+set	WindowHeight	0
+click	ApplyButton
+expect	settings.window_x	37
+expect	settings.window_y	49
+expect	settings.window_width	620
+expect	settings.window_height	420
+expect_text	WindowX	37
+expect_text	WindowY	49
+expect_text	WindowWidth	620
+expect_text	WindowHeight	420
+persisted
+# Official input: prior-size-invalid
+set	WindowX	57
+set	WindowY	69
+set	WindowWidth	620
+set	WindowHeight	420
+click	ApplyButton
+set	WindowX	abc
+set	WindowY	abc
+set	WindowWidth	abc
+set	WindowHeight	abc
+click	ApplyButton
+expect	settings.window_x	57
+expect	settings.window_y	69
+expect	settings.window_width	620
+expect	settings.window_height	420
+expect_text	WindowX	57
+expect_text	WindowY	69
+expect_text	WindowWidth	620
+expect_text	WindowHeight	420
+persisted
+# Official input: prior-size-negative
+set	WindowX	57
+set	WindowY	69
+set	WindowWidth	620
+set	WindowHeight	420
+click	ApplyButton
+set	WindowX	37
+set	WindowY	49
+set	WindowWidth	-1
+set	WindowHeight	-1
+click	ApplyButton
+expect	settings.window_x	37
+expect	settings.window_y	49
+expect	settings.window_width	620
+expect	settings.window_height	420
+expect_text	WindowX	37
+expect_text	WindowY	49
+expect_text	WindowWidth	620
+expect_text	WindowHeight	420
+persisted
+set	WindowX	37
+set	WindowY	49
+set	WindowWidth	100
+set	WindowHeight	80
+click	ApplyButton
+set	WindowWidth	123
+set	WindowHeight	99
+click	Cancel
+expect	settings.window_width	100
+expect	settings.window_height	80
+startup
+expect	window.width	136
+expect	window.height	80
+pixel_copy
+snapshot_small	custom-small-static.png	136	80
+settings
+tab	Window
+set	WindowWidth	1
+set	WindowHeight	1
+click	OK
+startup
+expect	window.width	136
+expect	window.height	39
+pixel_copy
+resize	800	600
+settings
+tab	Window
+click	Reset
+click	ApplyButton
+expect	settings.window_width	480
+expect	settings.window_height	360
+expect	settings.startup_position	1
+persisted
+click	OK
+open	${fixtures}/blend.apng
+wait
+resize	136	39
+expect	player.visible	true
+expect	player.no_overlap	true
+pixel_copy
+snapshot	custom-animation-minimum.png

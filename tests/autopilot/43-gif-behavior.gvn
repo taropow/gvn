@@ -1,0 +1,220 @@
+copy_fixture	../../docs/verification/gif-reference-0.45/loops/assets/loops-1.gif	gif/finite.gif
+copy_fixture	../../docs/verification/gif-reference-0.45/background/assets/transparent-all.gif	gif/alpha.gif
+settings
+tab	Loading
+set	Autoplay	false
+click	OK
+open	${output}/gif/finite.gif
+wait
+expect	settings.gif_speed	0
+settings
+tab	Display
+scroll_page	top
+set	GifSpeed	0
+click	OK
+wait
+expect	settings.gif_speed	0
+expect	file_loops	2
+expect	playing	false
+expect	frame.duration	50
+persisted
+player	Play
+expect	playing	true
+wait_animation
+expect	playing	false
+expect	animation.ended	true
+expect	frame	2
+expect	player.pause_icon	false
+pixel_copy
+snapshot	gif-finite-ended-0.png
+player	Play
+expect	playing	true
+player	StopAnimation
+expect	frame	0
+expect	animation.ended	false
+seek	1
+expect	frame	1
+expect	playing	false
+player	FrameNext
+expect	frame	2
+pixel_copy
+player	StopAnimation
+settings
+tab	Display
+scroll_page	top
+set	GifSpeed	1
+click	OK
+wait
+expect	settings.gif_speed	1
+expect	file_loops	2
+expect	playing	false
+expect	frame.duration	100
+persisted
+player	Play
+expect	playing	true
+wait_animation
+expect	playing	false
+expect	animation.ended	true
+expect	frame	2
+expect	player.pause_icon	false
+pixel_copy
+player	Play
+expect	playing	true
+player	StopAnimation
+expect	frame	0
+expect	animation.ended	false
+seek	1
+expect	frame	1
+expect	playing	false
+player	FrameNext
+expect	frame	2
+pixel_copy
+player	StopAnimation
+settings
+tab	Display
+scroll_page	top
+set	GifSpeed	2
+click	OK
+wait
+expect	settings.gif_speed	2
+expect	file_loops	1
+expect	playing	false
+expect	frame.duration	50
+persisted
+player	Play
+expect	playing	true
+wait_animation
+expect	playing	false
+expect	animation.ended	true
+expect	frame	2
+expect	player.pause_icon	false
+pixel_copy
+player	Play
+expect	playing	true
+player	StopAnimation
+expect	frame	0
+expect	animation.ended	false
+seek	1
+expect	frame	1
+expect	playing	false
+player	FrameNext
+expect	frame	2
+pixel_copy
+player	StopAnimation
+settings
+tab	Display
+scroll_page	top
+set	GifSpeed	3
+click	OK
+wait
+expect	settings.gif_speed	3
+expect	file_loops	1
+expect	playing	false
+expect	frame.duration	50
+persisted
+player	Play
+expect	playing	true
+wait_animation
+expect	playing	false
+expect	animation.ended	true
+expect	frame	2
+expect	player.pause_icon	false
+pixel_copy
+player	Play
+expect	playing	true
+player	StopAnimation
+expect	frame	0
+expect	animation.ended	false
+seek	1
+expect	frame	1
+expect	playing	false
+player	FrameNext
+expect	frame	2
+pixel_copy
+player	StopAnimation
+settings
+tab	Display
+scroll_page	top
+set	GifSpeed	4
+snapshot	gif-style-chrome-settings.png
+click	OK
+wait
+expect	settings.gif_speed	4
+expect	file_loops	2
+expect	playing	false
+expect	frame.duration	50
+persisted
+player	Play
+expect	playing	true
+wait_animation
+expect	playing	false
+expect	animation.ended	true
+expect	frame	2
+expect	player.pause_icon	false
+pixel_copy
+snapshot	gif-finite-ended-4.png
+player	Play
+expect	playing	true
+player	StopAnimation
+expect	frame	0
+expect	animation.ended	false
+seek	1
+expect	frame	1
+expect	playing	false
+player	FrameNext
+expect	frame	2
+pixel_copy
+player	StopAnimation
+settings
+tab	Display
+scroll_page	top
+set	GifSpeed	2
+click	Cancel
+expect	settings.gif_speed	4
+expect	file_loops	2
+settings
+tab	Display
+click	Reset
+click	OK
+wait
+expect	settings.gif_speed	0
+expect	settings.animation_autoplay	false
+persisted
+player	Loop
+expect	loop	false
+expect	player.loop_checked	false
+player	Play
+wait_animation
+expect	frame	2
+expect	animation.ended	true
+player	Loop
+expect	loop	true
+expect	settings.animation_file_loops	false
+expect	animation.honor_file_loops	false
+expect_text	player.loop	無限
+player	Play
+wait_ms	750
+expect	playing	true
+expect	animation.ended	false
+snapshot	gif-explicit-infinite.png
+player	StopAnimation
+settings
+tab	Loading
+scroll_page	bottom
+set	AnimationFileLoops	true
+click	OK
+expect	animation.honor_file_loops	true
+expect_text	player.loop	ファイル指定
+persisted
+player	Play
+wait_animation
+expect	frame	2
+open	${output}/gif/alpha.gif
+wait
+player	LastFrame
+expect_pixel	0	0	12	34	56	0
+expect_pixel	6	0	30	50	220	255
+pixel_copy
+snapshot	gif-alpha-final-frame.png
+expect_file	gif/finite.gif	../../docs/verification/gif-reference-0.45/loops/assets/loops-1.gif
+expect_file	gif/alpha.gif	../../docs/verification/gif-reference-0.45/background/assets/transparent-all.gif

@@ -1,0 +1,21 @@
+{
+  "source": "palette/png-4-alpha.png",
+  "source_sha256": "dc374a1e225b0b398ac05b59eeea158de4be754c5e05be7fa33ce6839134b5e5",
+  "outputs": [
+    {
+      "file": "applied.png",
+      "reference": "applied.png",
+      "alpha": true
+    },
+    {
+      "file": "accepted.png",
+      "reference": "accepted.png",
+      "alpha": true
+    },
+    {
+      "file": "applied.bmp",
+      "reference": "applied.png",
+      "alpha": false
+    }
+  ]
+}

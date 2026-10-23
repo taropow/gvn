@@ -1,0 +1,318 @@
+copy_fixture	palette/png-1-opaque.png	assets/png-1-opaque.png
+open	${output}/assets/png-1-opaque.png
+wait
+expect_indexed	1
+expect_index	1	0	1
+save_target	pixels/png-1-opaque.png.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	palette/png-1-alpha.png	assets/png-1-alpha.png
+open	${output}/assets/png-1-alpha.png
+wait
+expect_indexed	1
+expect_index	1	0	1
+save_target	pixels/png-1-alpha.png.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	palette/bmp-1.bmp	assets/bmp-1.bmp
+open	${output}/assets/bmp-1.bmp
+wait
+expect_indexed	1
+expect_index	1	0	1
+save_target	pixels/bmp-1.bmp.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	palette/png-2-opaque.png	assets/png-2-opaque.png
+open	${output}/assets/png-2-opaque.png
+wait
+expect_indexed	2
+expect_index	1	0	3
+save_target	pixels/png-2-opaque.png.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	palette/png-2-alpha.png	assets/png-2-alpha.png
+open	${output}/assets/png-2-alpha.png
+wait
+expect_indexed	2
+expect_index	1	0	3
+save_target	pixels/png-2-alpha.png.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	palette/png-4-opaque.png	assets/png-4-opaque.png
+open	${output}/assets/png-4-opaque.png
+wait
+expect_indexed	4
+expect_index	1	0	7
+save_target	pixels/png-4-opaque.png.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	palette/png-4-alpha.png	assets/png-4-alpha.png
+open	${output}/assets/png-4-alpha.png
+wait
+expect_indexed	4
+expect_index	1	0	7
+save_target	pixels/png-4-alpha.png.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	palette/bmp-4.bmp	assets/bmp-4.bmp
+open	${output}/assets/bmp-4.bmp
+wait
+expect_indexed	4
+expect_index	1	0	7
+save_target	pixels/bmp-4.bmp.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	palette/bmp-4-rle.bmp	assets/bmp-4-rle.bmp
+open	${output}/assets/bmp-4-rle.bmp
+wait
+expect_indexed	4
+expect_index	1	0	7
+save_target	pixels/bmp-4-rle.bmp.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	palette/png-8-opaque.png	assets/png-8-opaque.png
+open	${output}/assets/png-8-opaque.png
+wait
+expect_indexed	8
+expect_index	1	0	7
+save_target	pixels/png-8-opaque.png.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	palette/png-8-alpha.png	assets/png-8-alpha.png
+open	${output}/assets/png-8-alpha.png
+wait
+expect_indexed	8
+expect_index	1	0	7
+save_target	pixels/png-8-alpha.png.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	palette/bmp-8.bmp	assets/bmp-8.bmp
+open	${output}/assets/bmp-8.bmp
+wait
+expect_indexed	8
+expect_index	1	0	7
+save_target	pixels/bmp-8.bmp.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	palette/bmp-8-rle.bmp	assets/bmp-8-rle.bmp
+open	${output}/assets/bmp-8-rle.bmp
+wait
+expect_indexed	8
+expect_index	1	0	7
+save_target	pixels/bmp-8-rle.bmp.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	palette/gif-opaque.gif	assets/gif-opaque.gif
+open	${output}/assets/gif-opaque.gif
+wait
+expect_indexed	8
+expect_index	1	0	7
+save_target	pixels/gif-opaque.gif.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	palette/gif-alpha.gif	assets/gif-alpha.gif
+open	${output}/assets/gif-alpha.gif
+wait
+expect_indexed	8
+expect_index	1	0	7
+save_target	pixels/gif-alpha.gif.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/bmp-1.bmp
+wait
+save_target	pixels/bmp-1.bmp.bmp
+command	SaveAs
+save_type	Bmp
+save_set	BmpBits	4
+save_expect_control	BmpBits	4
+save_set	BmpRle	true
+save_set	BmpTopDown	true
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/png-2-opaque.png
+wait
+save_target	pixels/png-2-opaque.png.bmp
+command	SaveAs
+save_type	Bmp
+save_set	BmpBits	4
+save_expect_control	BmpBits	4
+save_set	BmpRle	true
+save_set	BmpTopDown	true
+save_layout
+save_snapshot	bmp-original-depth.png
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/bmp-4-rle.bmp
+wait
+save_target	pixels/bmp-4-rle.bmp.bmp
+command	SaveAs
+save_type	Bmp
+save_set	BmpBits	4
+save_expect_control	BmpBits	4
+save_set	BmpRle	true
+save_set	BmpTopDown	true
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/bmp-8-rle.bmp
+wait
+save_target	pixels/bmp-8-rle.bmp.bmp
+command	SaveAs
+save_type	Bmp
+save_set	BmpBits	4
+save_expect_control	BmpBits	4
+save_set	BmpRle	true
+save_set	BmpTopDown	true
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/gif-alpha.gif
+wait
+save_target	pixels/gif-alpha.gif
+command	SaveAs
+save_type	Gif
+save_set	GifTransparency	1
+save_set	GifIndex	2
+answer	OK
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/assets/png-4-alpha.png
+wait
+command	RotateRight
+expect_indexed	4
+pixel_copy
+save_target	pixels/rotated.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+command	Negative
+expect_indexed	0
+save_target	pixels/negative.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+command	Undo
+expect_indexed	4
+pixel_copy
+save_target	pixels/undo.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+snapshot	palette-final.png

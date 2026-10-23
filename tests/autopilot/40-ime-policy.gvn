@@ -1,0 +1,93 @@
+expect	settings.disable_ime	true
+expect	ime.main_enabled	false
+expect	ime.bars_disabled	true
+settings
+tab	General
+expect	ime.settings_is_owned	true
+expect	ime.settings_edit_enabled	true
+set	DisableIme	false
+click	Cancel
+expect	settings.disable_ime	true
+expect	ime.main_enabled	false
+settings
+tab	General
+set	DisableIme	false
+snapshot	ime-settings-off.png
+click	OK
+expect	settings.disable_ime	false
+ime_seed
+expect	ime.main_enabled	true
+persisted
+copy_fixture	alpha.png	files/original.png
+open	${output}/files/original.png
+wait
+remember	source
+settings
+tab	Bars
+set	ToolbarLarge	true
+click	ApplyButton
+expect	ime.main_enabled	true
+tab	General
+expect	ime.settings_edit_enabled	true
+set	DisableIme	true
+click	ApplyButton
+expect	settings.disable_ime	true
+expect	ime.main_enabled	false
+expect	ime.bars_disabled	true
+expect	ime.settings_edit_enabled	true
+click	OK
+persisted
+focus	Main
+key	F2
+prompt_ime
+prompt_text	透明レイヤー_日本語.png
+prompt_snapshot	ime-rename-japanese.png
+prompt_cancel
+expect_location	image	${output}/files/original.png
+expect_same	source	true
+focus	Main
+key	F2
+prompt_ime
+prompt_text	透明レイヤー_日本語.png
+prompt_accept
+expect_location	image	${output}/files/透明レイヤー_日本語.png
+expect_same	source	true
+expect	ime.main_enabled	false
+expect	ime.bars_disabled	true
+command	Fullscreen
+expect	ime.main_enabled	false
+expect	ime.bars_disabled	true
+command	Fullscreen
+focus	Main
+key	Ctrl+A
+expect	selection_w	3
+expect	selection_h	2
+command	ClearSelection
+settings
+tab	General
+set	DisableIme	false
+click	OK
+persisted
+expect	ime.main_enabled	true
+settings
+tab	Background
+set	Cell	12
+click	OK
+expect	settings.disable_ime	false
+settings
+tab	General
+click	Reset
+click	Cancel
+expect	settings.disable_ime	false
+expect	ime.main_enabled	true
+settings
+tab	General
+click	Reset
+snapshot	ime-settings-reset.png
+click	OK
+expect	settings.disable_ime	true
+expect	ime.main_enabled	false
+expect	ime.bars_disabled	true
+expect	settings.checker_size	12
+expect_same	source	true
+persisted

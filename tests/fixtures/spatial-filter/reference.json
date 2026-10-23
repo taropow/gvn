@@ -1,0 +1,158 @@
+{
+  "reference_version": "0.45",
+  "reference_sha256": "c23b73887a3a98833f9318e7e3321a6a5b9825ad442b88e8bd3b0333ba28a3e5",
+  "method": "Actual owned native menu/dialog/copy/undo on private station; generated opaque sources only.",
+  "samples": [
+    {
+      "pattern": "colors",
+      "label": "sharpen",
+      "values": [
+        "0.6",
+        "100",
+        "0"
+      ],
+      "source_sha256": "bbc497d9a5eedaec06d72fce12413c2f13e7688cea93c5723b1ad9c33a6048da",
+      "output_sha256": "eb55cc10111b9e766a6f85bfc321cada55db2bd0bc9717986843ca859a12a1f9",
+      "native_preset_equals_dialog": true,
+      "max_channel_error": 2
+    },
+    {
+      "pattern": "colors",
+      "label": "sharpen-strong",
+      "values": [
+        "0.8",
+        "200",
+        "0"
+      ],
+      "source_sha256": "bbc497d9a5eedaec06d72fce12413c2f13e7688cea93c5723b1ad9c33a6048da",
+      "output_sha256": "18ae292f7045b18a16a9a15268f838b783d92a9e2e36364deee1180c9656d18c",
+      "native_preset_equals_dialog": true,
+      "max_channel_error": 2
+    },
+    {
+      "pattern": "colors",
+      "label": "sharpen-edges",
+      "values": [
+        "0.6",
+        "150",
+        "15"
+      ],
+      "source_sha256": "bbc497d9a5eedaec06d72fce12413c2f13e7688cea93c5723b1ad9c33a6048da",
+      "output_sha256": "e96c20653e1e5a25e5b85c5d667ba8de313fd68106dcb5e96126fbd0fba141bc",
+      "native_preset_equals_dialog": true,
+      "max_channel_error": 2
+    },
+    {
+      "pattern": "colors",
+      "label": "blur",
+      "values": [
+        "0.4",
+        "0"
+      ],
+      "source_sha256": "bbc497d9a5eedaec06d72fce12413c2f13e7688cea93c5723b1ad9c33a6048da",
+      "output_sha256": "79517f0d85d162b03ef2853d784061b4c997a4efcd8260fd29a6c6b1fe1844b3",
+      "native_preset_equals_dialog": true,
+      "max_channel_error": 2
+    },
+    {
+      "pattern": "colors",
+      "label": "blur-strong",
+      "values": [
+        "0.8",
+        "0"
+      ],
+      "source_sha256": "bbc497d9a5eedaec06d72fce12413c2f13e7688cea93c5723b1ad9c33a6048da",
+      "output_sha256": "61849dcefd9c6866f6763b339c5fc80cfc1add074cb0687df99d74a14cb97764",
+      "native_preset_equals_dialog": true,
+      "max_channel_error": 2
+    },
+    {
+      "pattern": "colors",
+      "label": "blur-soft",
+      "values": [
+        "5.0",
+        "65"
+      ],
+      "source_sha256": "bbc497d9a5eedaec06d72fce12413c2f13e7688cea93c5723b1ad9c33a6048da",
+      "output_sha256": "e9ba5a6f5e268b97ec1f70991268e2da5e26d53135c98d6fcc4da748d1170d74",
+      "native_preset_equals_dialog": true,
+      "max_channel_error": 2
+    },
+    {
+      "pattern": "impulse",
+      "label": "sharpen",
+      "values": [
+        "0.6",
+        "100",
+        "0"
+      ],
+      "source_sha256": "a6abc5f5bcd02a6b9dd21407df9eab6f9cc7b789f1c690b5759ef6fdb9095081",
+      "output_sha256": "a6abc5f5bcd02a6b9dd21407df9eab6f9cc7b789f1c690b5759ef6fdb9095081",
+      "native_preset_equals_dialog": true,
+      "max_channel_error": 2
+    },
+    {
+      "pattern": "impulse",
+      "label": "sharpen-strong",
+      "values": [
+        "0.8",
+        "200",
+        "0"
+      ],
+      "source_sha256": "a6abc5f5bcd02a6b9dd21407df9eab6f9cc7b789f1c690b5759ef6fdb9095081",
+      "output_sha256": "a6abc5f5bcd02a6b9dd21407df9eab6f9cc7b789f1c690b5759ef6fdb9095081",
+      "native_preset_equals_dialog": true,
+      "max_channel_error": 2
+    },
+    {
+      "pattern": "impulse",
+      "label": "sharpen-edges",
+      "values": [
+        "0.6",
+        "150",
+        "15"
+      ],
+      "source_sha256": "a6abc5f5bcd02a6b9dd21407df9eab6f9cc7b789f1c690b5759ef6fdb9095081",
+      "output_sha256": "a6abc5f5bcd02a6b9dd21407df9eab6f9cc7b789f1c690b5759ef6fdb9095081",
+      "native_preset_equals_dialog": true,
+      "max_channel_error": 2
+    },
+    {
+      "pattern": "impulse",
+      "label": "blur",
+      "values": [
+        "0.4",
+        "0"
+      ],
+      "source_sha256": "a6abc5f5bcd02a6b9dd21407df9eab6f9cc7b789f1c690b5759ef6fdb9095081",
+      "output_sha256": "72e3702d3ede374cede6384d430a120fc7b50d5d5527871af0cfa8fadaa36fee",
+      "native_preset_equals_dialog": true,
+      "max_channel_error": 2
+    },
+    {
+      "pattern": "impulse",
+      "label": "blur-strong",
+      "values": [
+        "0.8",
+        "0"
+      ],
+      "source_sha256": "a6abc5f5bcd02a6b9dd21407df9eab6f9cc7b789f1c690b5759ef6fdb9095081",
+      "output_sha256": "eed2d53c0c6403f2d367b5dd94579927514adb5dbd62f8a29da5d431d926be2d",
+      "native_preset_equals_dialog": true,
+      "max_channel_error": 2
+    },
+    {
+      "pattern": "impulse",
+      "label": "blur-soft",
+      "values": [
+        "5.0",
+        "65"
+      ],
+      "source_sha256": "a6abc5f5bcd02a6b9dd21407df9eab6f9cc7b789f1c690b5759ef6fdb9095081",
+      "output_sha256": "9b7164b3e3bca1422543560ed560fa792309b65bd6c7e674a007d3de3a3fe784",
+      "native_preset_equals_dialog": true,
+      "max_channel_error": 2
+    }
+  ],
+  "limitations": "Measured corpus only. Radius+0.17 is inferred; native internals and arbitrary-image pixel identity are not claimed."
+}

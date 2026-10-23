@@ -1,0 +1,465 @@
+mkdir	dest/copy1
+mkdir	dest/copy2
+mkdir	dest/copy3
+mkdir	dest/copy4
+mkdir	dest/copy5
+mkdir	dest/copy6
+mkdir	dest/copy7
+mkdir	dest/copy8
+mkdir	dest/copy9
+mkdir	dest/copy10
+mkdir	dest/move1
+mkdir	dest/move2
+mkdir	dest/move3
+mkdir	dest/move4
+mkdir	dest/move5
+mkdir	dest/move6
+mkdir	dest/move7
+mkdir	dest/move8
+mkdir	dest/move9
+mkdir	dest/move10
+settings
+tab	FileOperations
+scroll_page	bottom
+row	DestinationList	0
+set	DestinationEdit	"${output}/dest/copy1"
+row	DestinationList	1
+set	DestinationEdit	${output}/dest/copy2
+row	DestinationList	2
+set	DestinationEdit	${output}/dest/copy3
+row	DestinationList	3
+set	DestinationEdit	${output}/dest/copy4
+row	DestinationList	4
+set	DestinationEdit	${output}/dest/copy5
+row	DestinationList	5
+set	DestinationEdit	${output}/dest/copy6
+row	DestinationList	6
+set	DestinationEdit	${output}/dest/copy7
+row	DestinationList	7
+set	DestinationEdit	${output}/dest/copy8
+row	DestinationList	8
+set	DestinationEdit	${output}/dest/copy9
+row	DestinationList	9
+set	DestinationEdit	${output}/dest/copy10
+row	DestinationList	10
+set	DestinationEdit	${output}/dest/move1
+row	DestinationList	11
+set	DestinationEdit	${output}/dest/move2
+row	DestinationList	12
+set	DestinationEdit	${output}/dest/move3
+row	DestinationList	13
+set	DestinationEdit	${output}/dest/move4
+row	DestinationList	14
+set	DestinationEdit	${output}/dest/move5
+row	DestinationList	15
+set	DestinationEdit	${output}/dest/move6
+row	DestinationList	16
+set	DestinationEdit	${output}/dest/move7
+row	DestinationList	17
+set	DestinationEdit	${output}/dest/move8
+row	DestinationList	18
+set	DestinationEdit	${output}/dest/move9
+row	DestinationList	19
+set	DestinationEdit	${output}/dest/move10
+snapshot	twenty-destinations.png
+click	ApplyButton
+expect_destination	copy	1	${output}/dest/copy1
+expect_destination	copy	2	${output}/dest/copy2
+expect_destination	copy	3	${output}/dest/copy3
+expect_destination	copy	4	${output}/dest/copy4
+expect_destination	copy	5	${output}/dest/copy5
+expect_destination	copy	6	${output}/dest/copy6
+expect_destination	copy	7	${output}/dest/copy7
+expect_destination	copy	8	${output}/dest/copy8
+expect_destination	copy	9	${output}/dest/copy9
+expect_destination	copy	10	${output}/dest/copy10
+expect_destination	move	1	${output}/dest/move1
+expect_destination	move	2	${output}/dest/move2
+expect_destination	move	3	${output}/dest/move3
+expect_destination	move	4	${output}/dest/move4
+expect_destination	move	5	${output}/dest/move5
+expect_destination	move	6	${output}/dest/move6
+expect_destination	move	7	${output}/dest/move7
+expect_destination	move	8	${output}/dest/move8
+expect_destination	move	9	${output}/dest/move9
+expect_destination	move	10	${output}/dest/move10
+persisted
+click	OK
+settings
+tab	FileOperations
+scroll_page	bottom
+row	DestinationList	0
+set	DestinationEdit	${output}/dest/copy1
+row	DestinationList	1
+set	DestinationEdit	${output}/dest/copy2
+row	DestinationList	2
+set	DestinationEdit	${output}/dest/copy3
+row	DestinationList	3
+set	DestinationEdit	${output}/dest/copy4
+row	DestinationList	4
+set	DestinationEdit	${output}/dest/copy5
+row	DestinationList	5
+set	DestinationEdit	${output}/dest/copy6
+row	DestinationList	6
+set	DestinationEdit	${output}/dest/copy7
+row	DestinationList	7
+set	DestinationEdit	${output}/dest/copy8
+row	DestinationList	8
+set	DestinationEdit	${output}/dest/copy9
+row	DestinationList	9
+set	DestinationEdit	${output}/dest/copy10
+row	DestinationList	10
+set	DestinationEdit	${output}/dest/move1
+row	DestinationList	11
+set	DestinationEdit	${output}/dest/move2
+row	DestinationList	12
+set	DestinationEdit	${output}/dest/move3
+row	DestinationList	13
+set	DestinationEdit	${output}/dest/move4
+row	DestinationList	14
+set	DestinationEdit	${output}/dest/move5
+row	DestinationList	15
+set	DestinationEdit	${output}/dest/move6
+row	DestinationList	16
+set	DestinationEdit	${output}/dest/move7
+row	DestinationList	17
+set	DestinationEdit	${output}/dest/move8
+row	DestinationList	18
+set	DestinationEdit	${output}/dest/move9
+row	DestinationList	19
+set	DestinationEdit	${output}/dest/move10
+row	DestinationList	0
+set	DestinationEdit	discarded
+click	Cancel
+expect_destination	copy	1	${output}/dest/copy1
+expect_destination	copy	2	${output}/dest/copy2
+expect_destination	copy	3	${output}/dest/copy3
+expect_destination	copy	4	${output}/dest/copy4
+expect_destination	copy	5	${output}/dest/copy5
+expect_destination	copy	6	${output}/dest/copy6
+expect_destination	copy	7	${output}/dest/copy7
+expect_destination	copy	8	${output}/dest/copy8
+expect_destination	copy	9	${output}/dest/copy9
+expect_destination	copy	10	${output}/dest/copy10
+expect_destination	move	1	${output}/dest/move1
+expect_destination	move	2	${output}/dest/move2
+expect_destination	move	3	${output}/dest/move3
+expect_destination	move	4	${output}/dest/move4
+expect_destination	move	5	${output}/dest/move5
+expect_destination	move	6	${output}/dest/move6
+expect_destination	move	7	${output}/dest/move7
+expect_destination	move	8	${output}/dest/move8
+expect_destination	move	9	${output}/dest/move9
+expect_destination	move	10	${output}/dest/move10
+settings
+tab	Background
+set	Cell	19
+tab	FileOperations
+click	Reset
+click	ApplyButton
+expect_destination	copy	1	empty
+expect_destination	copy	2	empty
+expect_destination	copy	3	empty
+expect_destination	copy	4	empty
+expect_destination	copy	5	empty
+expect_destination	copy	6	empty
+expect_destination	copy	7	empty
+expect_destination	copy	8	empty
+expect_destination	copy	9	empty
+expect_destination	copy	10	empty
+expect_destination	move	1	empty
+expect_destination	move	2	empty
+expect_destination	move	3	empty
+expect_destination	move	4	empty
+expect_destination	move	5	empty
+expect_destination	move	6	empty
+expect_destination	move	7	empty
+expect_destination	move	8	empty
+expect_destination	move	9	empty
+expect_destination	move	10	empty
+expect	settings.checker_size	19
+persisted
+click	OK
+copy_fixture	alpha.png	files/copy.png
+open	${output}/files/copy.png
+wait
+destination_command	copy	10
+transfer_expect	Mode	true
+transfer_expect	Focus	Edit10
+transfer_snapshot	unregistered-copy.png
+transfer_click	Cancel
+expect_file	files/copy.png	alpha.png
+expect_file	dest/copy10/copy.png	absent
+destination_command	copy	10
+transfer_expect	Slot	10
+transfer_click	Execute10
+expect	transfer_open	true
+expect	error_count	1
+transfer_set	Edit10	${output}/dest/copy10
+transfer_click	Execute10
+expect_destination	copy	10	${output}/dest/copy10
+expect_destination	move	10	empty
+expect_file	files/copy.png	alpha.png
+expect_file	dest/copy10/copy.png	alpha.png
+persisted
+copy_fixture	alpha.png	files/move.png
+open	${output}/files/move.png
+wait
+destination_command	move	10
+transfer_expect	Focus	Edit10
+transfer_snapshot	unregistered-move.png
+transfer_click	Cancel
+expect_file	files/move.png	alpha.png
+expect_file	dest/move10/move.png	absent
+destination_command	move	10
+transfer_expect	Slot	10
+transfer_set	Edit10	${output}/dest/move10
+transfer_click	Execute10
+expect_file	files/move.png	absent
+expect_file	dest/move10/move.png	alpha.png
+expect	transfer_open	false
+persisted
+settings
+tab	FileOperations
+scroll_page	bottom
+row	DestinationList	8
+set	DestinationEdit	${output}/dest/copy9
+click	ApplyButton
+click	Cancel
+expect_destination	copy	9	${output}/dest/copy9
+expect_file	dest/copy9/move.png	absent
+persisted
+destination_command	copy	9
+expect	transfer_open	false
+expect_file	dest/copy9/move.png	alpha.png
+settings
+tab	FileOperations
+scroll_page	bottom
+row	DestinationList	0
+set	DestinationEdit	${output}/dest/copy1
+row	DestinationList	1
+set	DestinationEdit	${output}/dest/copy2
+row	DestinationList	2
+set	DestinationEdit	${output}/dest/copy3
+row	DestinationList	3
+set	DestinationEdit	${output}/dest/copy4
+row	DestinationList	4
+set	DestinationEdit	${output}/dest/copy5
+row	DestinationList	5
+set	DestinationEdit	${output}/dest/copy6
+row	DestinationList	6
+set	DestinationEdit	${output}/dest/copy7
+row	DestinationList	7
+set	DestinationEdit	${output}/dest/copy8
+row	DestinationList	8
+set	DestinationEdit	${output}/dest/copy9
+row	DestinationList	9
+set	DestinationEdit	${output}/dest/copy10
+row	DestinationList	10
+set	DestinationEdit	${output}/dest/move1
+row	DestinationList	11
+set	DestinationEdit	${output}/dest/move2
+row	DestinationList	12
+set	DestinationEdit	${output}/dest/move3
+row	DestinationList	13
+set	DestinationEdit	${output}/dest/move4
+row	DestinationList	14
+set	DestinationEdit	${output}/dest/move5
+row	DestinationList	15
+set	DestinationEdit	${output}/dest/move6
+row	DestinationList	16
+set	DestinationEdit	${output}/dest/move7
+row	DestinationList	17
+set	DestinationEdit	${output}/dest/move8
+row	DestinationList	18
+set	DestinationEdit	${output}/dest/move9
+row	DestinationList	19
+set	DestinationEdit	${output}/dest/move10
+click	OK
+expect_destination	copy	1	${output}/dest/copy1
+expect_destination	copy	2	${output}/dest/copy2
+expect_destination	copy	3	${output}/dest/copy3
+expect_destination	copy	4	${output}/dest/copy4
+expect_destination	copy	5	${output}/dest/copy5
+expect_destination	copy	6	${output}/dest/copy6
+expect_destination	copy	7	${output}/dest/copy7
+expect_destination	copy	8	${output}/dest/copy8
+expect_destination	copy	9	${output}/dest/copy9
+expect_destination	copy	10	${output}/dest/copy10
+expect_destination	move	1	${output}/dest/move1
+expect_destination	move	2	${output}/dest/move2
+expect_destination	move	3	${output}/dest/move3
+expect_destination	move	4	${output}/dest/move4
+expect_destination	move	5	${output}/dest/move5
+expect_destination	move	6	${output}/dest/move6
+expect_destination	move	7	${output}/dest/move7
+expect_destination	move	8	${output}/dest/move8
+expect_destination	move	9	${output}/dest/move9
+expect_destination	move	10	${output}/dest/move10
+persisted
+copy_fixture	alpha.png	files/source-1.png
+open	${output}/files/source-1.png
+wait
+destination_command	copy	1
+expect	settings_open	false
+expect_file	files/source-1.png	alpha.png
+expect_file	dest/copy1/source-1.png	alpha.png
+destination_command	move	1
+expect	settings_open	false
+expect_file	files/source-1.png	absent
+expect_file	dest/move1/source-1.png	alpha.png
+copy_fixture	alpha.png	files/source-2.png
+open	${output}/files/source-2.png
+wait
+destination_command	copy	2
+expect	settings_open	false
+expect_file	files/source-2.png	alpha.png
+expect_file	dest/copy2/source-2.png	alpha.png
+destination_command	move	2
+expect	settings_open	false
+expect_file	files/source-2.png	absent
+expect_file	dest/move2/source-2.png	alpha.png
+copy_fixture	alpha.png	files/source-3.png
+open	${output}/files/source-3.png
+wait
+destination_command	copy	3
+expect	settings_open	false
+expect_file	files/source-3.png	alpha.png
+expect_file	dest/copy3/source-3.png	alpha.png
+destination_command	move	3
+expect	settings_open	false
+expect_file	files/source-3.png	absent
+expect_file	dest/move3/source-3.png	alpha.png
+copy_fixture	alpha.png	files/source-4.png
+open	${output}/files/source-4.png
+wait
+destination_command	copy	4
+expect	settings_open	false
+expect_file	files/source-4.png	alpha.png
+expect_file	dest/copy4/source-4.png	alpha.png
+destination_command	move	4
+expect	settings_open	false
+expect_file	files/source-4.png	absent
+expect_file	dest/move4/source-4.png	alpha.png
+copy_fixture	alpha.png	files/source-5.png
+open	${output}/files/source-5.png
+wait
+destination_command	copy	5
+expect	settings_open	false
+expect_file	files/source-5.png	alpha.png
+expect_file	dest/copy5/source-5.png	alpha.png
+destination_command	move	5
+expect	settings_open	false
+expect_file	files/source-5.png	absent
+expect_file	dest/move5/source-5.png	alpha.png
+copy_fixture	alpha.png	files/source-6.png
+open	${output}/files/source-6.png
+wait
+destination_command	copy	6
+expect	settings_open	false
+expect_file	files/source-6.png	alpha.png
+expect_file	dest/copy6/source-6.png	alpha.png
+destination_command	move	6
+expect	settings_open	false
+expect_file	files/source-6.png	absent
+expect_file	dest/move6/source-6.png	alpha.png
+copy_fixture	alpha.png	files/source-7.png
+open	${output}/files/source-7.png
+wait
+destination_command	copy	7
+expect	settings_open	false
+expect_file	files/source-7.png	alpha.png
+expect_file	dest/copy7/source-7.png	alpha.png
+destination_command	move	7
+expect	settings_open	false
+expect_file	files/source-7.png	absent
+expect_file	dest/move7/source-7.png	alpha.png
+copy_fixture	alpha.png	files/source-8.png
+open	${output}/files/source-8.png
+wait
+destination_command	copy	8
+expect	settings_open	false
+expect_file	files/source-8.png	alpha.png
+expect_file	dest/copy8/source-8.png	alpha.png
+destination_command	move	8
+expect	settings_open	false
+expect_file	files/source-8.png	absent
+expect_file	dest/move8/source-8.png	alpha.png
+copy_fixture	alpha.png	files/source-9.png
+open	${output}/files/source-9.png
+wait
+destination_command	copy	9
+expect	settings_open	false
+expect_file	files/source-9.png	alpha.png
+expect_file	dest/copy9/source-9.png	alpha.png
+destination_command	move	9
+expect	settings_open	false
+expect_file	files/source-9.png	absent
+expect_file	dest/move9/source-9.png	alpha.png
+copy_fixture	alpha.png	files/source-10.png
+open	${output}/files/source-10.png
+wait
+destination_command	copy	10
+expect	settings_open	false
+expect_file	files/source-10.png	alpha.png
+expect_file	dest/copy10/source-10.png	alpha.png
+destination_command	move	10
+expect	settings_open	false
+expect_file	files/source-10.png	absent
+expect_file	dest/move10/source-10.png	alpha.png
+snapshot	transferred-image.png
+expect	error_count	1
+settings
+tab	FileOperations
+click	Reset
+click	Cancel
+expect_destination	copy	1	${output}/dest/copy1
+expect_destination	copy	2	${output}/dest/copy2
+expect_destination	copy	3	${output}/dest/copy3
+expect_destination	copy	4	${output}/dest/copy4
+expect_destination	copy	5	${output}/dest/copy5
+expect_destination	copy	6	${output}/dest/copy6
+expect_destination	copy	7	${output}/dest/copy7
+expect_destination	copy	8	${output}/dest/copy8
+expect_destination	copy	9	${output}/dest/copy9
+expect_destination	copy	10	${output}/dest/copy10
+expect_destination	move	1	${output}/dest/move1
+expect_destination	move	2	${output}/dest/move2
+expect_destination	move	3	${output}/dest/move3
+expect_destination	move	4	${output}/dest/move4
+expect_destination	move	5	${output}/dest/move5
+expect_destination	move	6	${output}/dest/move6
+expect_destination	move	7	${output}/dest/move7
+expect_destination	move	8	${output}/dest/move8
+expect_destination	move	9	${output}/dest/move9
+expect_destination	move	10	${output}/dest/move10
+settings
+tab	FileOperations
+click	Reset
+click	OK
+expect_destination	copy	1	empty
+expect_destination	copy	2	empty
+expect_destination	copy	3	empty
+expect_destination	copy	4	empty
+expect_destination	copy	5	empty
+expect_destination	copy	6	empty
+expect_destination	copy	7	empty
+expect_destination	copy	8	empty
+expect_destination	copy	9	empty
+expect_destination	copy	10	empty
+expect_destination	move	1	empty
+expect_destination	move	2	empty
+expect_destination	move	3	empty
+expect_destination	move	4	empty
+expect_destination	move	5	empty
+expect_destination	move	6	empty
+expect_destination	move	7	empty
+expect_destination	move	8	empty
+expect_destination	move	9	empty
+expect_destination	move	10	empty
+expect	settings.checker_size	19
+persisted
+expect_transfer_option	copy	registered	false
+expect_transfer_option	move	registered	false
+expect_transfer_option	copy	basic	empty
+expect_transfer_option	move	basic	empty

@@ -1,0 +1,32 @@
+{
+  "generator": "tools/generate_loading_fixtures.py",
+  "files": {
+    "alpha-v4.bmp": "a8d50dcb80e80d3a33c553cfb8d1db383fe82d3273009220fa90d22a30922917",
+    "alpha-v5.bmp": "ead4d2aa79546daf828e4f8c09f921fd2ac132c5f6786f4044b1c625751f3661",
+    "animated-background.gif": "f0d4d938891c9888be0bfca80f2ff297593453573d5af53bb0408e54f1f7457f",
+    "background.apng": "42f9cd508231874c2458cb3c3773db924856bbaa1514576e4b3ccb7466a4ae4f",
+    "exif-1-expected.png": "492d7591d1ca6b73d822ca62c0953c43253f4843417a597a7ae8def1d9eb4a58",
+    "exif-1.jpg": "c3a2e75051b7d4154fa1c0ac705795b50ea24d9616c93eb67c7364fe7feb3e85",
+    "exif-2-expected.png": "8b87799f42593f2c0e1b49f46f4de7c99cf419747f6cf6be66fac32b5b582fb6",
+    "exif-2.jpg": "73bbc432988b6310541203e288e0df85f444a20fdbf129e4185105154856f36c",
+    "exif-3-expected.png": "8a40cbb05c163cbff6aeaa1b838e729bc58bab0ea7acd437708f9ed77d709e35",
+    "exif-3.jpg": "98f5f91531e0baa6c29b9d02af1be285ad6ea0bb3d0b3afc43fa3375f49cdc7f",
+    "exif-4-expected.png": "a46b0a51c612ba13335e715accf878bbcfc42c2a9243985e871cde90b0b46e3d",
+    "exif-4.jpg": "ee6b012218e417547a23125edb3d503f3d4d7446807f00c37972301b7cbb1f05",
+    "exif-5-expected.png": "513e32a014ac3e99e93ce75c0d6a4618bc8f0e5bd28988c8ee1359ea530aa7ac",
+    "exif-5.jpg": "81d517aa99ccf7f2a40ff948e3ef04bf908f765c22b71d3c42d6eaf93f8704be",
+    "exif-6-expected.png": "da4718c4809427d8bc61a4d2c404538cc8e180c6f3e70f44d8365c2f3ac31c1b",
+    "exif-6.jpg": "a27de4cae44e05517a92a5d7376ee1e71d8c76b0f2870036faa850a0839f183e",
+    "exif-7-expected.png": "6eefd0bb3defc8cc75a1e3cae81fa48bd5b1208bd65658a5d731bf0d81feca42",
+    "exif-7.jpg": "81706d7c2e3fd4e7595ba63b35dc962ff62cceb2023e7399482ef75f19e46e02",
+    "exif-8-expected.png": "e297240dfa2cf060a51288dbd4b7141dd86c892349a5924e158bac199bd6e467",
+    "exif-8.jpg": "c3ee056680d98dc6d2c92151e3a1345d029a9d5404672d763ba1c293fbc33fc0",
+    "first-offset.gif": "424321701b0427f67149ecbe680364667c2fe373a7e728935bd6ad906bb1a566",
+    "gray16-background.png": "a97b62a39870abf7a9f368d36dd18dfb2e68e7a94305bc724b0f0a6574e42934",
+    "gray2-background.png": "628abd0e35cdfb5df96661628f2dad527296499c7fc8810bef94d93ca1f943f8",
+    "indexed-background.png": "66a5e93585eef1f4b74fa43ca1c2f1482d926f4b9de951c01922cb4a970b1d5b",
+    "rgb16-trns-background.png": "3760cbb75b0c753d2ff5a72926da502827d5ab8d9a8a384ded1bd19584db9d3e",
+    "rgba-background.png": "93aa0b646227f8cc2e6f6d87cf39c72cfd580c1704b8f08fb63762349e733f00",
+    "static-background.gif": "566d59d3d4ed5efe619433b93ef1b85a55a0654fcb53509034ade4b1ef896c75"
+  }
+}

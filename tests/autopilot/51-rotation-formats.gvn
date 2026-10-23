@@ -1,0 +1,689 @@
+expect	settings.save_as_retarget	false
+settings
+tab	Loading
+set	Autoplay	false
+click	OK
+expect	settings.animation_autoplay	false
+persisted
+copy_fixture	view-rotation-formats/png-alpha/portrait.png	formats/png-alpha/portrait/source.png
+command	ViewRotateNone
+wait
+open	${output}/formats/png-alpha/portrait/source.png
+wait
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_rotation_format	png-alpha	portrait	1
+pixel_copy
+save_target	pixels/png-alpha-portrait-1.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/png-alpha-portrait-1.png
+expect_location	image	${output}/formats/png-alpha/portrait/source.png
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	1
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	png-alpha	portrait	1
+command	FitImage
+snapshot	rotation-format-png-alpha.png
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_rotation_format	png-alpha	portrait	7
+pixel_copy
+save_target	pixels/png-alpha-portrait-7.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/png-alpha-portrait-7.png
+expect_location	image	${output}/formats/png-alpha/portrait/source.png
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	2
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	png-alpha	portrait	7
+expect_file	formats/png-alpha/portrait/source.png	view-rotation-formats/png-alpha/portrait.png
+copy_fixture	view-rotation-formats/png-alpha/landscape.png	formats/png-alpha/landscape/source.png
+command	ViewRotateNone
+wait
+open	${output}/formats/png-alpha/landscape/source.png
+wait
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_rotation_format	png-alpha	landscape	1
+pixel_copy
+save_target	pixels/png-alpha-landscape-1.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/png-alpha-landscape-1.png
+expect_location	image	${output}/formats/png-alpha/landscape/source.png
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	3
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	png-alpha	landscape	1
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_rotation_format	png-alpha	landscape	7
+pixel_copy
+save_target	pixels/png-alpha-landscape-7.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/png-alpha-landscape-7.png
+expect_location	image	${output}/formats/png-alpha/landscape/source.png
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	4
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	png-alpha	landscape	7
+expect_file	formats/png-alpha/landscape/source.png	view-rotation-formats/png-alpha/landscape.png
+copy_fixture	view-rotation-formats/png-alpha/square.png	formats/png-alpha/square/source.png
+command	ViewRotateNone
+wait
+open	${output}/formats/png-alpha/square/source.png
+wait
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_rotation_format	png-alpha	square	1
+pixel_copy
+save_target	pixels/png-alpha-square-1.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/png-alpha-square-1.png
+expect_location	image	${output}/formats/png-alpha/square/source.png
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	5
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	png-alpha	square	1
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_rotation_format	png-alpha	square	7
+pixel_copy
+save_target	pixels/png-alpha-square-7.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/png-alpha-square-7.png
+expect_location	image	${output}/formats/png-alpha/square/source.png
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	6
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	png-alpha	square	7
+expect_file	formats/png-alpha/square/source.png	view-rotation-formats/png-alpha/square.png
+copy_fixture	view-rotation-formats/gif/portrait.gif	formats/gif/portrait/source.gif
+command	ViewRotateNone
+wait
+open	${output}/formats/gif/portrait/source.gif
+wait
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_rotation_format	gif	portrait	1
+pixel_copy
+save_target	pixels/gif-portrait-1.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-portrait-1.png
+expect_location	image	${output}/formats/gif/portrait/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	7
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	gif	portrait	1
+command	FitImage
+snapshot	rotation-format-gif.png
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_rotation_format	gif	portrait	7
+pixel_copy
+save_target	pixels/gif-portrait-7.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-portrait-7.png
+expect_location	image	${output}/formats/gif/portrait/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	8
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	gif	portrait	7
+expect_file	formats/gif/portrait/source.gif	view-rotation-formats/gif/portrait.gif
+copy_fixture	view-rotation-formats/gif/landscape.gif	formats/gif/landscape/source.gif
+command	ViewRotateNone
+wait
+open	${output}/formats/gif/landscape/source.gif
+wait
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_rotation_format	gif	landscape	1
+pixel_copy
+save_target	pixels/gif-landscape-1.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-landscape-1.png
+expect_location	image	${output}/formats/gif/landscape/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	9
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	gif	landscape	1
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_rotation_format	gif	landscape	7
+pixel_copy
+save_target	pixels/gif-landscape-7.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-landscape-7.png
+expect_location	image	${output}/formats/gif/landscape/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	10
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	gif	landscape	7
+expect_file	formats/gif/landscape/source.gif	view-rotation-formats/gif/landscape.gif
+copy_fixture	view-rotation-formats/gif/square.gif	formats/gif/square/source.gif
+command	ViewRotateNone
+wait
+open	${output}/formats/gif/square/source.gif
+wait
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_rotation_format	gif	square	1
+pixel_copy
+save_target	pixels/gif-square-1.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-square-1.png
+expect_location	image	${output}/formats/gif/square/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	11
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	gif	square	1
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_rotation_format	gif	square	7
+pixel_copy
+save_target	pixels/gif-square-7.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-square-7.png
+expect_location	image	${output}/formats/gif/square/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	12
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	gif	square	7
+expect_file	formats/gif/square/source.gif	view-rotation-formats/gif/square.gif
+copy_fixture	view-rotation-formats/gif-transparent/portrait.gif	formats/gif-transparent/portrait/source.gif
+command	ViewRotateNone
+wait
+open	${output}/formats/gif-transparent/portrait/source.gif
+wait
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_rotation_format	gif-transparent	portrait	1
+pixel_copy
+save_target	pixels/gif-transparent-portrait-1.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-transparent-portrait-1.png
+expect_location	image	${output}/formats/gif-transparent/portrait/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	13
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	gif-transparent	portrait	1
+command	FitImage
+snapshot	rotation-format-gif-transparent.png
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_rotation_format	gif-transparent	portrait	7
+pixel_copy
+save_target	pixels/gif-transparent-portrait-7.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-transparent-portrait-7.png
+expect_location	image	${output}/formats/gif-transparent/portrait/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	14
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	gif-transparent	portrait	7
+expect_file	formats/gif-transparent/portrait/source.gif	view-rotation-formats/gif-transparent/portrait.gif
+copy_fixture	view-rotation-formats/gif-transparent/landscape.gif	formats/gif-transparent/landscape/source.gif
+command	ViewRotateNone
+wait
+open	${output}/formats/gif-transparent/landscape/source.gif
+wait
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_rotation_format	gif-transparent	landscape	1
+pixel_copy
+save_target	pixels/gif-transparent-landscape-1.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-transparent-landscape-1.png
+expect_location	image	${output}/formats/gif-transparent/landscape/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	15
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	gif-transparent	landscape	1
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_rotation_format	gif-transparent	landscape	7
+pixel_copy
+save_target	pixels/gif-transparent-landscape-7.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-transparent-landscape-7.png
+expect_location	image	${output}/formats/gif-transparent/landscape/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	16
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	gif-transparent	landscape	7
+expect_file	formats/gif-transparent/landscape/source.gif	view-rotation-formats/gif-transparent/landscape.gif
+copy_fixture	view-rotation-formats/gif-transparent/square.gif	formats/gif-transparent/square/source.gif
+command	ViewRotateNone
+wait
+open	${output}/formats/gif-transparent/square/source.gif
+wait
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_rotation_format	gif-transparent	square	1
+pixel_copy
+save_target	pixels/gif-transparent-square-1.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-transparent-square-1.png
+expect_location	image	${output}/formats/gif-transparent/square/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	17
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	gif-transparent	square	1
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_rotation_format	gif-transparent	square	7
+pixel_copy
+save_target	pixels/gif-transparent-square-7.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-transparent-square-7.png
+expect_location	image	${output}/formats/gif-transparent/square/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	18
+expect	export_temporary	false
+expect	status.drag_pending	false
+expect_rotation_format	gif-transparent	square	7
+expect_file	formats/gif-transparent/square/source.gif	view-rotation-formats/gif-transparent/square.gif
+copy_fixture	view-rotation-formats/gif-animated/portrait.gif	formats/gif-animated/portrait/source.gif
+command	ViewRotateNone
+wait
+open	${output}/formats/gif-animated/portrait/source.gif
+wait
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_rotation_format	gif-animated	portrait	1
+pixel_copy
+expect	frame	0
+player	FrameNext
+expect	frame	1
+expect	playing	false
+pixel_copy
+save_target	pixels/gif-animated-portrait-1.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-animated-portrait-1.png
+expect_location	image	${output}/formats/gif-animated/portrait/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	19
+expect	export_temporary	true
+expect	status.drag_pending	false
+expect_rotation_format	gif-animated	portrait	1
+command	FitImage
+snapshot	rotation-format-gif-animated.png
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_rotation_format	gif-animated	portrait	7
+pixel_copy
+expect	frame	0
+player	FrameNext
+expect	frame	1
+expect	playing	false
+pixel_copy
+save_target	pixels/gif-animated-portrait-7.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-animated-portrait-7.png
+expect_location	image	${output}/formats/gif-animated/portrait/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	20
+expect	export_temporary	true
+expect	status.drag_pending	false
+expect_rotation_format	gif-animated	portrait	7
+expect_file	formats/gif-animated/portrait/source.gif	view-rotation-formats/gif-animated/portrait.gif
+copy_fixture	view-rotation-formats/gif-animated/landscape.gif	formats/gif-animated/landscape/source.gif
+command	ViewRotateNone
+wait
+open	${output}/formats/gif-animated/landscape/source.gif
+wait
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_rotation_format	gif-animated	landscape	1
+pixel_copy
+expect	frame	0
+player	FrameNext
+expect	frame	1
+expect	playing	false
+pixel_copy
+save_target	pixels/gif-animated-landscape-1.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-animated-landscape-1.png
+expect_location	image	${output}/formats/gif-animated/landscape/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	21
+expect	export_temporary	true
+expect	status.drag_pending	false
+expect_rotation_format	gif-animated	landscape	1
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_rotation_format	gif-animated	landscape	7
+pixel_copy
+expect	frame	0
+player	FrameNext
+expect	frame	1
+expect	playing	false
+pixel_copy
+save_target	pixels/gif-animated-landscape-7.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-animated-landscape-7.png
+expect_location	image	${output}/formats/gif-animated/landscape/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	22
+expect	export_temporary	true
+expect	status.drag_pending	false
+expect_rotation_format	gif-animated	landscape	7
+expect_file	formats/gif-animated/landscape/source.gif	view-rotation-formats/gif-animated/landscape.gif
+copy_fixture	view-rotation-formats/gif-animated/square.gif	formats/gif-animated/square/source.gif
+command	ViewRotateNone
+wait
+open	${output}/formats/gif-animated/square/source.gif
+wait
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_rotation_format	gif-animated	square	1
+pixel_copy
+expect	frame	0
+player	FrameNext
+expect	frame	1
+expect	playing	false
+pixel_copy
+save_target	pixels/gif-animated-square-1.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-animated-square-1.png
+expect_location	image	${output}/formats/gif-animated/square/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	23
+expect	export_temporary	true
+expect	status.drag_pending	false
+expect_rotation_format	gif-animated	square	1
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_rotation_format	gif-animated	square	7
+pixel_copy
+expect	frame	0
+player	FrameNext
+expect	frame	1
+expect	playing	false
+pixel_copy
+save_target	pixels/gif-animated-square-7.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-animated-square-7.png
+expect_location	image	${output}/formats/gif-animated/square/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	24
+expect	export_temporary	true
+expect	status.drag_pending	false
+expect_rotation_format	gif-animated	square	7
+expect_file	formats/gif-animated/square/source.gif	view-rotation-formats/gif-animated/square.gif
+copy_fixture	view-rotation-formats/gif-animated-transparent/portrait.gif	formats/gif-animated-transparent/portrait/source.gif
+command	ViewRotateNone
+wait
+open	${output}/formats/gif-animated-transparent/portrait/source.gif
+wait
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_rotation_format	gif-animated-transparent	portrait	1
+pixel_copy
+expect	frame	0
+player	FrameNext
+expect	frame	1
+expect	playing	false
+pixel_copy
+save_target	pixels/gif-animated-transparent-portrait-1.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-animated-transparent-portrait-1.png
+expect_location	image	${output}/formats/gif-animated-transparent/portrait/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	25
+expect	export_temporary	true
+expect	status.drag_pending	false
+expect_rotation_format	gif-animated-transparent	portrait	1
+command	FitImage
+snapshot	rotation-format-gif-animated-transparent.png
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_rotation_format	gif-animated-transparent	portrait	7
+pixel_copy
+expect	frame	0
+player	FrameNext
+expect	frame	1
+expect	playing	false
+pixel_copy
+save_target	pixels/gif-animated-transparent-portrait-7.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-animated-transparent-portrait-7.png
+expect_location	image	${output}/formats/gif-animated-transparent/portrait/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	26
+expect	export_temporary	true
+expect	status.drag_pending	false
+expect_rotation_format	gif-animated-transparent	portrait	7
+expect_file	formats/gif-animated-transparent/portrait/source.gif	view-rotation-formats/gif-animated-transparent/portrait.gif
+copy_fixture	view-rotation-formats/gif-animated-transparent/landscape.gif	formats/gif-animated-transparent/landscape/source.gif
+command	ViewRotateNone
+wait
+open	${output}/formats/gif-animated-transparent/landscape/source.gif
+wait
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_rotation_format	gif-animated-transparent	landscape	1
+pixel_copy
+expect	frame	0
+player	FrameNext
+expect	frame	1
+expect	playing	false
+pixel_copy
+save_target	pixels/gif-animated-transparent-landscape-1.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-animated-transparent-landscape-1.png
+expect_location	image	${output}/formats/gif-animated-transparent/landscape/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	27
+expect	export_temporary	true
+expect	status.drag_pending	false
+expect_rotation_format	gif-animated-transparent	landscape	1
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_rotation_format	gif-animated-transparent	landscape	7
+pixel_copy
+expect	frame	0
+player	FrameNext
+expect	frame	1
+expect	playing	false
+pixel_copy
+save_target	pixels/gif-animated-transparent-landscape-7.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-animated-transparent-landscape-7.png
+expect_location	image	${output}/formats/gif-animated-transparent/landscape/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	28
+expect	export_temporary	true
+expect	status.drag_pending	false
+expect_rotation_format	gif-animated-transparent	landscape	7
+expect_file	formats/gif-animated-transparent/landscape/source.gif	view-rotation-formats/gif-animated-transparent/landscape.gif
+copy_fixture	view-rotation-formats/gif-animated-transparent/square.gif	formats/gif-animated-transparent/square/source.gif
+command	ViewRotateNone
+wait
+open	${output}/formats/gif-animated-transparent/square/source.gif
+wait
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_rotation_format	gif-animated-transparent	square	1
+pixel_copy
+expect	frame	0
+player	FrameNext
+expect	frame	1
+expect	playing	false
+pixel_copy
+save_target	pixels/gif-animated-transparent-square-1.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-animated-transparent-square-1.png
+expect_location	image	${output}/formats/gif-animated-transparent/square/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	29
+expect	export_temporary	true
+expect	status.drag_pending	false
+expect_rotation_format	gif-animated-transparent	square	1
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_rotation_format	gif-animated-transparent	square	7
+pixel_copy
+expect	frame	0
+player	FrameNext
+expect	frame	1
+expect	playing	false
+pixel_copy
+save_target	pixels/gif-animated-transparent-square-7.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/gif-animated-transparent-square-7.png
+expect_location	image	${output}/formats/gif-animated-transparent/square/source.gif
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	30
+expect	export_temporary	true
+expect	status.drag_pending	false
+expect_rotation_format	gif-animated-transparent	square	7
+expect_file	formats/gif-animated-transparent/square/source.gif	view-rotation-formats/gif-animated-transparent/square.gif
+command	Copy
+command	NewPaste
+remember	clipboard-current-frame
+command	ViewRotateLeft
+expect_same	clipboard-current-frame	true
+pixel_copy
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	31
+expect	export_temporary	true
+snapshot	rotation-format-clipboard-alpha.png
+expect	error_count	0

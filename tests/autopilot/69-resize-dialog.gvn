@@ -1,0 +1,62 @@
+open	${fixtures}/alpha.png
+wait
+remember	original
+command	Resize
+expect	resize.open	true
+expect	resize.width	3
+expect	resize.height	2
+expect	resize.keep_aspect	true
+expect	resize.smooth	true
+resize_set	Width	6
+expect	resize.height	4
+resize_set	HeightPercent	50
+expect	resize.width	2
+expect	resize.height	1
+resize_click	Double
+expect	resize.width	4
+expect	resize.height	2
+resize_set	Width	0
+expect	resize.valid	false
+expect	resize.ok_enabled	false
+resize_set	Width	6
+expect	resize.height	4
+expect	resize.valid	true
+resize_set	KeepAspect	false
+resize_set	Height	3
+expect	resize.width	6
+expect	resize.height	3
+resize_snapshot	resize-independent.png
+resize_click	Cancel
+expect	resize.open	false
+expect_same	original	true
+expect	modified	false
+expect	settings.resize_keep_aspect	true
+expect	settings.resize_smooth	true
+command	Resize
+expect	resize.keep_aspect	true
+resize_set	WidthPercent	200
+resize_set	Smooth	false
+expect	resize.width	6
+expect	resize.height	4
+resize_snapshot	resize-nearest.png
+resize_click	OK
+expect	resize.open	false
+expect	width	6
+expect	height	4
+expect	modified	true
+expect	undo_available	true
+expect	settings.resize_smooth	false
+persisted
+expect_image	${fixtures}/resize/alpha-nearest-6x4.png	0
+pixel_copy
+command	Undo
+expect_same	original	true
+command	Resize
+expect	resize.smooth	false
+expect	resize.keep_aspect	true
+resize_set	Smooth	true
+resize_set	Width	3
+resize_click	OK
+expect_same	original	true
+pixel_copy
+expect	error_count	0

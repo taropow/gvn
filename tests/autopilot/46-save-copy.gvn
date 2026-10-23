@@ -1,0 +1,90 @@
+expect	settings.save_as_retarget	false
+copy_fixture	alpha.png	source/alpha.png
+open	${output}/source/alpha.png
+wait
+command	Negative
+remember	edited
+save_target	pixels/copy.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/copy.png
+expect_location	image	${output}/source/alpha.png
+expect_location	requested	${output}/source/alpha.png
+expect	modified	true
+expect_same	edited	true
+pixel_copy
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	1
+expect	export_temporary	true
+snapshot	save-copy-original-source.png
+settings
+tab	FileOperations
+set	SaveAsRetarget	true
+snapshot	save-copy-policy-settings.png
+click	OK
+expect	settings.save_as_retarget	true
+expect_location	image	${output}/source/alpha.png
+expect_same	edited	true
+persisted
+save_target	pixels/legacy.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/legacy.png
+expect_location	image	${output}/pixels/legacy.png
+expect_location	requested	${output}/pixels/legacy.png
+expect	modified	false
+settings
+tab	FileOperations
+set	SaveAsRetarget	false
+click	Cancel
+expect	settings.save_as_retarget	true
+settings
+tab	FileOperations
+click	Reset
+click	OK
+expect	settings.save_as_retarget	false
+expect_location	image	${output}/pixels/legacy.png
+persisted
+open	${output}/source/alpha.png
+wait
+command	Copy
+command	NewPaste
+save_target	pixels/clipboard.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/clipboard.png
+expect_location	image	empty
+expect_location	requested	empty
+expect	modified	true
+pixel_copy
+status_mouse	down	8	8
+status_mouse	move	80	-20
+expect	export_count	2
+expect	export_temporary	true
+snapshot	save-copy-clipboard-alpha.png
+command	Undo
+expect_location	image	${output}/source/alpha.png
+copy_fixture	disposal.gif	source/animation.gif
+open	${output}/source/animation.gif
+wait
+player	StopAnimation
+player	FrameNext
+expect	frame	1
+save_target	pixels/frame.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/frame.png
+expect_location	image	${output}/source/animation.gif
+expect	frame	1
+expect	modified	false
+player	FrameNext
+expect	frame	2
+snapshot	save-copy-animation-retained.png
+expect_file	source/alpha.png	alpha.png
+expect_file	source/animation.gif	disposal.gif
+expect	error_count	0

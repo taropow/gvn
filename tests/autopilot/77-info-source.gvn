@@ -1,0 +1,17 @@
+open	${fixtures}/palette/png-4-alpha.png
+wait
+remember	original
+command	Negative
+image_info
+info_expect	ファイル形式: PNG
+info_expect	294 bytes
+info_expect	4 BPP (パレット)
+info_snapshot	info-source-after-edit.png
+info_close
+command	Undo
+expect_same	original	true
+image_info
+info_expect	ファイル形式: PNG
+info_expect	294 bytes
+info_close
+expect	error_count	0

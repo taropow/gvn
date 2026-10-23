@@ -1,0 +1,46 @@
+# Fresh normal policy is shrink-only; fullscreen fits independently.
+expect	settings.display_mode	2
+expect	settings.full_display_mode	1
+resize	900	700
+open	${fixtures}/alpha.png
+wait
+expect	scale	1
+snapshot	normal-small-actual.png
+command	Fullscreen
+expect	scale	50
+snapshot	fullscreen-small-fit.png
+command	Fullscreen
+expect	scale	1
+settings
+tab	Display
+expect_text	DisplayMode	大きい画像だけウィンドウに合わせる
+set	DisplayMode	1
+tab	Fullscreen
+set	FullDisplayMode	2
+click	OK
+persisted
+expect	settings.display_mode	1
+expect	settings.full_display_mode	2
+command	Reload
+wait
+command	Fullscreen
+expect	scale	1
+command	Fullscreen
+settings
+tab	Display
+click	Reset
+expect_text	DisplayMode	大きい画像だけウィンドウに合わせる
+click	ApplyButton
+expect	settings.display_mode	2
+expect	settings.full_display_mode	2
+tab	Fullscreen
+click	Reset
+expect_text	FullDisplayMode	画像を全画面に合わせる
+click	ApplyButton
+expect	settings.display_mode	2
+expect	settings.full_display_mode	1
+click	Cancel
+command	Reload
+wait
+expect	scale	1
+snapshot	normal-restored-policy.png

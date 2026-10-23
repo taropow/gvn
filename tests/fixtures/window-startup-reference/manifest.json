@@ -1,0 +1,7 @@
+{
+  "reference_sha256": "c23b73887a3a98833f9318e7e3321a6a5b9825ad442b88e8bd3b0333ba28a3e5",
+  "raw_result_sha256": "3d1d47cdd9137c8fedbcc663a844c0cdb9187dd3fd900d99dd01f81793342dde",
+  "cases": 6,
+  "fixture_sha256": "80639e65a13ef5752030bacc098fa13d13d67d21f4ab0f381a915c33a760753a",
+  "source": "docs/verification/window-startup-reference-0.45.json"
+}

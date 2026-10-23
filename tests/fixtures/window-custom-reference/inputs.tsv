@@ -1,0 +1,16 @@
+# name	before_x	before_y	before_w	before_h	input_x	input_y	input_w	input_h	normalized_x	normalized_y	normalized_w	normalized_h	reference_rect_overflow
+small	0	0	480	360	37	49	100	80	37	49	100	80	0
+zero	0	0	480	360	0	0	0	0	0	0	480	360	0
+one	0	0	480	360	-1	-1	1	1	-1	-1	1	1	0
+negative-size	0	0	480	360	0	0	-1	-1	0	0	480	360	0
+large-coordinates	0	0	480	360	1000000	-1000000	640	480	1000000	-1000000	640	480	0
+empty	0	0	480	360					0	0	480	360	0
+not-number	0	0	480	360	abc	abc	abc	abc	0	0	480	360	0
+signed-extremes	0	0	480	360	2147483647	-2147483648	640	480	-2147483009	0	-640	480	1
+over-signed	0	0	480	360	2147483648	-2147483649	640	480	0	0	640	480	0
+size-32768	0	0	480	360	0	0	32768	32768	0	0	32768	32768	0
+size-int-max	0	0	480	360	0	0	2147483647	2147483647	0	0	2147483647	2147483647	0
+size-over-int	0	0	480	360	0	0	2147483648	2147483648	0	0	480	360	0
+prior-size-zero	57	69	620	420	37	49	0	0	37	49	620	420	0
+prior-size-invalid	57	69	620	420	abc	abc	abc	abc	57	69	620	420	0
+prior-size-negative	57	69	620	420	37	49	-1	-1	37	49	620	420	0

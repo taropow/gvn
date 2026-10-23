@@ -1,0 +1,67 @@
+# Input routing is real. The OS move loop is intercepted and counted explicitly.
+resize	900	700
+window_move_probe	on
+pointer	down	Left	50	30	1
+pointer	up	Left	50	30	1
+expect	window_move.requests	0
+command	ToggleCaption
+pointer	down	Left	50	30	1
+pointer	up	Left	50	30	1
+expect	window_move.requests	1
+expect	window_move.coordinates	true
+expect	pointer_buttons	0
+expect	drag_active	false
+open	${fixtures}/display-alpha.png
+wait
+remember	still
+pointer	down	Left	50	30	1
+pointer	up	Left	50	30	1
+expect	window_move.requests	2
+settings
+tab	MouseCustom
+mouse_assign	LeftDrag	0	1	MouseNone
+click	OK
+persisted
+pointer	down	Left	50	30	1
+pointer	move	Left	90	60	1
+pointer	up	Left	90	60	1
+expect	window_move.requests	2
+settings
+tab	MouseCustom
+mouse_assign	LeftDrag	0	1	MousePan
+click	OK
+command	Actual
+command	ZoomIn
+pointer	down	Left	50	30	1
+pointer	move	Left	70	50	1
+expect	drag_active	true
+pointer	up	Left	70	50	1
+expect	window_move.requests	2
+settings
+tab	MouseCustom
+mouse_assign	LeftDrag	0	1	MouseInherit
+click	OK
+persisted
+command	SelectMode
+pointer	down	Left	50	30	1
+pointer	up	Left	50	30	1
+expect	window_move.requests	2
+command	SelectMode
+command	ArmDrag
+pointer	down	Left	50	30	1
+pointer	up	Left	50	30	1
+key	Esc
+command	Fullscreen
+pointer	down	Left	50	30	1
+pointer	up	Left	50	30	1
+expect	window_move.requests	2
+command	Fullscreen
+pointer	down	Left	50	30	1
+pointer	up	Left	50	30	1
+expect	window_move.requests	3
+expect	window_move.coordinates	true
+expect	pointer_buttons	0
+expect	drag_active	false
+expect_same	still	true
+snapshot	captionless-custom-drag.png
+window_move_probe	off

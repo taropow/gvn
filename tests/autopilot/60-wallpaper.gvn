@@ -1,0 +1,130 @@
+expect_menu_enabled	WallpaperCenter	false
+expect_menu_enabled	WallpaperTile	false
+expect_menu_enabled	WallpaperStretch	false
+expect_menu_enabled	WallpaperWidth	false
+expect_menu_enabled	WallpaperHeight	false
+expect_menu_enabled	WallpaperDelete	false
+command	WallpaperCenter
+command	WallpaperDelete
+expect	wallpaper.applies	0
+expect	wallpaper.files	0
+open	${fixtures}/wallpaper-reference/alpha/source.png
+wait
+remember	original
+expect_menu_enabled	WallpaperCenter	true
+native_command	SelectNumbers
+prompt_text	1, 1, 2, 2
+prompt_accept
+expect	selection_w	2
+expect	selection_h	2
+menu	WallpaperCenter
+wallpaper_expect	0
+menu	WallpaperTile
+wallpaper_expect	1
+menu	WallpaperStretch
+wallpaper_expect	2
+menu	WallpaperWidth
+wallpaper_expect	3
+menu	WallpaperHeight
+wallpaper_expect	4
+expect	wallpaper.applies	5
+expect	wallpaper.files	1
+expect_menu_enabled	WallpaperDelete	true
+expect_menu_checked	WallpaperCenter	false
+expect_menu_checked	WallpaperHeight	false
+expect_same	original	true
+expect	modified	false
+expect	selection_w	2
+snapshot	wallpaper-alpha.png
+wallpaper_fail_next_apply
+native_command	WallpaperTile
+ack_error	Injected wallpaper apply failure
+expect	wallpaper.applies	7
+expect	wallpaper.files	1
+wallpaper_expect	4
+expect_same	original	true
+answer	No
+menu	WallpaperDelete
+expect	wallpaper.applies	7
+expect	wallpaper.files	1
+answer	Yes
+menu	WallpaperDelete
+expect	wallpaper.active	false
+expect	wallpaper.files	0
+expect_menu_enabled	WallpaperDelete	false
+expect_same	original	true
+settings
+tab	Keys
+expect	key_functions	238
+function	WallpaperCenter
+function	WallpaperTile
+function	WallpaperStretch
+function	WallpaperWidth
+function	WallpaperDelete
+function	WallpaperHeight
+set	KeyEdit	F12
+click	KeyAdd
+click	ApplyButton
+expect_binding	WallpaperHeight	F12
+expect_menu_key	WallpaperHeight	F12
+snapshot	wallpaper-key-settings.png
+click	OK
+key	F12
+wallpaper_expect	4
+popup_choice	WallpaperWidth
+command	Wallpaper
+expect	popup_count	1
+wallpaper_expect	3
+command	Negative
+expect	modified	true
+expect	undo_available	true
+menu	WallpaperStretch
+wallpaper_expect	2
+expect	modified	true
+expect	undo_available	true
+command	Undo
+expect_same	original	true
+command	ClearSelection
+command	Copy
+command	NewPaste
+remember	clipboard
+menu	WallpaperTile
+wallpaper_expect	1
+expect_same	clipboard	true
+pixel_copy
+open	${fixtures}/disposal.gif
+wait
+command	StopAnimation
+command	FrameNext
+expect	frame	1
+expect	playing	false
+remember	gif
+menu	WallpaperCenter
+wallpaper_expect	0
+expect_same	gif	true
+expect	frame	1
+expect	playing	false
+open	${fixtures}/blend.apng
+wait
+command	StopAnimation
+command	FrameNext
+expect	frame	1
+remember	apng
+menu	WallpaperWidth
+wallpaper_expect	3
+expect_same	apng	true
+open	${fixtures}/psd-16-3.psd
+wait
+remember	psd
+menu	WallpaperHeight
+wallpaper_expect	4
+expect_same	psd	true
+command	CloseImage
+expect_menu_enabled	WallpaperCenter	false
+expect_menu_enabled	WallpaperDelete	true
+answer	Yes
+menu	WallpaperDelete
+expect	wallpaper.active	false
+expect	wallpaper.files	0
+expect_menu_enabled	WallpaperDelete	false
+snapshot	wallpaper-empty.png

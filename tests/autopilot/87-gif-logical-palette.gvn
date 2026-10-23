@@ -1,0 +1,133 @@
+copy_fixture	gif-canvas/global-duplicate.gif	source/global-duplicate.gif
+open	${output}/source/global-duplicate.gif
+wait
+expect_indexed	8
+pixel_copy
+save_target	pixels/global-duplicate.gif.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	gif-canvas/global-alpha.gif	source/global-alpha.gif
+open	${output}/source/global-alpha.gif
+wait
+expect_indexed	8
+pixel_copy
+save_target	pixels/global-alpha.gif.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	gif-canvas/local-background.gif	source/local-background.gif
+open	${output}/source/local-background.gif
+wait
+expect_indexed	8
+pixel_copy
+save_target	pixels/local-background.gif.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	gif-canvas/local-overflow.gif	source/local-overflow.gif
+open	${output}/source/local-overflow.gif
+wait
+expect_indexed	0
+pixel_copy
+save_target	pixels/local-overflow.gif.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+copy_fixture	gif-canvas/cropped-global.gif	source/cropped-global.gif
+open	${output}/source/cropped-global.gif
+wait
+expect_indexed	8
+pixel_copy
+save_target	pixels/cropped-global.gif.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/source/global-alpha.gif
+wait
+command	RotateRight
+expect_indexed	8
+save_target	pixels/rotated.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+command	Negative
+expect_indexed	0
+save_target	pixels/negative.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+command	Undo
+expect_indexed	8
+pixel_copy
+save_target	pixels/undo.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/source/global-duplicate.gif
+wait
+save_target	pixels/original-depth.bmp
+command	SaveAs
+save_type	Bmp
+save_set	BmpBits	4
+save_expect_control	BmpBits	4
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+save_target	pixels/opaque.gif
+command	SaveAs
+save_type	Gif
+save_layout
+save_accept
+wait_save
+persisted
+expect	error_count	0
+pixel_copy
+snapshot	logical-screen.png
+expect_file	source/global-duplicate.gif	gif-canvas/global-duplicate.gif
+expect_file	source/global-alpha.gif	gif-canvas/global-alpha.gif
+expect_file	source/local-background.gif	gif-canvas/local-background.gif
+expect_file	source/local-overflow.gif	gif-canvas/local-overflow.gif
+expect_file	source/cropped-global.gif	gif-canvas/cropped-global.gif

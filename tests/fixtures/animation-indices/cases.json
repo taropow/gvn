@@ -1,0 +1,55 @@
+{
+  "cases": [
+    {
+      "file": "local-compatible.gif",
+      "representable": true,
+      "first_indices": [
+        1,
+        2,
+        0,
+        0,
+        1,
+        2,
+        0,
+        0
+      ],
+      "second_indices": [
+        1,
+        2,
+        2,
+        0,
+        1,
+        2,
+        0,
+        0
+      ],
+      "sha256": "c3a676d70ab204bed424ebcb986289dc33707aceae17447e0b7d07b3dd15c3f8"
+    },
+    {
+      "file": "local-conflict.gif",
+      "representable": false,
+      "first_indices": [
+        1,
+        2,
+        0,
+        0,
+        1,
+        2,
+        0,
+        0
+      ],
+      "second_indices": [
+        1,
+        2,
+        1,
+        0,
+        1,
+        2,
+        0,
+        0
+      ],
+      "sha256": "353c4d6b3f1dd2bbdf3bd4c4dbaf3bf700f1de606b7c76cde3234ee621846786"
+    }
+  ],
+  "writer": "Independent clear/literal GIF LZW,raw duplicate1/2numbers and different local tables;PillowRGBA frame references."
+}

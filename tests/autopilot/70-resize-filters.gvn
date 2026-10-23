@@ -1,0 +1,54 @@
+open	${fixtures}/alpha.png
+wait
+remember	original
+command	Resize
+expect	resize.down_count	3
+expect	resize.up_count	3
+expect	resize.down	1
+expect	resize.up	1
+expect	resize.sharpen	false
+resize_set	Down	2
+resize_set	Up	2
+resize_set	Sharpen	true
+resize_set	Smooth	false
+expect	resize.filters_enabled	false
+expect	resize.down	10
+expect	resize.up	10
+expect	resize.sharpen	true
+resize_set	Smooth	true
+expect	resize.filters_enabled	true
+resize_snapshot	resize-filters.png
+resize_click	Cancel
+expect_same	original	true
+expect	settings.resize_down	1
+expect	settings.resize_up	1
+expect	settings.resize_sharpen	false
+command	Resize
+resize_set	Down	2
+resize_set	Up	2
+resize_set	Sharpen	true
+resize_set	Width	6
+resize_click	OK
+expect	width	6
+expect	height	4
+expect	undo_available	true
+expect	settings.resize_down	10
+expect	settings.resize_up	10
+expect	settings.resize_sharpen	true
+persisted
+pixel_copy
+command	Undo
+expect_same	original	true
+command	Resize
+expect	resize.down	10
+expect	resize.up	10
+expect	resize.sharpen	true
+resize_click	Half
+resize_snapshot	resize-shrink-sharpen.png
+resize_click	OK
+expect	width	2
+expect	height	1
+pixel_copy
+command	Undo
+expect_same	original	true
+expect	error_count	0

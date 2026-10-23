@@ -1,0 +1,64 @@
+[
+  {
+    "name": "libplum",
+    "repository": "https://github.com/aaaaaa123456789/libplum",
+    "revision": "89414559c9a8ecccd4fd1ffd2a31c440662c9dd2",
+    "archive_sha256": "9b9421a2c7a638e76af55e6e4ba4174261231dff4502dd6fe153712356f85783",
+    "files": 76
+  },
+  {
+    "name": "psd_sdk",
+    "repository": "https://github.com/MolecularMatters/psd_sdk",
+    "revision": "bfa117317e8bb15bfc9f76bad5800da603fddd1d",
+    "archive_sha256": "09b3c3d219bfaa6ebea0774989273298b55398959825f383a97df159cd557353",
+    "files": 103
+  },
+  {
+    "name": "miniz",
+    "repository": "https://github.com/richgel999/miniz",
+    "revision": "77d0dce8627735138c51770d1799a1ef48f2117d",
+    "version": "3.1.2",
+    "archive_sha256": "baa14349e7c5efb4a493a03af7d2f29d0ef45d87d488567fe5360edb33f8b7ba",
+    "files": 12
+  },
+  {
+    "name": "zlib",
+    "repository": "https://github.com/madler/zlib",
+    "version": "1.3.2",
+    "revision": "da607da739fa6047df13e66a2af6b8bec7c2a498",
+    "archive_url": "https://codeload.github.com/madler/zlib/tar.gz/da607da739fa6047df13e66a2af6b8bec7c2a498",
+    "archive_sha256": "b9258cf6254e7f7c37f1cd61dba943a1c5ea3cff5718c789834dac359094f5f7",
+    "files": 262,
+    "source_files_sha256": "bf6db622e5242b27db6372c83c605727cb2613f68f1021b54d17e7c0a0c59be8"
+  },
+  {
+    "name": "libpng",
+    "repository": "https://github.com/pnggroup/libpng",
+    "version": "1.6.59",
+    "revision": "cd952f49f95bb27154ae77dbb103032d95f6e580",
+    "archive_url": "https://codeload.github.com/pnggroup/libpng/tar.gz/cd952f49f95bb27154ae77dbb103032d95f6e580",
+    "archive_sha256": "ef1bccad2b2a58eb3c09e06ffe3b72b8604abda8b5011e4c4bb5391989040f26",
+    "files": 614,
+    "source_files_sha256": "4182717f21554c420c0e0d4642206758f9d1bf9fd266f1bd772034c455b04aff"
+  },
+  {
+    "name": "libjpeg-turbo",
+    "repository": "https://github.com/libjpeg-turbo/libjpeg-turbo",
+    "version": "3.2.0",
+    "revision": "c85e6b905bf237038faa936dab160ebfc5da0344",
+    "archive_url": "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/3.2.0/libjpeg-turbo-3.2.0.tar.gz",
+    "archive_sha256": "6f30092cef9fb839779646608f4ee14ae3cbac989c47fa05e841b0841f09878e",
+    "files": 613,
+    "source_files_sha256": "8984bb6bd250c83f4899b40520905ced9d48a5e55119a06e79347be9be606e3d"
+  },
+  {
+    "name": "giflib",
+    "repository": "https://sourceforge.net/p/giflib/code/",
+    "version": "6.1.3",
+    "revision": "edff4aed17f857442ab0cac31566572ba08f93d3",
+    "archive_url": "https://downloads.sourceforge.net/project/giflib/giflib-6.x/giflib-6.1.3.tar.gz",
+    "archive_sha256": "b65b66b99f0424b93525f987386f22fc5efb9da2bfc92ad4a532249aaffbab0e",
+    "files": 174,
+    "source_files_sha256": "6a4a68237179d51da335ce3d24c57ebdf4ddc6b164442cda314f3768c8fdb705"
+  }
+]

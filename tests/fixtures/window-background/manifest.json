@@ -1,0 +1,37 @@
+{
+  "reference": "../../../docs/verification/background-reference-0.45.json",
+  "cases": 20,
+  "scope": "Actual opaque source and complete normal client RGB. Captured DIB unused Alpha bytes are not an Alpha oracle.",
+  "columns": [
+    "palette",
+    "preset",
+    "tiled",
+    "first_rgb",
+    "second_rgb",
+    "expected_bmp"
+  ],
+  "files": {
+    "cases.tsv": "888d4aa8efd9f85e67d47c44e84ed8eb392944ca871de39bfc7d4b338e47869a",
+    "expected-00.bmp": "66bd72ee53046cec73f520e4bec41cfabfeae03ed2abb795603fda24c82eba26",
+    "expected-01.bmp": "e4f6b0ccb657e5a08910f20f9cbc00eacf096a4142f6013f7e9181f2cd34d705",
+    "expected-02.bmp": "0a4bb417fd77ab63bb0ec5d3b9907c5db0940fc2902a3853c9220e2dd311f83b",
+    "expected-03.bmp": "e4f6b0ccb657e5a08910f20f9cbc00eacf096a4142f6013f7e9181f2cd34d705",
+    "expected-04.bmp": "a5b29af02a12444539672e037138130d69e9261a15601d66ac5d4ead748419cf",
+    "expected-05.bmp": "e4f6b0ccb657e5a08910f20f9cbc00eacf096a4142f6013f7e9181f2cd34d705",
+    "expected-06.bmp": "88578d67ab0fc684a6b00232cce87bff5c43af03c77d1f4ce34dda4da745f83a",
+    "expected-07.bmp": "e4f6b0ccb657e5a08910f20f9cbc00eacf096a4142f6013f7e9181f2cd34d705",
+    "expected-08.bmp": "d750727e8df7c62316ce4b37533030c6b1f9f48c89f4a4a68383d68bf9758a3c",
+    "expected-09.bmp": "e4f6b0ccb657e5a08910f20f9cbc00eacf096a4142f6013f7e9181f2cd34d705",
+    "expected-10.bmp": "908174bc0be0d65d112b84167a974df81a8697ece1f088e8b943b47ece6ab4bb",
+    "expected-11.bmp": "2f0e3d3a689bc00800bbb19dc46a0f96b68926a939c8816dc5ab656e09a60912",
+    "expected-12.bmp": "b56c04c400b0b33d7862d4e1df36cb3f1d2665812784de2bc6cc48d7f6b98cea",
+    "expected-13.bmp": "2f0e3d3a689bc00800bbb19dc46a0f96b68926a939c8816dc5ab656e09a60912",
+    "expected-14.bmp": "fe352984513b045485d63b2b074a965e27c9ad7474bb2139d66e16b790e6c306",
+    "expected-15.bmp": "2f0e3d3a689bc00800bbb19dc46a0f96b68926a939c8816dc5ab656e09a60912",
+    "expected-16.bmp": "f9e31599066e59de074c70683e7659d83a9ad02275c6c9ee61cd2638c7fe2500",
+    "expected-17.bmp": "2f0e3d3a689bc00800bbb19dc46a0f96b68926a939c8816dc5ab656e09a60912",
+    "expected-18.bmp": "81b3ed06049c4d64dc3a2da0f01d5695dddce3cb154d8e9a093566557be65bf3",
+    "expected-19.bmp": "2f0e3d3a689bc00800bbb19dc46a0f96b68926a939c8816dc5ab656e09a60912",
+    "source.png": "712080d77ad728046cf520dab12fbdacb5b8062673fb2d8f4019630339019be0"
+  }
+}

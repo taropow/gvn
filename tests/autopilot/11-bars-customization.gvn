@@ -1,0 +1,82 @@
+settings
+tab	Loading
+set	Autoplay	false
+tab	Fullscreen
+set	FullFit	2
+tab	Bars
+set	ToolbarCenter	true
+set	ToolbarLine	true
+set	ToolbarLarge	true
+set	TitleMode	2
+click	OK
+open	${fixtures}/blend.apng
+wait
+expect	toolbar.centered	true
+expect	settings.full_initial_fit	2
+expect	toolbar.icon_size	24
+expect	toolbar.no_clip	true
+expect_text	title	fixtures
+snapshot	large-centered-toolbar.png
+resize	360	350
+expect	toolbar.no_clip	true
+expect	player.no_overlap	true
+expect	player.bottom	true
+snapshot	large-player-three-rows.png
+settings
+tab	Bars
+set	ToolbarAuto	true
+set	StatusAuto	true
+scroll_page	bottom
+expect	settings.scrollbar	true
+snapshot	bar-settings-bottom.png
+click	OK
+bar_hover	50	150	0
+expect	toolbar.visible	false
+expect	status.visible	false
+bar_hover	50	1	0
+expect	toolbar.visible	true
+bar_child_hover	Toolbar	10	10	1
+expect	toolbar.visible	false
+bar_hover	50	1	0
+expect	toolbar.visible	true
+bar_leave
+expect	toolbar.visible	false
+bar_hover	50	1	1
+expect	toolbar.visible	false
+bar_hover	50	bottom	0
+expect	status.visible	true
+expect	player.bottom	true
+bar_child_hover	Status	10	10	2
+expect	status.visible	false
+bar_hover	50	bottom	0
+expect	status.visible	true
+bar_hover	50	bottom	2
+expect	status.visible	false
+expect	player.bottom	true
+command	Fullscreen
+expect	toolbar.visible	false
+bar_hover	50	1	0
+expect	toolbar.visible	true
+expect	toolbar.centered	true
+snapshot	fullscreen-toolbar-shown.png
+command	ToggleToolbar
+expect	settings.full_toolbar	false
+expect	settings.toolbar	true
+expect	toolbar.visible	false
+command	Fullscreen
+bar_hover	50	1	0
+expect	toolbar.visible	true
+settings
+tab	Bars
+click	Reset
+click	ApplyButton
+expect	settings.toolbar_large	false
+expect	settings.toolbar_auto	false
+expect	settings.status_auto	false
+click	Cancel
+expect	toolbar.icon_size	16
+expect	toolbar.visible	true
+expect	status.visible	true
+expect	player.no_overlap	true
+expect	player.bottom	true
+persisted

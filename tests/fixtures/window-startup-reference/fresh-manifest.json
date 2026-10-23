@@ -1,0 +1,17 @@
+{
+  "reference": "docs/verification/window-defaults-reference-0.45.json",
+  "reference_sha256": "0e957bcb8fd66a878d67a4085a48f573cef588556a53a880749da07c41dc6c2b",
+  "source_image_size": [
+    64,
+    48
+  ],
+  "source_image_rgb": [
+    211,
+    37,
+    173
+  ],
+  "files": {
+    "fresh-window.tsv": "0c3fbfc286b05cc9e1ba1a7f971519dc80e21c4e174a781fe5ac6544ecc95fd2",
+    "fresh-image.png": "1afc59e3aa1516ec8e6347716a0eb80fc6397d974548165de5225adff64d9306"
+  }
+}

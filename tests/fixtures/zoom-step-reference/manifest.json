@@ -1,0 +1,8 @@
+{
+  "reference": "docs/verification/zoom-reference-0.45.json",
+  "reference_sha256": "927d44511b9c102b453d288c02240227d5dfa139392087ef29c11ce5a70f20ba",
+  "cases": 474,
+  "files": {
+    "cases.tsv": "48420bd909b3bb740c60b912a152b213b5501fc7bdb6d820e4e6db442829b1cf"
+  }
+}

@@ -1,0 +1,12 @@
+#pragma once
+
+namespace gvn {
+inline constexpr wchar_t version_string[] = L"@PROJECT_VERSION@";
+#if defined(_M_ARM64)
+inline constexpr wchar_t build_architecture[] = L"ARM64";
+#elif defined(_WIN64)
+inline constexpr wchar_t build_architecture[] = L"x64";
+#else
+inline constexpr wchar_t build_architecture[] = L"x86";
+#endif
+} // namespace gvn

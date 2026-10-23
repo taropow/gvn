@@ -1,0 +1,73 @@
+expect	settings.reopen_last	false
+expect_empty_checker
+copy_fixture	alpha.png	files/01.png
+copy_fixture	rgb.bmp	files/02.bmp
+open	${output}/files/01.png
+wait
+remember_startup_file
+settings
+tab	General
+set	ReopenLast	true
+snapshot	reopen-enabled.png
+click	OK
+expect	settings.reopen_last	true
+persisted
+command	CloseImage
+expect_empty_checker
+resume_startup
+wait
+expect_location	image	${output}/files/01.png
+expect_image	${fixtures}/alpha.png	0
+pixel_copy
+snapshot	reopened-alpha.png
+command	CloseImage
+resume_startup	${output}/files/02.bmp
+wait
+expect_location	image	${output}/files/02.bmp
+expect_image	${fixtures}/rgb.bmp	0
+remember_startup_file
+settings
+tab	FileOperations
+set	ConfirmDelete	false
+set	RecycleDeleted	false
+set	NextAfterFileop	false
+click	OK
+command	FileDelete
+expect	removed_current	true
+expect_file	files/02.bmp	absent
+command	CloseImage
+resume_startup
+wait
+expect_location	image	${output}/files/01.png
+expect_image	${fixtures}/alpha.png	0
+pixel_copy
+remember_startup_file
+settings
+tab	General
+set	ReopenLast	false
+click	Cancel
+expect	settings.reopen_last	true
+persisted
+settings
+tab	Background
+set	Cell	12
+click	OK
+expect	settings.reopen_last	true
+persisted
+settings
+tab	General
+click	Reset
+click	Cancel
+expect	settings.reopen_last	true
+settings
+tab	General
+click	Reset
+snapshot	reopen-defaults.png
+click	OK
+expect	settings.reopen_last	false
+expect	settings.checker_size	12
+persisted
+command	CloseImage
+resume_startup
+wait
+expect_empty_checker

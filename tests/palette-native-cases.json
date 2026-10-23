@@ -1,0 +1,140 @@
+[
+  {
+    "file": "png-1-opaque.png.png",
+    "source": "png-1-opaque.png",
+    "format": "Png",
+    "op": 0
+  },
+  {
+    "file": "png-1-alpha.png.png",
+    "source": "png-1-alpha.png",
+    "format": "Png",
+    "op": 0
+  },
+  {
+    "file": "bmp-1.bmp.png",
+    "source": "bmp-1.bmp",
+    "format": "Png",
+    "op": 0
+  },
+  {
+    "file": "png-2-opaque.png.png",
+    "source": "png-2-opaque.png",
+    "format": "Png",
+    "op": 0
+  },
+  {
+    "file": "png-2-alpha.png.png",
+    "source": "png-2-alpha.png",
+    "format": "Png",
+    "op": 0
+  },
+  {
+    "file": "png-4-opaque.png.png",
+    "source": "png-4-opaque.png",
+    "format": "Png",
+    "op": 0
+  },
+  {
+    "file": "png-4-alpha.png.png",
+    "source": "png-4-alpha.png",
+    "format": "Png",
+    "op": 0
+  },
+  {
+    "file": "bmp-4.bmp.png",
+    "source": "bmp-4.bmp",
+    "format": "Png",
+    "op": 0
+  },
+  {
+    "file": "bmp-4-rle.bmp.png",
+    "source": "bmp-4-rle.bmp",
+    "format": "Png",
+    "op": 0
+  },
+  {
+    "file": "png-8-opaque.png.png",
+    "source": "png-8-opaque.png",
+    "format": "Png",
+    "op": 0
+  },
+  {
+    "file": "png-8-alpha.png.png",
+    "source": "png-8-alpha.png",
+    "format": "Png",
+    "op": 0
+  },
+  {
+    "file": "bmp-8.bmp.png",
+    "source": "bmp-8.bmp",
+    "format": "Png",
+    "op": 0
+  },
+  {
+    "file": "bmp-8-rle.bmp.png",
+    "source": "bmp-8-rle.bmp",
+    "format": "Png",
+    "op": 0
+  },
+  {
+    "file": "gif-opaque.gif.png",
+    "source": "gif-opaque.gif",
+    "format": "Png",
+    "op": 0
+  },
+  {
+    "file": "gif-alpha.gif.png",
+    "source": "gif-alpha.gif",
+    "format": "Png",
+    "op": 0
+  },
+  {
+    "file": "bmp-1.bmp.bmp",
+    "source": "bmp-1.bmp",
+    "format": "Bmp",
+    "op": 0
+  },
+  {
+    "file": "png-2-opaque.png.bmp",
+    "source": "png-2-opaque.png",
+    "format": "Bmp",
+    "op": 0
+  },
+  {
+    "file": "bmp-4-rle.bmp.bmp",
+    "source": "bmp-4-rle.bmp",
+    "format": "Bmp",
+    "op": 0
+  },
+  {
+    "file": "bmp-8-rle.bmp.bmp",
+    "source": "bmp-8-rle.bmp",
+    "format": "Bmp",
+    "op": 0
+  },
+  {
+    "file": "gif-alpha.gif",
+    "source": "gif-alpha.gif",
+    "format": "Gif",
+    "op": 0
+  },
+  {
+    "file": "rotated.png",
+    "source": "png-4-alpha.png",
+    "format": "Png",
+    "op": 2
+  },
+  {
+    "file": "negative.png",
+    "source": "png-4-alpha.png",
+    "format": "Png",
+    "op": 8
+  },
+  {
+    "file": "undo.png",
+    "source": "png-4-alpha.png",
+    "format": "Png",
+    "op": 2
+  }
+]

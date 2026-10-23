@@ -1,0 +1,9 @@
+{
+  "reference": "Official MassiGra0.45 generated-image output; actual controls selected and dithering off. No user image or clipboard.",
+  "reference_report": ".cache/color-depth-related-0.50-stage2/reference/result.json",
+  "files": {
+    "gradient.png": "95ed76df320ef9500ce8e4b3c4729ca65ab6c29951a44de3c254f8812859862b",
+    "reference-555.bmp": "540eab2376d99deb3cb792eecde5dbff8100a40d4232b41670807e38446324da",
+    "reference-565.bmp": "bf018c2c3f2a1e9778baae2036cfde9b2a1f5701ed8a176e80ab5beb1c9983ec"
+  }
+}

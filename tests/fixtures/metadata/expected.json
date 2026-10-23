@@ -1,0 +1,13 @@
+{
+  "method": "Pillow save/dpi/EXIF/ICC plus PNG and Adobe resource metadata insertion; existing pixel payloads retained",
+  "profile_bytes": 588,
+  "files": [
+    "alpha-300x150.apng",
+    "gray16-100x50.tiff",
+    "rgb-200x100.tiff",
+    "rgb-300x150.bmp",
+    "rgba-300x150.png",
+    "rgba-300x150.psd",
+    "rotated-300x150.jpg"
+  ]
+}

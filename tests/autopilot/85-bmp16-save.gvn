@@ -1,0 +1,62 @@
+copy_fixture	alpha.png	source/alpha.png
+open	${output}/source/alpha.png
+wait
+pixel_copy
+save_target	pixels/top16.bmp
+command	SaveAs
+save_type	Bmp
+save_set	BmpBits	1
+save_set	BmpRle	true
+save_set	BmpBits	5
+save_expect_control	BmpBits	5
+save_enabled	BmpRle	false
+save_enabled	Dither	false
+save_expect_control	BmpRle	true
+save_set	BmpTopDown	true
+save_set	BmpMatte	123456
+save_layout
+save_snapshot	bmp16-options.png
+answer	OK
+save_accept
+wait_save
+persisted
+pixel_copy
+expect	error_count	0
+remember_saving	saved16
+save_target	pixels/cancelled.bmp
+command	SaveAs
+save_type	Bmp
+save_expect_control	BmpBits	5
+save_set	BmpBits	0
+save_cancel
+wait_save
+expect_saving	saved16
+persisted
+save_target	pixels/bottom16.bmp
+command	SaveAs
+save_type	Bmp
+save_expect_control	BmpBits	5
+save_set	BmpTopDown	false
+answer	OK
+save_accept
+wait_save
+persisted
+pixel_copy
+save_target	pixels/top24.bmp
+command	SaveAs
+save_type	Bmp
+save_set	BmpBits	0
+save_set	BmpTopDown	true
+answer	OK
+save_accept
+wait_save
+persisted
+pixel_copy
+open	${output}/pixels/top16.bmp
+wait
+expect_location	image	${output}/pixels/top16.bmp
+open	${output}/pixels/bottom16.bmp
+wait
+expect_location	image	${output}/pixels/bottom16.bmp
+expect_file	source/alpha.png	alpha.png
+expect	error_count	0

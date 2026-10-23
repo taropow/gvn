@@ -1,0 +1,359 @@
+copy_fixture	alpha.png	files/source.png
+open	${output}/files/source.png
+wait
+remember	source
+remember_startup_file
+expect	settings.allow_multiple	true
+expect	settings.activate_reused	true
+expect	settings.activate_dropped	true
+expect	settings.allow_physical_overflow	false
+expect	settings.undo_enabled	true
+expect	settings.cut_transparent	true
+expect	settings.cut_color	0
+expect	settings.remember_history	true
+expect	settings.paste_new	true
+expect	settings.reopen_last	false
+expect	settings.disable_ime	true
+expect	settings.grid	1
+settings
+tab	General
+scroll_page	top
+set	AllowMultiple	false
+set	ActivateReused	false
+set	ActivateDropped	false
+set	AllowPhysicalOverflow	true
+set	Undo	false
+set	CutTransparent	false
+set	CutColor	123456
+set	History	false
+set	PasteNew	false
+set	ReopenLast	true
+set	DisableIme	false
+scroll_page	bottom
+set	Grid	23
+expect_checked	AllowMultiple	false
+expect_checked	ActivateReused	false
+expect_checked	ActivateDropped	false
+expect_checked	AllowPhysicalOverflow	true
+expect_checked	Undo	false
+expect_checked	CutTransparent	false
+expect_text	CutColor	123456
+expect_checked	History	false
+expect_checked	PasteNew	false
+expect_checked	ReopenLast	true
+expect_checked	DisableIme	false
+expect_text	Grid	23
+expect	enabled.ActivateReused	true
+expect	enabled.CutColor	true
+expect	enabled.CutColorPick	true
+snapshot	general-all-custom.png
+click	OK
+expect	settings.allow_multiple	false
+expect	settings.activate_reused	false
+expect	settings.activate_dropped	false
+expect	settings.allow_physical_overflow	true
+expect	settings.undo_enabled	false
+expect	settings.cut_transparent	false
+expect	settings.cut_color	1193046
+expect	settings.remember_history	false
+expect	settings.paste_new	false
+expect	settings.reopen_last	true
+expect	settings.disable_ime	false
+expect	settings.grid	23
+persisted
+settings
+tab	General
+click	Reset
+expect_checked	AllowMultiple	true
+expect_checked	ActivateReused	true
+expect_checked	ActivateDropped	true
+expect_checked	AllowPhysicalOverflow	false
+expect_checked	Undo	true
+expect_checked	CutTransparent	true
+expect_text	CutColor	000000
+expect_checked	History	true
+expect_checked	PasteNew	true
+expect_checked	ReopenLast	false
+expect_checked	DisableIme	true
+expect_text	Grid	1
+expect	enabled.ActivateReused	false
+expect	enabled.CutColor	false
+expect	enabled.CutColorPick	false
+expect	settings.allow_multiple	false
+expect	settings.activate_reused	false
+expect	settings.activate_dropped	false
+expect	settings.allow_physical_overflow	true
+expect	settings.undo_enabled	false
+expect	settings.cut_transparent	false
+expect	settings.cut_color	1193046
+expect	settings.remember_history	false
+expect	settings.paste_new	false
+expect	settings.reopen_last	true
+expect	settings.disable_ime	false
+expect	settings.grid	23
+click	Cancel
+expect	settings.allow_multiple	false
+expect	settings.activate_reused	false
+expect	settings.activate_dropped	false
+expect	settings.allow_physical_overflow	true
+expect	settings.undo_enabled	false
+expect	settings.cut_transparent	false
+expect	settings.cut_color	1193046
+expect	settings.remember_history	false
+expect	settings.paste_new	false
+expect	settings.reopen_last	true
+expect	settings.disable_ime	false
+expect	settings.grid	23
+persisted
+settings
+tab	General
+tab	Background
+set	Cell	13
+tab	Zoom
+set	ZoomMode	0
+set	ZoomStep	75
+tab	General
+scroll_page	top
+set	CutColor	ZZZZZZ
+scroll_page	bottom
+set	Grid	0
+click	Reset
+expect_checked	AllowMultiple	true
+expect_checked	ActivateReused	true
+expect_checked	ActivateDropped	true
+expect_checked	AllowPhysicalOverflow	false
+expect_checked	Undo	true
+expect_checked	CutTransparent	true
+expect_text	CutColor	000000
+expect_checked	History	true
+expect_checked	PasteNew	true
+expect_checked	ReopenLast	false
+expect_checked	DisableIme	true
+expect_text	Grid	1
+expect	enabled.ActivateReused	false
+expect	enabled.CutColor	false
+expect	enabled.CutColorPick	false
+tab	Background
+expect_text	Cell	13
+tab	Zoom
+expect_text	ZoomStep	75
+tab	General
+click	ApplyButton
+expect	settings.allow_multiple	true
+expect	settings.activate_reused	true
+expect	settings.activate_dropped	true
+expect	settings.allow_physical_overflow	false
+expect	settings.undo_enabled	true
+expect	settings.cut_transparent	true
+expect	settings.cut_color	0
+expect	settings.remember_history	true
+expect	settings.paste_new	true
+expect	settings.reopen_last	false
+expect	settings.disable_ime	true
+expect	settings.grid	1
+expect	settings.checker_size	13
+expect	settings.zoom_step	75
+expect	error_count	0
+persisted
+snapshot	general-all-reset-applied.png
+scroll_page	top
+set	Undo	false
+set	History	false
+set	AllowPhysicalOverflow	true
+tab	Background
+set	Cell	17
+click	Cancel
+expect	settings.allow_multiple	true
+expect	settings.activate_reused	true
+expect	settings.activate_dropped	true
+expect	settings.allow_physical_overflow	false
+expect	settings.undo_enabled	true
+expect	settings.cut_transparent	true
+expect	settings.cut_color	0
+expect	settings.remember_history	true
+expect	settings.paste_new	true
+expect	settings.reopen_last	false
+expect	settings.disable_ime	true
+expect	settings.grid	1
+expect	settings.checker_size	13
+expect	settings.zoom_step	75
+persisted
+settings
+tab	General
+scroll_page	top
+set	AllowMultiple	false
+set	ActivateReused	false
+set	ActivateDropped	false
+set	AllowPhysicalOverflow	true
+set	Undo	false
+set	CutTransparent	false
+set	CutColor	123456
+set	History	false
+set	PasteNew	false
+set	ReopenLast	true
+set	DisableIme	false
+scroll_page	bottom
+set	Grid	23
+click	OK
+expect	settings.allow_multiple	false
+expect	settings.activate_reused	false
+expect	settings.activate_dropped	false
+expect	settings.allow_physical_overflow	true
+expect	settings.undo_enabled	false
+expect	settings.cut_transparent	false
+expect	settings.cut_color	1193046
+expect	settings.remember_history	false
+expect	settings.paste_new	false
+expect	settings.reopen_last	true
+expect	settings.disable_ime	false
+expect	settings.grid	23
+settings
+tab	General
+click	Reset
+expect_checked	AllowMultiple	true
+expect_checked	ActivateReused	true
+expect_checked	ActivateDropped	true
+expect_checked	AllowPhysicalOverflow	false
+expect_checked	Undo	true
+expect_checked	CutTransparent	true
+expect_text	CutColor	000000
+expect_checked	History	true
+expect_checked	PasteNew	true
+expect_checked	ReopenLast	false
+expect_checked	DisableIme	true
+expect_text	Grid	1
+expect	enabled.ActivateReused	false
+expect	enabled.CutColor	false
+expect	enabled.CutColorPick	false
+tab	Background
+set	Cell	0
+tab	General
+click	Reset
+click	ApplyButton
+expect	error_count	1
+expect	settings.allow_multiple	false
+expect	settings.activate_reused	false
+expect	settings.activate_dropped	false
+expect	settings.allow_physical_overflow	true
+expect	settings.undo_enabled	false
+expect	settings.cut_transparent	false
+expect	settings.cut_color	1193046
+expect	settings.remember_history	false
+expect	settings.paste_new	false
+expect	settings.reopen_last	true
+expect	settings.disable_ime	false
+expect	settings.grid	23
+expect	settings.checker_size	13
+set	Cell	17
+tab	General
+expect_checked	AllowMultiple	true
+expect_checked	ActivateReused	true
+expect_checked	ActivateDropped	true
+expect_checked	AllowPhysicalOverflow	false
+expect_checked	Undo	true
+expect_checked	CutTransparent	true
+expect_text	CutColor	000000
+expect_checked	History	true
+expect_checked	PasteNew	true
+expect_checked	ReopenLast	false
+expect_checked	DisableIme	true
+expect_text	Grid	1
+expect	enabled.ActivateReused	false
+expect	enabled.CutColor	false
+expect	enabled.CutColorPick	false
+click	OK
+expect	settings.allow_multiple	true
+expect	settings.activate_reused	true
+expect	settings.activate_dropped	true
+expect	settings.allow_physical_overflow	false
+expect	settings.undo_enabled	true
+expect	settings.cut_transparent	true
+expect	settings.cut_color	0
+expect	settings.remember_history	true
+expect	settings.paste_new	true
+expect	settings.reopen_last	false
+expect	settings.disable_ime	true
+expect	settings.grid	1
+expect	settings.checker_size	17
+expect	settings.zoom_step	75
+persisted
+settings
+tab	General
+scroll_page	top
+set	AllowMultiple	false
+set	ActivateReused	false
+set	ActivateDropped	false
+set	AllowPhysicalOverflow	true
+set	Undo	false
+set	CutTransparent	false
+set	CutColor	123456
+set	History	false
+set	PasteNew	false
+set	ReopenLast	true
+set	DisableIme	false
+scroll_page	bottom
+set	Grid	23
+click	OK
+expect	settings.allow_multiple	false
+expect	settings.activate_reused	false
+expect	settings.activate_dropped	false
+expect	settings.allow_physical_overflow	true
+expect	settings.undo_enabled	false
+expect	settings.cut_transparent	false
+expect	settings.cut_color	1193046
+expect	settings.remember_history	false
+expect	settings.paste_new	false
+expect	settings.reopen_last	true
+expect	settings.disable_ime	false
+expect	settings.grid	23
+command	Negative
+expect	undo_available	false
+remember	edited
+settings
+tab	General
+click	Reset
+expect_checked	AllowMultiple	true
+expect_checked	ActivateReused	true
+expect_checked	ActivateDropped	true
+expect_checked	AllowPhysicalOverflow	false
+expect_checked	Undo	true
+expect_checked	CutTransparent	true
+expect_text	CutColor	000000
+expect_checked	History	true
+expect_checked	PasteNew	true
+expect_checked	ReopenLast	false
+expect_checked	DisableIme	true
+expect_text	Grid	1
+expect	enabled.ActivateReused	false
+expect	enabled.CutColor	false
+expect	enabled.CutColorPick	false
+click	OK
+expect	settings.allow_multiple	true
+expect	settings.activate_reused	true
+expect	settings.activate_dropped	true
+expect	settings.allow_physical_overflow	false
+expect	settings.undo_enabled	true
+expect	settings.cut_transparent	true
+expect	settings.cut_color	0
+expect	settings.remember_history	true
+expect	settings.paste_new	true
+expect	settings.reopen_last	false
+expect	settings.disable_ime	true
+expect	settings.grid	1
+expect	undo_available	false
+command	Negative
+expect	undo_available	true
+command	Undo
+expect_same	edited	true
+open	${output}/files/source.png
+wait
+focus	Main
+key	Ctrl+A
+key	Ctrl+X
+expect_pixel	0	0	0	0	0	0
+key	Ctrl+V
+expect_same	source	true
+expect	settings.checker_size	17
+expect	settings.zoom_step	75
+persisted
+snapshot	general-reset-behavior.png

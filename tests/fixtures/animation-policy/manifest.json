@@ -1,0 +1,86 @@
+[
+  {
+    "path": "finite-1.apng",
+    "plays": 1,
+    "source": "blend.apng",
+    "source_sha256": "d0a20938dbaef07059db904889f38bd374cf2484a23d811be589a346ee4c6492",
+    "sha256": "24e47413932a69b78e211a975cab43ca77a6afd4454ab40525ee6386c213f520",
+    "method": "Only acTL.num_plays and the acTL CRC changed; original frame data and poster layout unchanged."
+  },
+  {
+    "path": "finite-2.apng",
+    "plays": 2,
+    "source": "blend.apng",
+    "source_sha256": "d0a20938dbaef07059db904889f38bd374cf2484a23d811be589a346ee4c6492",
+    "sha256": "8e67f109e125843f3af787ce0060fbcd1627393444bc4b17fcb45ae304c9906a",
+    "method": "Only acTL.num_plays and the acTL CRC changed; original frame data and poster layout unchanged."
+  },
+  {
+    "path": "poster-1.apng",
+    "plays": 1,
+    "source": "excluded.png",
+    "source_sha256": "a86a4aa0607b84c9e893d2f12df7878176cfff0df42fbe8f440d8af141c693f0",
+    "sha256": "13e4ddfaac3eb5ddc0a7c3fd06fe7b8f75e0789cfd4c1b4fa9a62c703b1fdd7b",
+    "method": "Only acTL.num_plays and the acTL CRC changed; original frame data and poster layout unchanged."
+  },
+  {
+    "path": "poster-2.apng",
+    "plays": 2,
+    "source": "excluded.png",
+    "source_sha256": "a86a4aa0607b84c9e893d2f12df7878176cfff0df42fbe8f440d8af141c693f0",
+    "sha256": "e19bf1761620c74a8af9e91abeb1b7a73289121e4711d6c904d9f5d18ce47197",
+    "method": "Only acTL.num_plays and the acTL CRC changed; original frame data and poster layout unchanged."
+  },
+  {
+    "path": "finite-4294967295.apng",
+    "plays": 4294967295,
+    "source": "blend.apng",
+    "source_sha256": "d0a20938dbaef07059db904889f38bd374cf2484a23d811be589a346ee4c6492",
+    "sha256": "eea5a50d978db9962acdc49c5c6f22f974b9c1621d5e00b9520390857b6868d6",
+    "method": "Out-of-range PNG integer; retained as rejection test input."
+  },
+  {
+    "path": "poster-4294967295.apng",
+    "plays": 4294967295,
+    "source": "excluded.png",
+    "source_sha256": "a86a4aa0607b84c9e893d2f12df7878176cfff0df42fbe8f440d8af141c693f0",
+    "sha256": "d8bbe6ac0e2dfaacac5e29895d2d977081d3966ad23d9577cb2525e23d333868",
+    "method": "Out-of-range PNG integer; retained as rejection test input."
+  },
+  {
+    "path": "finite-2147483647.apng",
+    "plays": 2147483647,
+    "source": "blend.apng",
+    "source_sha256": "d0a20938dbaef07059db904889f38bd374cf2484a23d811be589a346ee4c6492",
+    "sha256": "e8489a1c43013b1b8681de853a9e8c1bfbd4cfc595a423303ad51659eec5bb23",
+    "valid_png_integer": true,
+    "method": "Only acTL.num_plays and CRC changed; PNG3 maximum and first invalid value."
+  },
+  {
+    "path": "finite-2147483648.apng",
+    "plays": 2147483648,
+    "source": "blend.apng",
+    "source_sha256": "d0a20938dbaef07059db904889f38bd374cf2484a23d811be589a346ee4c6492",
+    "sha256": "d78fc1398f3e1b941204f8bfa0863158a02dc29db4e9dbcb926c1e20b02fa1bb",
+    "valid_png_integer": false,
+    "method": "Only acTL.num_plays and CRC changed; PNG3 maximum and first invalid value."
+  },
+  {
+    "path": "poster-2147483647.apng",
+    "plays": 2147483647,
+    "source": "excluded.png",
+    "source_sha256": "a86a4aa0607b84c9e893d2f12df7878176cfff0df42fbe8f440d8af141c693f0",
+    "sha256": "5130f64deed337bcfa8a3856bf1fb4cce681cb1cd47a57221fbe0e685a9723aa",
+    "valid_png_integer": true,
+    "method": "Only acTL.num_plays and CRC changed; PNG3 maximum and first invalid value."
+  },
+  {
+    "path": "poster-2147483648.apng",
+    "plays": 2147483648,
+    "source": "excluded.png",
+    "source_sha256": "a86a4aa0607b84c9e893d2f12df7878176cfff0df42fbe8f440d8af141c693f0",
+    "sha256": "129af0f63dfb609bb5554e96ab2b96d1bbcad712545242f2598a6ef0c36b6fc8",
+    "valid_png_integer": false,
+    "method": "Only acTL.num_plays and CRC changed; PNG3 maximum and first invalid value."
+  }
+]

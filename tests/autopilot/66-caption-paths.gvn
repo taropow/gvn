@@ -1,0 +1,70 @@
+# Exact filename text; ordinary/ZIP source, overlay, paste/Undo, and pending open.
+copy_fixture	alpha.png	親フォルダ/子フォルダ/many.parts 日本語.png
+copy_fixture	dates.zip	資料/images.zip
+open	${output}\親フォルダ\子フォルダ\many.parts 日本語.png
+wait
+remember	rgba
+expect_caption	many.parts 日本語.png
+settings
+tab	Bars
+set	TitleMode	1
+click	OK
+expect_caption	${output}\親フォルダ\子フォルダ\many.parts 日本語.png
+settings
+tab	Bars
+set	TitleMode	2
+click	OK
+expect_caption	\子フォルダ\many.parts 日本語.png
+settings
+tab	Bars
+set	TitleMode	3
+click	OK
+expect_caption	many.parts 日本語
+settings
+tab	Bars
+set	TitleMode	4
+click	OK
+expect_caption	@none
+settings
+tab	Bars
+set	TitleMode	0
+click	OK
+open	${output}\資料\images.zip
+wait
+expect_caption	images.zip / new.png
+expect_same	rgba	true
+settings
+tab	Bars
+set	TitleMode	1
+click	OK
+expect_caption	${output}\資料\images.zip / new.png
+command	Fullscreen
+render
+expect	overlay.visible	true
+expect	overlay.caption	true
+expect_same	rgba	true
+snapshot	zip-full-path.png
+command	Fullscreen
+pixel_copy
+command	NewPaste
+expect_caption	クリップボード画像
+command	Undo
+expect_caption	${output}\資料\images.zip / new.png
+open_hold
+open	${output}\親フォルダ\子フォルダ\many.parts 日本語.png
+wait_open_blocked
+expect_caption	${output}\資料\images.zip / new.png
+open_release
+wait
+expect_caption	${output}\親フォルダ\子フォルダ\many.parts 日本語.png
+open	${output}\資料\images.zip
+wait
+settings
+tab	Bars
+set	TitleMode	2
+click	OK
+expect_caption	\資料\images.zip / new.png
+expect_same	rgba	true
+pixel_copy
+snapshot	zip-parent-path.png
+persisted

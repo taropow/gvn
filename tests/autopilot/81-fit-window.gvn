@@ -1,0 +1,50 @@
+# Fit a small edited image from wide and narrow windows; keep full RGBA/Undo.
+resize	900	600
+settings
+tab	Window
+set	WindowToolbarMin	false
+tab	Bars
+set	ToolbarLarge	true
+set	ToolbarLine	true
+set	Scrollbars	false
+tab	Display
+set	DisplayMode	5
+click	OK
+open	${fixtures}/selection-units.png
+wait
+remember	original
+command	RotateRight
+remember	edited
+resize	900	600
+command	DisplayWindowImage
+expect	view.actual_fits	true
+expect	layout.no_overlap	true
+expect	toolbar.no_clip	true
+fit_snapshot	fit-wrapped-toolbar.png
+pixel_copy
+expect_same	edited	true
+resize	136	600
+command	DisplayWindowImage
+expect	view.actual_fits	true
+expect	layout.no_overlap	true
+expect	toolbar.no_clip	true
+expect_same	edited	true
+settings
+tab	Window
+set	WindowToolbarMin	true
+click	OK
+command	DisplayWindowImage
+expect	view.actual_fits	true
+expect	layout.no_overlap	true
+expect	toolbar.no_clip	true
+fit_snapshot	fit-single-row-toolbar.png
+command	ToggleToolbar
+command	ToggleStatus
+command	DisplayWindowImage
+expect	view.actual_fits	true
+expect	toolbar.visible	false
+expect	status.visible	false
+pixel_copy
+expect_same	edited	true
+command	Undo
+expect_same	original	true

@@ -1,0 +1,31 @@
+# Private OS clipboard, actual Ctrl+V routing, normal file decoding and RGBA copy.
+copy_fixture	display-alpha.png	日本語 フォルダ/透明 画像.PNG
+clipboard_path	${output}/日本語 フォルダ/透明 画像.PNG	quoted
+focus	Main
+key	Ctrl+V
+wait
+expect_text	title	透明 画像.PNG
+expect	modified	false
+pixel_copy
+snapshot	pasted-file.png
+command	CloseImage
+expect_empty_checker
+clipboard_path	${fixtures}/psd-16-3.psd
+key	Ctrl+V
+wait
+expect_text	title	psd-16-3.psd
+pixel_copy
+clipboard_path	${fixtures}/disposal.gif	quoted
+key	Ctrl+V
+wait
+expect_text	title	disposal.gif
+expect	player.visible	true
+pixel_copy
+snapshot	pasted-animation.png
+clipboard_path	${fixtures}/blend.apng
+key	Ctrl+V
+wait
+expect_text	title	blend.apng
+pixel_copy
+command	CloseImage
+expect_empty_checker

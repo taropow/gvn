@@ -1,0 +1,80 @@
+settings
+tab	Zoom
+set	ZoomMode	0
+tab	Mouse
+set	Middle	0
+set	WheelScroll	90
+set	DragScroll	200
+set	DragZoom	200
+set	DragAxis	2
+set	DragThreshold	5
+set	HoverMargin	25
+set	HoverMin	1
+set	IgnoreActivation	true
+set	SlowWheel	false
+snapshot	mouse-options.png
+tab	MouseCustom
+mouse_assign	LeftClick	0	0	FlipH
+mouse_assign	RightClick	0	0	MouseNone
+mouse_assign	LeftClick	2	0	Next
+mouse_assign	RightDrag	0	0	MousePan
+expect	error_count	1
+mouse_assign	RightDrag	0	0	MouseZoom
+mouse_assign	MiddleDrag	0	0	MouseFile
+mouse_assign	X1Drag	0	0	MouseSelect
+snapshot	mouse-custom.png
+click	ApplyButton
+expect	mouse.wheel_scroll	90
+expect	mouse.drag_scroll	200
+expect	mouse.drag_axis	2
+expect_mouse	LeftClick	2	0	Next
+persisted
+click	Cancel
+open	${fixtures}/display-alpha.png
+wait
+remember	original
+pointer	down	Left	100	100	0
+pointer	move	-	105	100	0
+pointer	up	Left	105	100	0
+expect_same	original	false
+command	Undo
+expect_same	original	true
+command	Actual
+command	ZoomIn
+command	ZoomIn
+command	ZoomIn
+command	ZoomIn
+pointer	down	Left	100	100	0
+pointer	move	-	112	100	0
+expect	pan_x	24
+pointer	up	Left	112	100	0
+expect_same	original	true
+pointer	down	Left	100	100	0
+pointer	wheel	120	100	100	0
+expect	pan_y	90
+pointer	up	Left	100	100	0
+expect_same	original	true
+pointer	down	Right	200	100	0
+pointer	move	-	250	100	0
+expect	scale	6.636430245261341
+pointer	up	Right	250	100	0
+pointer	down	X1	240	180	0
+pointer	move	-	310	230	0
+pointer	up	X1	310	230	0
+expect_positive	selection_w
+expect_positive	selection_h
+command	ClearSelection
+pointer	down	Middle	100	100	0
+pointer	move	-	120	100	0
+pointer	up	Middle	120	100	0
+expect	export_count	1
+expect	export_temporary	false
+command	FlipH
+pointer	down	Middle	100	100	0
+pointer	move	-	120	100	0
+pointer	up	Middle	120	100	0
+expect	export_count	2
+expect	export_temporary	true
+expect	pointer_buttons	0
+expect	drag_active	false
+snapshot	mouse-image.png

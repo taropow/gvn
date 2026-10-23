@@ -1,0 +1,114 @@
+open	${fixtures}/mask-reference/png/source-alpha.png
+wait
+remember	original
+menu	ConfigureMask
+expect	tabs	16
+expect_text	GlassSize	8
+expect_checked	FLNegative	true
+expect_checked	GlassRemainder	false
+expect_checked	MaskNegativeRed	true
+expect_checked	MaskNegativeGreen	true
+expect_checked	MaskNegativeBlue	true
+expect_checked	MaskXorRed	true
+expect_checked	MaskXorGreen	true
+expect_checked	MaskXorBlue	true
+expect_checked	Q0Vertical	true
+expect_checked	Q0Horizontal	true
+expect_checked	Q0Negative	true
+expect_checked	Q0Xor	false
+expect_checked	Q0FlipVertical	false
+expect_checked	Q0FlipHorizontal	false
+set	GlassSize	3
+set	GlassRemainder	true
+set	MaskSwapChoice	4
+set	MaskNegativeRed	false
+set	MaskNegativeBlue	false
+set	MaskXorGreen	false
+set	MaskXorBlue	false
+set	Q0Xor	true
+set	Q0FlipVertical	true
+set	Q0FlipHorizontal	true
+snapshot	mask-custom.png
+click	OK
+persisted
+menu	MaskNegative
+expect_image	${fixtures}/mask-reference/png/negative-green.png	0
+pixel_copy
+command	Undo
+expect_same	original	true
+command	Negative
+expect_image	${fixtures}/mask-reference/png/image-negative.png	0
+command	Undo
+menu	Xor80
+expect_image	${fixtures}/mask-reference/png/xor-red.png	0
+command	Undo
+menu	MaskSwap
+expect_image	${fixtures}/mask-reference/png/swap-backward.png	0
+command	Undo
+menu	GlassV
+expect_image	${fixtures}/mask-reference/png/glass-v-tail.png	0
+pixel_copy
+command	Undo
+menu	GlassH
+expect_image	${fixtures}/mask-reference/png/glass-h-tail.png	0
+command	Undo
+menu	WinMask
+expect_image	${fixtures}/mask-reference/png/win.png	0
+command	Undo
+menu	ConfigureMask
+set	MaskNegativeRed	true
+set	MaskNegativeBlue	true
+set	MaskXorGreen	true
+set	MaskXorBlue	true
+click	OK
+menu	Q0Mask
+expect_image	${fixtures}/mask-reference/png/q0-all.png	0
+pixel_copy
+command	Undo
+menu	ConfigureMask
+set	MaskNegativeGreen	false
+set	MaskNegativeBlue	false
+set	MaskXorRed	false
+set	MaskXorBlue	false
+click	OK
+menu	Q0Mask
+expect_image	${fixtures}/mask-reference/png/q0-components.png	0
+pixel_copy
+command	Undo
+expect_same	original	true
+menu	ConfigureMask
+click	Reset
+expect_text	GlassSize	8
+expect_checked	FLNegative	true
+expect_checked	GlassRemainder	false
+expect_checked	MaskNegativeRed	true
+expect_checked	MaskNegativeGreen	true
+expect_checked	MaskNegativeBlue	true
+expect_checked	MaskXorRed	true
+expect_checked	MaskXorGreen	true
+expect_checked	MaskXorBlue	true
+expect_checked	Q0Vertical	true
+expect_checked	Q0Horizontal	true
+expect_checked	Q0Negative	true
+expect_checked	Q0Xor	false
+expect_checked	Q0FlipVertical	false
+expect_checked	Q0FlipHorizontal	false
+snapshot	mask-reset.png
+click	Cancel
+expect	settings.glass_size	3
+expect	settings.mask_swap	4
+expect	settings.glass_remainder	true
+expect	settings.mask_negative_green	false
+expect	settings.mask_q0_xor	true
+persisted
+menu	ConfigureMask
+click	Reset
+click	OK
+expect	settings.glass_size	8
+expect	settings.mask_swap	3
+expect	settings.glass_remainder	false
+expect	settings.mask_negative_green	true
+expect	settings.mask_q0_xor	false
+expect	settings.mask_q0_flip_vertical	false
+expect	settings.mask_q0_flip_horizontal	false
+persisted

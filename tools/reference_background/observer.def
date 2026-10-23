@@ -1,0 +1,4 @@
+LIBRARY observer
+EXPORTS
+Install=_Install@4
+Capture=_Capture@4

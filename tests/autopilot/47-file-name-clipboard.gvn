@@ -1,0 +1,90 @@
+# Real menu, key/mouse dispatch and private OS Unicode clipboard; generated source only.
+clipboard_path	${output}\untouched.png
+command	CopyFileName
+command	CopyFolderName
+command	CopyFolderPath
+command	CopyShortPath
+command	CopyPath
+expect_clipboard_text	${output}/untouched.png	path
+copy_fixture	alpha.png	Reference folder 日本語 space/many.parts_日本語 image.png
+open	${output}/Reference folder 日本語 space/many.parts_日本語 image.png
+wait
+menu	CopyFileName
+expect_clipboard_text	many.parts_日本語 image.png
+menu	CopyPath
+expect_clipboard_text	${output}/Reference folder 日本語 space/many.parts_日本語 image.png	path
+menu	CopyFolderName
+expect_clipboard_text	Reference folder 日本語 space
+menu	CopyFolderPath
+expect_clipboard_text	${output}/Reference folder 日本語 space	path
+menu	CopyShortPath
+expect_clipboard_text	${output}/Reference folder 日本語 space/many.parts_日本語 image.png	short
+settings
+tab	Keys
+expect	key_functions	238
+function	CopyShortPath
+expect	key_slots	0
+function	CopyFolderName
+expect	key_slots	0
+function	CopyFolderPath
+expect	key_slots	0
+function	CopyFileName
+expect	key_slots	0
+set	KeyEdit	F12
+click	KeyAdd
+snapshot	file-name-keys.png
+tab	MouseCustom
+mouse_assign	MiddleClick	0	0	CopyFolderName
+click	OK
+persisted
+expect_menu_key	CopyFileName	F12
+focus	Main
+key	F12
+expect_clipboard_text	many.parts_日本語 image.png
+pointer	down	Middle	100	100	0
+pointer	up	Middle	100	100	0
+expect_clipboard_text	Reference folder 日本語 space
+command	Negative
+expect	modified	true
+key	F12
+expect_clipboard_text	many.parts_日本語 image.png
+save_target	pixels/saved-copy.png
+command	SaveAs
+save_accept
+wait_save
+expect_saved	pixels/saved-copy.png
+expect	modified	true
+command	CopyPath
+expect_clipboard_text	${output}/Reference folder 日本語 space/many.parts_日本語 image.png	path
+pixel_copy
+command	NewPaste
+expect	modified	true
+command	CopyFileName
+expect_clipboard_text	クリップボード画像
+command	CopyPath
+expect_clipboard_text	クリップボード画像
+command	CopyFolderName
+expect_clipboard_text	Reference folder 日本語 space
+command	CopyFolderPath
+expect_clipboard_text	${output}/Reference folder 日本語 space	path
+command	CopyShortPath
+expect_clipboard_empty
+pixel_copy
+snapshot	fileless-name-copy.png
+command	Undo
+command	CopyPath
+expect_clipboard_text	${output}/Reference folder 日本語 space/many.parts_日本語 image.png	path
+command	Undo
+command	CopyFolderPath
+expect_clipboard_text	${output}/Reference folder 日本語 space	path
+pixel_copy
+command	CloseImage
+command	CopyFileName
+command	CopyPath
+command	CopyFolderName
+command	CopyFolderPath
+command	CopyShortPath
+command	NewPaste
+pixel_copy
+expect	error_count	0
+expect_file	Reference folder 日本語 space/many.parts_日本語 image.png	alpha.png

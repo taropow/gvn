@@ -1,0 +1,3 @@
+LIBRARY observer
+EXPORTS
+Install=_Install@4

@@ -1,0 +1,35 @@
+{
+  "reference_version": "0.45",
+  "created_at": "2026-10-18T04:27:22.457653+00:00",
+  "archive_sha256": "76f28cf65e900778ae0f67d41ea324d35d0ec162624dcf50ada3e44ce831ca25",
+  "executable_sha256": "c23b73887a3a98833f9318e7e3321a6a5b9825ad442b88e8bd3b0333ba28a3e5",
+  "probe": "tools/probe_massigra_resampling.py",
+  "probe_sha256": "8b1524e549a041ba9c3562ce802821f6320a1a4a459d0832acb2758d38e9cba9",
+  "arguments": [
+    "3",
+    "0",
+    "3",
+    "6",
+    "ramp",
+    "6"
+  ],
+  "station_visible": false,
+  "clipboard_serialized": true,
+  "controlled_pid_created_by_probe": 97556,
+  "source_size": [
+    6,
+    6
+  ],
+  "target_size": [
+    3,
+    3
+  ],
+  "pattern": "ramp",
+  "methods": [
+    0
+  ],
+  "source_png_sha256": "73893e3fd51a77f9a30e1f5b9235627cb10c41180b49a0a80a3ef74243b3ab32",
+  "outputs": {
+    "result-0.png": "4ffd93c7e88bd84ff4caa12e042514015da2ebb01ed2f355829f5e8810f0dc52"
+  }
+}

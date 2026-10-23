@@ -1,0 +1,480 @@
+copy_fixture	view-rotation/single/portrait.png	rotation/portrait.png
+copy_fixture	view-rotation/single/landscape.png	rotation/landscape.png
+copy_fixture	view-rotation/single/square.png	rotation/square.png
+open	${output}/rotation/portrait.png
+wait
+command	ViewRotateNone
+wait
+expect	settings.view_rotation	0
+expect_image	${fixtures}/view-rotation/single/expected-000.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	true
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_image	${fixtures}/view-rotation/single/expected-001.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	true
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotateRight
+wait
+expect	settings.view_rotation	2
+expect_image	${fixtures}/view-rotation/single/expected-002.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	true
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotatePortraitLeft
+wait
+expect	settings.view_rotation	3
+expect_image	${fixtures}/view-rotation/single/expected-003.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	true
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotatePortraitRight
+wait
+expect	settings.view_rotation	4
+expect_image	${fixtures}/view-rotation/single/expected-004.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	true
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotateLandscapeLeft
+wait
+expect	settings.view_rotation	5
+expect_image	${fixtures}/view-rotation/single/expected-005.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	true
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotateLandscapeRight
+wait
+expect	settings.view_rotation	6
+expect_image	${fixtures}/view-rotation/single/expected-006.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	true
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_image	${fixtures}/view-rotation/single/expected-007.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	true
+open	${output}/rotation/landscape.png
+wait
+command	ViewRotateNone
+wait
+expect	settings.view_rotation	0
+expect_image	${fixtures}/view-rotation/single/expected-008.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	true
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_image	${fixtures}/view-rotation/single/expected-009.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	true
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotateRight
+wait
+expect	settings.view_rotation	2
+expect_image	${fixtures}/view-rotation/single/expected-010.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	true
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotatePortraitLeft
+wait
+expect	settings.view_rotation	3
+expect_image	${fixtures}/view-rotation/single/expected-011.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	true
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotatePortraitRight
+wait
+expect	settings.view_rotation	4
+expect_image	${fixtures}/view-rotation/single/expected-012.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	true
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotateLandscapeLeft
+wait
+expect	settings.view_rotation	5
+expect_image	${fixtures}/view-rotation/single/expected-013.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	true
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotateLandscapeRight
+wait
+expect	settings.view_rotation	6
+expect_image	${fixtures}/view-rotation/single/expected-014.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	true
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_image	${fixtures}/view-rotation/single/expected-015.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	true
+open	${output}/rotation/square.png
+wait
+command	ViewRotateNone
+wait
+expect	settings.view_rotation	0
+expect_image	${fixtures}/view-rotation/single/expected-016.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	true
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotateLeft
+wait
+expect	settings.view_rotation	1
+expect_image	${fixtures}/view-rotation/single/expected-017.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	true
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotateRight
+wait
+expect	settings.view_rotation	2
+expect_image	${fixtures}/view-rotation/single/expected-018.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	true
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotatePortraitLeft
+wait
+expect	settings.view_rotation	3
+expect_image	${fixtures}/view-rotation/single/expected-019.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	true
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotatePortraitRight
+wait
+expect	settings.view_rotation	4
+expect_image	${fixtures}/view-rotation/single/expected-020.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	true
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotateLandscapeLeft
+wait
+expect	settings.view_rotation	5
+expect_image	${fixtures}/view-rotation/single/expected-021.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	true
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotateLandscapeRight
+wait
+expect	settings.view_rotation	6
+expect_image	${fixtures}/view-rotation/single/expected-022.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	true
+expect_menu_checked	ViewRotateHalf	false
+command	ViewRotateHalf
+wait
+expect	settings.view_rotation	7
+expect_image	${fixtures}/view-rotation/single/expected-023.png	0
+pixel_copy
+expect	modified	false
+expect_menu_checked	ViewRotateNone	false
+expect_menu_checked	ViewRotateLeft	false
+expect_menu_checked	ViewRotateRight	false
+expect_menu_checked	ViewRotatePortraitLeft	false
+expect_menu_checked	ViewRotatePortraitRight	false
+expect_menu_checked	ViewRotateLandscapeLeft	false
+expect_menu_checked	ViewRotateLandscapeRight	false
+expect_menu_checked	ViewRotateHalf	true
+snapshot	rotation-square-half.png
+settings
+tab	Keys
+expect	key_functions	238
+function	ViewRotateNone
+expect	key_slots	0
+function	ViewRotateLeft
+expect	key_slots	0
+function	ViewRotateRight
+expect	key_slots	0
+function	ViewRotatePortraitLeft
+expect	key_slots	0
+function	ViewRotatePortraitRight
+expect	key_slots	0
+function	ViewRotateLandscapeLeft
+expect	key_slots	0
+function	ViewRotateLandscapeRight
+expect	key_slots	0
+function	ViewRotateHalf
+expect	key_slots	0
+function	ViewRotate
+expect	key_slots	0
+function	ComicSingleWide
+expect	key_slots	0
+function	ViewRotateLeft
+set	KeyEdit	F12
+click	KeyAdd
+tab	MouseCustom
+mouse_assign	MiddleClick	0	0	ViewRotateHalf
+click	OK
+persisted
+expect_menu_key	ViewRotateLeft	F12
+focus	Main
+key	F12
+wait
+expect	settings.view_rotation	1
+command	ViewRotate
+expect	popup_count	1
+pointer	down	Middle	100	100	0
+pointer	up	Middle	100	100	0
+wait
+expect	settings.view_rotation	7
+command	ViewRotateNone
+wait
+open	${fixtures}/alpha.png
+wait
+command	Copy
+command	ViewRotateLeft
+wait
+command	NewPaste
+expect_image	${fixtures}/alpha.png	0
+command	ViewRotateRight
+wait
+expect_image	${fixtures}/alpha.png	0
+expect	modified	true
+pixel_copy
+snapshot	rotation-pasted-alpha.png
+command	CloseImage
+copy_fixture	view-rotation/comic/PP-1.png	pages/01.png
+copy_fixture	view-rotation/comic/PP-2.png	pages/02.png
+command	ViewRotateLeft
+open	${output}/pages/01.png
+wait
+command	Comic
+wait
+settings
+tab	Display
+set	ComicRTL	true
+set	ComicHeightMode	1
+set	ComicDown	0
+set	ComicHeightMode	2
+set	ComicUp	0
+set	ComicHeightMode	0
+set	ComicRotateBefore	false
+click	OK
+wait
+expect	settings.comic_rotate_before	false
+expect	settings.comic_single_wide	false
+expect_image	${fixtures}/view-rotation/comic/expected-033.png	0
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicRotateBefore	true
+snapshot	rotation-before-comic-settings.png
+click	OK
+wait
+expect	settings.comic_rotate_before	true
+expect	settings.comic_single_wide	false
+expect_image	${fixtures}/view-rotation/comic/expected-225.png	0
+pixel_copy
+persisted
+command	ComicSingleWide
+wait
+expect	settings.comic_rotate_before	true
+expect	settings.comic_single_wide	true
+expect_image	${fixtures}/view-rotation/comic-wide/expected-225.png	0
+pixel_copy
+settings
+click	OK
+persisted
+settings
+tab	Display
+set	ComicRotateBefore	false
+click	OK
+wait
+expect	settings.comic_rotate_before	false
+expect	settings.comic_single_wide	true
+expect_image	${fixtures}/view-rotation/comic-wide/expected-033.png	0
+pixel_copy
+persisted
+settings
+tab	Display
+set	ComicRotateBefore	true
+click	Cancel
+expect	settings.comic_rotate_before	false
+settings
+tab	General
+set	Grid	23
+tab	Display
+set	ComicRotateBefore	true
+click	Reset
+click	OK
+wait
+expect	settings.grid	23
+expect	settings.comic_rotate_before	false
+expect	settings.view_rotation	1
+expect	settings.comic_single_wide	true
+persisted
+pixel_copy
+snapshot	rotation-display-page-reset.png
+expect	error_count	0
+expect_file	rotation/portrait.png	view-rotation/single/portrait.png
+expect_file	rotation/landscape.png	view-rotation/single/landscape.png
+expect_file	rotation/square.png	view-rotation/single/square.png

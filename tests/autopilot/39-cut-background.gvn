@@ -1,0 +1,110 @@
+expect	settings.cut_transparent	true
+expect	settings.cut_color	0
+settings
+tab	General
+expect	enabled.CutColor	false
+expect	enabled.CutColorPick	false
+expect_text	CutColor	000000
+set	CutTransparent	false
+expect	enabled.CutColor	true
+expect	enabled.CutColorPick	true
+click	CutColorPick
+color_expect	0	0	0
+color_set	18	52	86
+color_close	Cancel
+expect_text	CutColor	000000
+click	CutColorPick
+color_expect	0	0	0
+color_set	255	128	64
+color_close	OK
+expect_text	CutColor	FF8040
+set	CutColor	ZZZZZZ
+click	ApplyButton
+expect	error_count	1
+expect	settings_open	true
+expect	settings.cut_transparent	true
+expect	settings.cut_color	0
+set	CutColor	FF8040
+snapshot	cut-color-settings.png
+click	OK
+expect	settings.cut_transparent	false
+expect	settings.cut_color	16744512
+persisted
+open	${fixtures}/rgb.bmp
+wait
+focus	Main
+key	Ctrl+C
+open	${fixtures}/display-alpha.png
+wait
+remember	source
+focus	Main
+key	Ctrl+A
+key	Ctrl+X
+expect	modified	true
+expect_pixel	0	0	255	128	64	255
+expect_pixel	1	1	255	128	64	255
+expect_same	source	false
+snapshot	cut-filled.png
+key	Ctrl+V
+expect_same	source	true
+expect_location	image	empty
+settings
+tab	General
+set	CutTransparent	true
+expect	enabled.CutColor	false
+expect_text	CutColor	FF8040
+click	Cancel
+expect	settings.cut_transparent	false
+expect	settings.cut_color	16744512
+persisted
+settings
+tab	General
+set	CutTransparent	true
+click	OK
+expect	settings.cut_transparent	true
+expect	settings.cut_color	16744512
+persisted
+open	${fixtures}/rgb.bmp
+wait
+focus	Main
+key	Ctrl+C
+open	${fixtures}/display-alpha.png
+wait
+focus	Main
+key	Ctrl+A
+key	Ctrl+X
+expect_pixel	0	0	0	0	0	0
+expect_pixel	1	1	0	0	0	0
+snapshot	cut-transparent.png
+key	Ctrl+V
+expect_same	source	true
+settings
+tab	General
+set	CutTransparent	false
+set	CutColor	ABCDEF
+click	Cancel
+expect	settings.cut_transparent	true
+expect	settings.cut_color	16744512
+settings
+tab	Background
+set	Cell	12
+click	OK
+persisted
+expect	settings.cut_color	16744512
+settings
+tab	General
+click	Reset
+expect	enabled.CutColor	false
+expect_text	CutColor	000000
+click	Cancel
+expect	settings.cut_color	16744512
+settings
+tab	General
+click	Reset
+snapshot	cut-reset-settings.png
+click	OK
+expect	settings.cut_transparent	true
+expect	settings.cut_color	0
+expect	settings.checker_size	12
+persisted
+expect_same	source	true

@@ -1,0 +1,57 @@
+copy_fixture	alpha.png	pages/1.png
+copy_fixture	display-alpha.png	pages/2.png
+copy_fixture	alpha.png	pages/3.png
+settings
+tab	General
+set	Undo	false
+set	History	false
+set	PasteNew	false
+set	Grid	8
+tab	Zoom
+set	ZoomMode	0
+set	ZoomStep	50
+tab	Move
+set	SkipCount	2
+tab	Fullscreen
+set	FullDown	0
+set	FullUp	0
+tab	Loading
+set	Autoplay	false
+set	AnimationLoop	false
+click	OK
+expect	settings_open	false
+expect	settings.undo_enabled	false
+expect	settings.remember_history	false
+expect	settings.paste_new	false
+expect	settings.grid	8
+open	${output}/pages/1.png
+wait
+command	Actual
+command	ZoomIn
+expect	scale	1.5
+command	ZoomOut
+expect	scale	1
+command	SkipNext
+wait
+expect	index	2
+command	SkipBack
+wait
+expect	index	0
+command	Fullscreen
+expect	renderer.filter	0
+command	Fullscreen
+expect	renderer.nearest	false
+open	${fixtures}/blend.apng
+wait
+expect	playing	false
+expect	loop	false
+player	FrameNext
+expect	frame	1
+remember	original
+answer	OK
+command	Negative
+expect	modified	true
+expect	undo_available	false
+command	Undo
+expect_same	original	false
+snapshot	undo-disabled.png

@@ -1,0 +1,63 @@
+copy_fixture	alpha.png	cache/a.png
+copy_fixture	rgb.bmp	cache/b.bmp
+copy_fixture	disposal.gif	cache/c.gif
+open	${output}/cache/a.png
+wait_cache
+remember	raw
+expect_positive	loader.cache_bytes
+expect	loader.cache_limit	67108864
+settings
+tab	Loading
+scroll_page	bottom
+set	CacheMiB	-1
+click	ApplyButton
+expect	error_count	1
+expect	settings.cache_mib	64
+set	CacheMiB	0
+set	PrefetchEnabled	false
+click	ApplyButton
+wait_cache
+expect	loader.cache_bytes	0
+expect	loader.cache_limit	0
+expect_same	raw	true
+pixel_copy
+set	CacheMiB	1
+click	ApplyButton
+wait_cache
+expect	loader.cache_bytes	0
+expect	loader.cache_limit	1048576
+set	PrefetchEnabled	true
+click	ApplyButton
+wait_cache
+expect_positive	loader.cache_bytes
+expect	loader.cache_budget	true
+expect_same	raw	true
+snapshot	cache-settings.png
+scroll_page	top
+set	PreserveAlpha	true
+scroll_page	bottom
+click	Reset
+click	ApplyButton
+wait_cache
+expect	settings.cache_mib	64
+expect	settings.prefetch_enabled	true
+expect_text	CacheMiB	64
+click	OK
+persisted
+settings
+tab	Loading
+scroll_page	bottom
+set	CacheMiB	128
+set	PrefetchEnabled	false
+click	Cancel
+expect	settings.cache_mib	64
+expect	settings.prefetch_enabled	true
+command	Next
+wait_cache
+expect_positive	loader.cache_hits
+expect	loader.cache_budget	true
+command	CloseImage
+wait_cache
+expect	loader.cache_bytes	0
+expect_empty_checker
+snapshot	closed-cache-released.png

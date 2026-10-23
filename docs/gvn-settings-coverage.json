@@ -1,0 +1,3598 @@
+[
+  {
+    "id": "S001",
+    "section": "1 全般",
+    "setting": "多重起動を許可",
+    "reference_behavior": "複数起動を許す。無効なら、再起動時に指定されたファイルを既存ウィンドウで開く",
+    "state": "実装済み",
+    "implementation": [
+      "src/instance.cpp:InstanceStartup",
+      "src/preferences.cpp:AllowMultiple / ActivateReused / ActivateDropped",
+      "src/viewer.cpp:process_forwarded_file / open_external"
+    ],
+    "evidence": [
+      "settings:instance_options_defaults_roundtrip_and_missing_legacy_keys",
+      "autopilot:37-general-instance.gvn",
+      "app:forwarded_requests_acknowledge_before_open_and_keep_latest_file"
+    ],
+    "note": "0.21.0。ONで独立画面、OFFで同じ設定ファイルの既存画面へ指定ファイルまたは空の起動要求を転送。6同時起動で1画面、別プロファイル・既存ONからOFFへの変更と応答不能時も実プロセスで検査。多数起動するユーザーの使い方を保ち既定ON（参照既定OFF）。全体回帰と配布は別の段階で確認する。"
+  },
+  {
+    "id": "S002",
+    "section": "1 全般",
+    "setting": "多重起動しない場合ウィンドウをアクティブ",
+    "reference_behavior": "既存ウィンドウに処理を渡すとき、アクティブにする",
+    "state": "実装済み",
+    "implementation": [
+      "src/instance.cpp:InstanceStartup",
+      "src/preferences.cpp:AllowMultiple / ActivateReused / ActivateDropped",
+      "src/viewer.cpp:process_forwarded_file / open_external"
+    ],
+    "evidence": [
+      "settings:instance_options_defaults_roundtrip_and_missing_legacy_keys",
+      "autopilot:37-general-instance.gvn",
+      "app:forwarded_file_waits_for_modal_owner_and_loads_after_enable",
+      "app:reused_activation_off_keeps_minimized_through_metadata_and_image_policy"
+    ],
+    "note": "0.21.0。再利用時のアクティブ化を独立設定。最小化中の画像連動サイズ調整もOFFを守り、設定モーダル中は最後の要求を保留。空要求で保留ファイルを消さない。ON/OFF・相対日本語パス・モーダル・保存/取消/初期化を検査。物理デスクトップの他プロセスによる前景ロックは別確認。"
+  },
+  {
+    "id": "S003",
+    "section": "1 全般",
+    "setting": "ファイルドロップされたらアクティブ",
+    "reference_behavior": "ドロップを受けたウィンドウをアクティブにする",
+    "state": "実装済み",
+    "implementation": [
+      "src/instance.cpp:InstanceStartup",
+      "src/preferences.cpp:AllowMultiple / ActivateReused / ActivateDropped",
+      "src/viewer.cpp:process_forwarded_file / open_external"
+    ],
+    "evidence": [
+      "settings:instance_options_defaults_roundtrip_and_missing_legacy_keys",
+      "autopilot:37-general-instance.gvn",
+      "app:dropped_file_activation_controls_restore_and_preserves_source_alpha"
+    ],
+    "note": "0.21.0。Shellのファイルドロップを受けた時のアクティブ化を独立設定。最小化中のON/OFF、通常読み込み経路のAlpha画素と専用自動操縦の実WM_DROPFILESを検査。入力OLE IDropTargetや外部ソフト操作のE2Eを完了した意味ではない。"
+  },
+  {
+    "id": "S004",
+    "section": "1 全般",
+    "setting": "物理メモリを超えるサイズの画像を扱う",
+    "reference_behavior": "拡大縮小・画像サイズで物理メモリを超える画像の作成を許す。画像の読み込み時には関係しない",
+    "state": "実装済み",
+    "implementation": [
+      "src/edit_memory.cpp:EditMemory::pixels / allocate",
+      "src/viewer.cpp:edit_memory / dimensions / replace",
+      "src/preferences.cpp:AllowPhysicalOverflow"
+    ],
+    "evidence": [
+      "settings:edit_memory_default_roundtrip_legacy_and_bounded_values",
+      "app:editing_dimensions_allow_more_than_decode_limit_without_allocating_output",
+      "app:edit_memory_small_budget_controls_real_commands_without_touching_source",
+      "app:edit_allocation_faults_preserve_undo_selection_and_animation",
+      "autopilot:41-edit-memory.gvn"
+    ],
+    "note": "0.22.0。既定OFFは出力RGBAと物理メモリ総量を比較、ONは比較を省略。読込の既定256MiBは変更せず、生成済み画像の表示・保存・コピーとは分離。各辺65535、RGBA1GiBまで。小さい予算で実生成と拒否、確保失敗注入時の元画像/Undo/選択保持、最大寸法の細長い実画像を検査。巨大2次元とピークメモリ、参照の正確なバイト境界は未測定。"
+  },
+  {
+    "id": "S005",
+    "section": "1 全般",
+    "setting": "元に戻すを利用する",
+    "reference_behavior": "1段階のUndoを有効にする。無効なら元画像保持の処理とメモリを節約",
+    "state": "実装済み",
+    "implementation": [
+      "src/viewer.cpp:App::replace",
+      "src/preferences.cpp:Undo"
+    ],
+    "evidence": [
+      "autopilot:04-settings-behavior.gvn",
+      "app:customization_changes_real_paste_undo_and_shortcut_dispatch"
+    ],
+    "note": "Undo無効時は直前画像を保持しない。実加工・貼り付け後にUndoできないことを確認。"
+  },
+  {
+    "id": "S006",
+    "section": "1 全般",
+    "setting": "切り取りの背景色",
+    "reference_behavior": "切り取り後の塗り潰し色",
+    "state": "実装済み",
+    "implementation": [
+      "src/viewer.cpp:Cut",
+      "src/preferences.cpp:CutTransparent / CutColor"
+    ],
+    "evidence": [
+      "settings:cut_background_defaults_roundtrip_legacy_and_invalid_values",
+      "app:configured_cut_color_preserves_clipboard_alpha_and_outside_pixels",
+      "app:cut_transparent_default_and_runtime_switch_do_not_reload_source",
+      "app:cut_color_animation_cancel_current_frame_and_palette_undo",
+      "autopilot:39-cut-background.gvn"
+    ],
+    "note": "0.22.0。切り取り後を透明または指定RGBの不透明色にする。GVNは透明を既定に保ち、指定色の初期値は参照と同じ黒。コピーした元RGBAと選択外を保持。実色選択、アニメ取消/現在コマ、元パレットとUndo、保存/取消/初期化を検査。"
+  },
+  {
+    "id": "S007",
+    "section": "1 全般",
+    "setting": "選択範囲が無い時の貼り付けは新規画像に貼り付け",
+    "reference_behavior": "有効なら新規画像に貼る。無効なら現在画像の全体が選択されている扱いで貼る",
+    "state": "実装済み",
+    "implementation": [
+      "src/viewer.cpp:Paste",
+      "src/preferences.cpp:PasteNew"
+    ],
+    "evidence": [
+      "app:customization_changes_real_paste_undo_and_shortcut_dispatch"
+    ],
+    "note": "選択なし貼り付けの新規/現在画像を選べる。現画像への半透明合成、領域外・隠れたRGB・文書参照先、再度ONにした新規貼り付けを確認。"
+  },
+  {
+    "id": "S008",
+    "section": "1 全般",
+    "setting": "最近開いたフォルダを保存する",
+    "reference_behavior": "履歴を次回へ引き継ぐ",
+    "state": "実装済み",
+    "implementation": [
+      "src/settings.cpp:Settings::remember",
+      "src/preferences.cpp:History"
+    ],
+    "evidence": [
+      "settings:settings_customization_persists_and_history_can_be_disabled",
+      "app:customization_changes_real_paste_undo_and_shortcut_dispatch"
+    ],
+    "note": "保存OFF時は履歴を消去し、以後の記憶・INI復元を行わない。"
+  },
+  {
+    "id": "S009",
+    "section": "1 全般",
+    "setting": "起動時に前回終了時に開いていたファイルを開く",
+    "reference_behavior": "起動引数のファイル指定がなければ前回画像を開く。見つからなければそのフォルダの先頭を開く",
+    "state": "実装済み",
+    "implementation": [
+      "src/viewer.cpp:open_startup / remember_startup_file",
+      "src/open_source.cpp:prepare_open",
+      "src/settings.cpp:last_archive_entry_parts",
+      "src/preferences.cpp:ReopenLast"
+    ],
+    "evidence": [
+      "settings:reopen_last_defaults_roundtrip_and_internal_location_preservation",
+      "app:startup_reopen_default_off_explicit_priority_fallback_and_quiet_empty",
+      "app:closing_remembers_displayed_source_instead_of_pending_file_or_clipboard",
+      "app:startup_archive_remembers_member_name_and_reloads_original_not_unsaved_edits",
+      "autopilot:38-reopen-last.gvn"
+    ],
+    "note": "0.22.0。既定OFFの市松起動を維持し、ONかつ新規の空起動時だけ前回表示ファイルを開く。明示引数を優先し、消失時は親フォルダの先頭、空なら静かに空表示。未保存加工を自動保存せず、読み込み中も表示中の元ファイルを記録。ZIP内部名のUnicode/改行/長い名前を保存し並び替え後も同じ項目へ戻る。実プロセスも検査。"
+  },
+  {
+    "id": "S010",
+    "section": "1 全般",
+    "setting": "IMEを無効化する",
+    "reference_behavior": "日本語入力中にキー操作が効かなくなることを防ぐ",
+    "state": "実装済み",
+    "implementation": [
+      "src/ime.cpp:ViewerIme::apply / restore",
+      "src/viewer.cpp:WM_PARENTNOTIFY / WM_INPUTLANGCHANGE / WM_SETFOCUS",
+      "src/preferences.cpp:DisableIme"
+    ],
+    "evidence": [
+      "settings:ime_default_roundtrip_legacy_and_bounded_values",
+      "app:configured_ime_disable_changes_actual_main_input_context",
+      "app:ime_default_new_children_language_focus_and_destroy_restore",
+      "autopilot:40-ime-policy.gvn"
+    ],
+    "note": "0.22.0。既定ONで本体と表示用の自分の子ウィンドウのIMM関連付けを無効化し、OFF/終了前に復元。設定・改名等の所有ポップアップと文字入力欄は除外。実HIMC、追加子、言語通知/フォーカス/破棄、キー経路と日本語名を検査。日本語名はWM_SETTEXTによる入力で、実IME変換・プロファイル・物理入力のE2Eは未確認。"
+  },
+  {
+    "id": "S011",
+    "section": "1 全般",
+    "setting": "標準の設定に戻す",
+    "reference_behavior": "全般ページだけを標準状態に戻す",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:Impl::reset_page",
+      "tools/preferences_probe.cpp:general_reset_contract"
+    ],
+    "evidence": [
+      "autopilot:02-settings-validation.gvn",
+      "autopilot:37-general-instance.gvn",
+      "autopilot:42-general-reset.gvn"
+    ],
+    "note": "0.22.0。一般の全12入力（元の全項目とGVNの透明切り取り/選択単位）をページ単位で標準化。無効な現在ページ入力は破棄し、他ページの保留値と未作成ページ、内部履歴/前回ファイルを保持。取消/適用後取消/保存失敗と再試行、他ページ不正値による一括適用拒否、依存表示、実UndoとAlpha切り取りも検査。標準化したUndoは既に捨てた履歴を復元しない。"
+  },
+  {
+    "id": "S012",
+    "section": "2 背景",
+    "setting": "背景をタイル状にする",
+    "reference_behavior": "表示ウィンドウの背景に2色のパターンを使う",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:BackgroundTiled",
+      "src/renderer.cpp:Renderer::scene / reset_patterns",
+      "src/settings.cpp:Settings::load / save"
+    ],
+    "evidence": [
+      "settings:viewport_background_reference_defaults_and_all_presets_roundtrip",
+      "settings:viewport_background_legacy_migration_is_read_only_and_explicit_palette_wins",
+      "settings:viewport_background_invalid_values_are_bounded_without_affecting_alpha_options",
+      "render:viewport_background_matches_all_twenty_actual_reference_clients",
+      "render:empty_background_respects_palette_and_tile_while_alpha_controls_stay_independent",
+      "render:alpha_checker_and_its_solid_fallback_do_not_replace_the_outer_tile",
+      "render:background_pattern_change_keeps_d2d_target_image_and_sampling_cache",
+      "render:background_contexts_match_official_zoom_pan_fullscreen_and_empty_rois",
+      "app:background_changes_preserve_image_animation_copy_save_and_ole",
+      "autopilot:52-background.gvn",
+      "autopilot:53-background-color.gvn"
+    ],
+    "note": "0.30.0。ウィンドウ背景全体のタイルON/OFF、色1/色2、5択8/16/32/64/128pxを実装。既定はON/中/32と48、OFFでは色1としサイズ/色2を無効化して値を保持。旧INIと独立Alpha設定を維持し、背景変更では描画先・画像/サンプル・再生位置を保持。公式の通常20条件42画像と追加52画像を照合。実色選択・プレビュー全RGB・スクロール到達・適用/OK/取消/ページ初期化・他ページ値・保存失敗を検査。設定42/描画20/統合143件、全41項目と専用53本9613操作、通常/軽量配布と保存済みCSP2試料のRGBAが成功。画像の拡大境界は別の表示試験、物理DPI・性能・実編集ソフト受信は全体の残課題として扱う。"
+  },
+  {
+    "id": "S013",
+    "section": "2 背景",
+    "setting": "背景パターンのサイズ",
+    "reference_behavior": "ウィンドウ背景の5択（最小8/小16/中32/大64/最大128px）。既定は中。タイルOFF時は操作を無効化",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:BackgroundPattern",
+      "src/renderer.cpp:Renderer::scene / reset_patterns",
+      "src/settings.cpp:Settings::load / save"
+    ],
+    "evidence": [
+      "settings:viewport_background_reference_defaults_and_all_presets_roundtrip",
+      "settings:viewport_background_legacy_migration_is_read_only_and_explicit_palette_wins",
+      "settings:viewport_background_invalid_values_are_bounded_without_affecting_alpha_options",
+      "render:viewport_background_matches_all_twenty_actual_reference_clients",
+      "render:empty_background_respects_palette_and_tile_while_alpha_controls_stay_independent",
+      "render:alpha_checker_and_its_solid_fallback_do_not_replace_the_outer_tile",
+      "render:background_pattern_change_keeps_d2d_target_image_and_sampling_cache",
+      "render:background_contexts_match_official_zoom_pan_fullscreen_and_empty_rois",
+      "app:background_changes_preserve_image_animation_copy_save_and_ole",
+      "autopilot:52-background.gvn",
+      "autopilot:53-background-color.gvn"
+    ],
+    "note": "0.30.0。ウィンドウ背景全体のタイルON/OFF、色1/色2、5択8/16/32/64/128pxを実装。既定はON/中/32と48、OFFでは色1としサイズ/色2を無効化して値を保持。旧INIと独立Alpha設定を維持し、背景変更では描画先・画像/サンプル・再生位置を保持。公式の通常20条件42画像と追加52画像を照合。実色選択・プレビュー全RGB・スクロール到達・適用/OK/取消/ページ初期化・他ページ値・保存失敗を検査。設定42/描画20/統合143件、全41項目と専用53本9613操作、通常/軽量配布と保存済みCSP2試料のRGBAが成功。画像の拡大境界は別の表示試験、物理DPI・性能・実編集ソフト受信は全体の残課題として扱う。"
+  },
+  {
+    "id": "S014",
+    "section": "2 背景",
+    "setting": "背景色1",
+    "reference_behavior": "単色背景の場合も使用する色",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:BackgroundFirst",
+      "src/renderer.cpp:Renderer::scene / reset_patterns",
+      "src/settings.cpp:Settings::load / save"
+    ],
+    "evidence": [
+      "settings:viewport_background_reference_defaults_and_all_presets_roundtrip",
+      "settings:viewport_background_legacy_migration_is_read_only_and_explicit_palette_wins",
+      "settings:viewport_background_invalid_values_are_bounded_without_affecting_alpha_options",
+      "render:viewport_background_matches_all_twenty_actual_reference_clients",
+      "render:empty_background_respects_palette_and_tile_while_alpha_controls_stay_independent",
+      "render:alpha_checker_and_its_solid_fallback_do_not_replace_the_outer_tile",
+      "render:background_pattern_change_keeps_d2d_target_image_and_sampling_cache",
+      "render:background_contexts_match_official_zoom_pan_fullscreen_and_empty_rois",
+      "app:background_changes_preserve_image_animation_copy_save_and_ole",
+      "autopilot:52-background.gvn",
+      "autopilot:53-background-color.gvn"
+    ],
+    "note": "0.30.0。ウィンドウ背景全体のタイルON/OFF、色1/色2、5択8/16/32/64/128pxを実装。既定はON/中/32と48、OFFでは色1としサイズ/色2を無効化して値を保持。旧INIと独立Alpha設定を維持し、背景変更では描画先・画像/サンプル・再生位置を保持。公式の通常20条件42画像と追加52画像を照合。実色選択・プレビュー全RGB・スクロール到達・適用/OK/取消/ページ初期化・他ページ値・保存失敗を検査。設定42/描画20/統合143件、全41項目と専用53本9613操作、通常/軽量配布と保存済みCSP2試料のRGBAが成功。画像の拡大境界は別の表示試験、物理DPI・性能・実編集ソフト受信は全体の残課題として扱う。"
+  },
+  {
+    "id": "S015",
+    "section": "2 背景",
+    "setting": "背景色2",
+    "reference_behavior": "タイル用のもう1色",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:BackgroundSecond",
+      "src/renderer.cpp:Renderer::scene / reset_patterns",
+      "src/settings.cpp:Settings::load / save"
+    ],
+    "evidence": [
+      "settings:viewport_background_reference_defaults_and_all_presets_roundtrip",
+      "settings:viewport_background_legacy_migration_is_read_only_and_explicit_palette_wins",
+      "settings:viewport_background_invalid_values_are_bounded_without_affecting_alpha_options",
+      "render:viewport_background_matches_all_twenty_actual_reference_clients",
+      "render:empty_background_respects_palette_and_tile_while_alpha_controls_stay_independent",
+      "render:alpha_checker_and_its_solid_fallback_do_not_replace_the_outer_tile",
+      "render:background_pattern_change_keeps_d2d_target_image_and_sampling_cache",
+      "render:background_contexts_match_official_zoom_pan_fullscreen_and_empty_rois",
+      "app:background_changes_preserve_image_animation_copy_save_and_ole",
+      "autopilot:52-background.gvn",
+      "autopilot:53-background-color.gvn"
+    ],
+    "note": "0.30.0。ウィンドウ背景全体のタイルON/OFF、色1/色2、5択8/16/32/64/128pxを実装。既定はON/中/32と48、OFFでは色1としサイズ/色2を無効化して値を保持。旧INIと独立Alpha設定を維持し、背景変更では描画先・画像/サンプル・再生位置を保持。公式の通常20条件42画像と追加52画像を照合。実色選択・プレビュー全RGB・スクロール到達・適用/OK/取消/ページ初期化・他ページ値・保存失敗を検査。設定42/描画20/統合143件、全41項目と専用53本9613操作、通常/軽量配布と保存済みCSP2試料のRGBAが成功。画像の拡大境界は別の表示試験、物理DPI・性能・実編集ソフト受信は全体の残課題として扱う。"
+  },
+  {
+    "id": "S016",
+    "section": "2 背景",
+    "setting": "背景プレビュー",
+    "reference_behavior": "現在の配色とパターンを表示",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:WM_DRAWITEM / layout",
+      "src/renderer.cpp:Renderer::scene / reset_patterns",
+      "src/settings.cpp:Settings::load / save"
+    ],
+    "evidence": [
+      "settings:viewport_background_reference_defaults_and_all_presets_roundtrip",
+      "settings:viewport_background_legacy_migration_is_read_only_and_explicit_palette_wins",
+      "settings:viewport_background_invalid_values_are_bounded_without_affecting_alpha_options",
+      "render:viewport_background_matches_all_twenty_actual_reference_clients",
+      "render:empty_background_respects_palette_and_tile_while_alpha_controls_stay_independent",
+      "render:alpha_checker_and_its_solid_fallback_do_not_replace_the_outer_tile",
+      "render:background_pattern_change_keeps_d2d_target_image_and_sampling_cache",
+      "render:background_contexts_match_official_zoom_pan_fullscreen_and_empty_rois",
+      "app:background_changes_preserve_image_animation_copy_save_and_ole",
+      "autopilot:52-background.gvn",
+      "autopilot:53-background-color.gvn"
+    ],
+    "note": "0.30.0。ウィンドウ背景全体のタイルON/OFF、色1/色2、5択8/16/32/64/128pxを実装。既定はON/中/32と48、OFFでは色1としサイズ/色2を無効化して値を保持。旧INIと独立Alpha設定を維持し、背景変更では描画先・画像/サンプル・再生位置を保持。公式の通常20条件42画像と追加52画像を照合。実色選択・プレビュー全RGB・スクロール到達・適用/OK/取消/ページ初期化・他ページ値・保存失敗を検査。設定42/描画20/統合143件、全41項目と専用53本9613操作、通常/軽量配布と保存済みCSP2試料のRGBAが成功。画像の拡大境界は別の表示試験、物理DPI・性能・実編集ソフト受信は全体の残課題として扱う。"
+  },
+  {
+    "id": "S017",
+    "section": "2 背景",
+    "setting": "標準の設定に戻す",
+    "reference_behavior": "背景ページを戻す",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:reset_page",
+      "src/renderer.cpp:Renderer::scene / reset_patterns",
+      "src/settings.cpp:Settings::load / save"
+    ],
+    "evidence": [
+      "settings:viewport_background_reference_defaults_and_all_presets_roundtrip",
+      "settings:viewport_background_legacy_migration_is_read_only_and_explicit_palette_wins",
+      "settings:viewport_background_invalid_values_are_bounded_without_affecting_alpha_options",
+      "render:viewport_background_matches_all_twenty_actual_reference_clients",
+      "render:empty_background_respects_palette_and_tile_while_alpha_controls_stay_independent",
+      "render:alpha_checker_and_its_solid_fallback_do_not_replace_the_outer_tile",
+      "render:background_pattern_change_keeps_d2d_target_image_and_sampling_cache",
+      "render:background_contexts_match_official_zoom_pan_fullscreen_and_empty_rois",
+      "app:background_changes_preserve_image_animation_copy_save_and_ole",
+      "autopilot:52-background.gvn",
+      "autopilot:53-background-color.gvn"
+    ],
+    "note": "0.30.0。ウィンドウ背景全体のタイルON/OFF、色1/色2、5択8/16/32/64/128pxを実装。既定はON/中/32と48、OFFでは色1としサイズ/色2を無効化して値を保持。旧INIと独立Alpha設定を維持し、背景変更では描画先・画像/サンプル・再生位置を保持。公式の通常20条件42画像と追加52画像を照合。実色選択・プレビュー全RGB・スクロール到達・適用/OK/取消/ページ初期化・他ページ値・保存失敗を検査。設定42/描画20/統合143件、全41項目と専用53本9613操作、通常/軽量配布と保存済みCSP2試料のRGBAが成功。画像の拡大境界は別の表示試験、物理DPI・性能・実編集ソフト受信は全体の残課題として扱う。"
+  },
+  {
+    "id": "S018",
+    "section": "3 ウィンドウ",
+    "setting": "ウィンドウを画面の中央に置く",
+    "reference_behavior": "起動時に中央配置。自動サイズ調整もウィンドウ中央を基準にする",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App",
+      "src/settings.cpp:Settings",
+      "src/ui.cpp:IconToolbar"
+    ],
+    "evidence": [
+      "app:window_startup_position_state_and_reopen",
+      "app:window_styles_display_options_and_toolbar_rebuild",
+      "autopilot:10-window-startup.gvn",
+      "core:window_placement_negative_monitors_and_small_images"
+    ],
+    "note": "起動時のモニタ作業領域の中央配置と、自動サイズ調整時の現在ウィンドウ中心の維持を実装。画面外は補正する。"
+  },
+  {
+    "id": "S019",
+    "section": "3 ウィンドウ",
+    "setting": "サイズ自動調整時にツールバーより小さくしない",
+    "reference_behavior": "ツールバーが収まる横幅を下回らないようにする",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App",
+      "src/settings.cpp:Settings",
+      "src/ui.cpp:IconToolbar"
+    ],
+    "evidence": [
+      "app:window_styles_display_options_and_toolbar_rebuild",
+      "settings:window_and_bars_roundtrip_negative_coordinates_and_corruption",
+      "app:custom_window_small_sizes_keep_alpha_and_use_system_tracking_minimum",
+      "app:fit_window_measures_chrome_at_target_width_and_preserves_edited_alpha",
+      "autopilot:81-fit-window.gvn"
+    ],
+    "note": "自動サイズ調整時、ONならツールバーの一列幅を確保し、OFFならそれより小さくできる。メニューの幅は別に確保する。0.33.0で静止画の下限はWindowsの最小追跡寸法（採取時96DPIで136×39）となった。アニメでは従来340×240とプレイヤー領域の下限を保つ。ユーザー指定の起動矩形へ、この自動調整用のツールバー幅を強制しない。 0.42では変更先の幅でバー/枠を測り直し、OFFの折り返し時も画像全体を原寸で表示する。本体4件・専用49操作2画面でON/OFF、実バーの収まり、全RGBAとUndoを確認。"
+  },
+  {
+    "id": "S020",
+    "section": "3 ウィンドウ",
+    "setting": "起動時の位置",
+    "reference_behavior": "起動位置の指定方法を選ぶ",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:StartupPosition / WindowX / WindowY / WindowWidth / WindowHeight / reset_page",
+      "src/settings.cpp:Settings::load/save",
+      "src/viewer.cpp:App::show_initial / App::position_custom_window / App::minimum_window_size"
+    ],
+    "evidence": [
+      "app:window_startup_position_state_and_reopen",
+      "app:startup_defaults_fresh_empty_and_image_match_native_then_restore_position",
+      "app:startup_defaults_restore_maximized_and_keep_explicit_legacy_windows_mode",
+      "app:custom_window_small_sizes_keep_alpha_and_use_system_tracking_minimum",
+      "app:custom_window_spans_present_monitors_and_centers_actual_minimum_size",
+      "app:custom_window_large_saved_integers_keep_positive_geometry_without_endpoint_overflow",
+      "settings:window_startup_reference_defaults_preserve_explicit_old_profile_values",
+      "settings:custom_window_valid_integer_ranges_roundtrip_without_changing_legacy_corruption_recovery",
+      "autopilot:10-window-startup.gvn",
+      "autopilot:62-startup-defaults.gvn",
+      "autopilot:64-custom-window.gvn"
+    ],
+    "note": "0.33.0。公式の前回終了位置/ユーザー指定と、従来の追加選択肢Windowsに任せるを区別。新規は前回位置、保存なしは0,0,480×360。旧明示値を保持する。符号付き座標と正の1〜INT_MAX寸法、無効入力の前値保持、適用/取消/初期化/INI、静止画のWindows最小寸法、仮想デスクトップと中央配置を実装。公式28矩形は通常EXEの初回/再起動56プロセスですべて一致した。端点の符号反転は再現せず64bit計算で正の寸法を保つ。物理DWM/混在DPIは全体の実機確認として残す。"
+  },
+  {
+    "id": "S021",
+    "section": "3 ウィンドウ",
+    "setting": "ユーザー指定位置のX / Y",
+    "reference_behavior": "起動位置を数値指定",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App",
+      "src/settings.cpp:Settings",
+      "src/ui.cpp:IconToolbar"
+    ],
+    "evidence": [
+      "app:window_startup_position_state_and_reopen",
+      "autopilot:10-window-startup.gvn",
+      "settings:window_and_bars_roundtrip_negative_coordinates_and_corruption",
+      "core:window_placement_negative_monitors_and_small_images",
+      "app:custom_window_spans_present_monitors_and_centers_actual_minimum_size",
+      "app:custom_window_large_saved_integers_keep_positive_geometry_without_endpoint_overflow",
+      "autopilot:64-custom-window.gvn"
+    ],
+    "note": "0.33.0。ユーザー指定X/Yを正負の画面座標で入力・保存し、無効入力では直前の有効値を保持する。中央OFFは仮想デスクトップ内へ補正してWindowsの配置処理へ渡し、画面をまたぐ座標も保持。中央ONは指定矩形から選んだモニタの作業領域へ中央配置する。公式28矩形の初回/再起動を通常EXEで照合した。物理DWM/混在DPIは別確認。"
+  },
+  {
+    "id": "S022",
+    "section": "3 ウィンドウ",
+    "setting": "ユーザー指定位置の幅 / 高さ",
+    "reference_behavior": "起動サイズを数値指定",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App",
+      "src/settings.cpp:Settings",
+      "src/ui.cpp:IconToolbar"
+    ],
+    "evidence": [
+      "app:window_startup_position_state_and_reopen",
+      "autopilot:10-window-startup.gvn",
+      "settings:window_and_bars_roundtrip_negative_coordinates_and_corruption",
+      "app:custom_window_small_sizes_keep_alpha_and_use_system_tracking_minimum",
+      "settings:custom_window_valid_integer_ranges_roundtrip_without_changing_legacy_corruption_recovery",
+      "autopilot:64-custom-window.gvn"
+    ],
+    "note": "0.33.0。ユーザー指定の幅/高さは1〜INT_MAXの正の整数を保存する。ダイアログの0/負数/空欄/解釈不能/範囲外は前値を保持する。壊れたINIの非正寸法だけは従来の340/240へ復旧する。実表示は静止画ならWindowsの最小追跡寸法、アニメなら従来のプレイヤー最小寸法を満たし、指定値そのものは上書きしない。仮想デスクトップ/中央配置と整数端点の安全性を検査した。"
+  },
+  {
+    "id": "S023",
+    "section": "3 ウィンドウ",
+    "setting": "現在の位置とサイズ",
+    "reference_behavior": "現在値をユーザー指定欄へ取り込む",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App",
+      "src/settings.cpp:Settings",
+      "src/ui.cpp:IconToolbar"
+    ],
+    "evidence": [
+      "autopilot:10-window-startup.gvn"
+    ],
+    "note": "所有ウィンドウの実矩形をX/Y/幅/高さに取り込み、ユーザー指定方式へ切り替える。適用した値と実HWND矩形を照合した。"
+  },
+  {
+    "id": "S024",
+    "section": "3 ウィンドウ",
+    "setting": "起動時の表示状態",
+    "reference_behavior": "起動時のウィンドウ状態を選ぶ",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App",
+      "src/settings.cpp:Settings",
+      "src/ui.cpp:IconToolbar"
+    ],
+    "evidence": [
+      "app:window_startup_position_state_and_reopen",
+      "autopilot:10-window-startup.gvn",
+      "settings:window_and_bars_roundtrip_negative_coordinates_and_corruption"
+    ],
+    "note": "通常・最小化・最大化・全画面を指定できる。別Appの新規生成・INI読込と同じ起動処理、実ウィンドウ状態で照合する。"
+  },
+  {
+    "id": "S025",
+    "section": "3 ウィンドウ",
+    "setting": "前回終了時に最大化していたら最大化",
+    "reference_behavior": "起動状態が通常の場合に適用",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App",
+      "src/settings.cpp:Settings",
+      "src/ui.cpp:IconToolbar"
+    ],
+    "evidence": [
+      "app:window_startup_position_state_and_reopen",
+      "app:window_styles_display_options_and_toolbar_rebuild",
+      "autopilot:10-window-startup.gvn"
+    ],
+    "note": "起動状態が通常で前回が最大化なら最大化する。最大化から最小化して終了する場合も最大化の復元情報を保つ。明示した起動状態が優先。"
+  },
+  {
+    "id": "S026",
+    "section": "3 ウィンドウ",
+    "setting": "前回終了時に全画面表示していたら全画面表示",
+    "reference_behavior": "起動状態が通常の場合に適用。スライドの全画面オプションとは別",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:RestoreFullscreen / SlideFullscreen",
+      "src/settings.cpp:Settings::load/save",
+      "src/viewer.cpp:App::show_initial / App::start_slideshow / App::stop_slideshow / App::persisted_settings"
+    ],
+    "evidence": [
+      "app:window_startup_position_state_and_reopen",
+      "app:slideshow_window_start_stop_matches_native_six_cases",
+      "app:slideshow_close_active_and_reopen_excludes_only_automatic_fullscreen",
+      "app:slideshow_window_option_changes_take_effect_on_next_start_only",
+      "app:slideshow_load_error_and_image_close_restore_original_window",
+      "app:slideshow_window_preserves_animation_alpha_selection_and_undo",
+      "settings:slideshow_fullscreen_roundtrip_legacy_defaults_and_unrelated_values",
+      "autopilot:10-window-startup.gvn",
+      "autopilot:61-slideshow-window.gvn",
+      "autopilot:62-startup-defaults.gvn"
+    ],
+    "note": "0.33.0。通常起動で前回の手動全画面を復元し、明示した起動状態を優先する。スライドONで一時的に切り替えた全画面だけを保存から除外し、開始前の通常/最大化/手動全画面を保持。スライドOFF中の手動切替は保存する。途中の設定変更は次回開始に適用。公式6開始/停止条件、通常EXEの18終了/再起動条件、保存/取消/初期化とAlpha/コマ/選択/Undoの保持を検査した。既定Escは既存GVNの停止/全画面解除を保持する。"
+  },
+  {
+    "id": "S027",
+    "section": "3 ウィンドウ",
+    "setting": "標準の設定に戻す",
+    "reference_behavior": "ウィンドウページを戻す",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App",
+      "src/settings.cpp:Settings",
+      "src/ui.cpp:IconToolbar"
+    ],
+    "evidence": [
+      "autopilot:10-window-startup.gvn"
+    ],
+    "note": "ウィンドウページの位置・状態・復元・枠・最前面をまとめて既定値へ戻す。現在ウィンドウの位置を即時変更せず、起動用値は次の起動に使う。"
+  },
+  {
+    "id": "S028",
+    "section": "4 表示",
+    "setting": "画像をウィンドウの中央に表示",
+    "reference_behavior": "無効なら左上。ただし全画面中は中央",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::render_settings",
+      "src/core.cpp:View",
+      "src/renderer.cpp:Renderer::filter"
+    ],
+    "evidence": [
+      "app:display_alignment_zoom_policies_and_fullscreen_bounds",
+      "core:view_alignment_fit_limit_and_stepped_zoom",
+      "autopilot:09-display-zoom-quality.gvn"
+    ],
+    "note": "中央/左上を通常表示で切り替える。全画面は強制中央。スクロール端・隅・中央とズーム中心を同じ座標モデルで処理する。"
+  },
+  {
+    "id": "S029",
+    "section": "4 表示",
+    "setting": "アニメGIFの速度制限",
+    "reference_behavior": "ブラウザに似せた遅延、ループ回数解釈、異常な背景処理の扱い",
+    "state": "実装済み",
+    "implementation": [
+      "src/animation.cpp:gif_extensions / decode_animation",
+      "src/core.cpp:Player::reset / set_loop / advance",
+      "src/settings.cpp:Settings::load / save",
+      "src/preferences.cpp:GifSpeed / AnimationFileLoops",
+      "src/viewer.cpp:apply_settings / Loop / WM_TIMER"
+    ],
+    "evidence": [
+      "settings:gif_style_defaults_roundtrip_all_choices_cache_flags_and_invalid_ini",
+      "gif:gif_all_five_styles_match_reference_durations_and_loop_interpretations",
+      "gif:gif_all_sixty_reference_background_cases_match_rgb_and_alpha",
+      "gif:gif_loop_data_segmentation_is_preserved_through_public_decode_and_ignores_unknown_apps",
+      "gif:gif_late_clock_advances_one_frame_and_discards_credit_that_consumes_the_next_frame",
+      "gif:gif_clock_compensates_only_credit_inside_the_next_frame_and_firefox_discards_it",
+      "gif:apng_play_counts_above_the_png_integer_range_are_rejected",
+      "loader:gif_style_is_part_of_foreground_cache_and_prefetch_identity",
+      "app:gif_style_change_preserves_static_and_edited_image_identity",
+      "app:gif_finite_and_forced_infinite_modes_are_distinguished_by_nominal_timer_ticks",
+      "app:animation_clock_retains_fractional_milliseconds_across_timer_callbacks",
+      "autopilot:43-gif-behavior.gvn"
+    ],
+    "note": "0.23.0。公式0.45の5択/既定値、速度・ループ・背景の90ケースと描画負荷60測定を照合。GIFの短い遅延、回数のN/N+1、異常disposal、遅れの持ち越しと全コマ表示を反映。ファイル指定回数と明示ONの無限再生を分離し旧INIも移行。APNG/静止画/編集/Alphaを保持し、分割拡張・65535回・APNG31ビット上限と超過拒否を検査。全34項目・99統合ケース・専用43本7,365操作、配布10経路と実プロセス9+13+3ケースで回帰。物理提示遅延、全負荷条件、現行ブラウザの再現を保証するものではない。"
+  },
+  {
+    "id": "S030",
+    "section": "4 表示",
+    "setting": "拡大の最大倍率",
+    "reference_behavior": "ウィンドウに合わせる場合の拡大上限。手動ズームとは別",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::render_settings",
+      "src/core.cpp:View",
+      "src/renderer.cpp:Renderer::filter"
+    ],
+    "evidence": [
+      "app:display_alignment_zoom_policies_and_fullscreen_bounds",
+      "core:view_alignment_fit_limit_and_stepped_zoom",
+      "autopilot:09-display-zoom-quality.gvn"
+    ],
+    "note": "フィット表示の上限を1～5000%で指定する。原寸と手動ズームには上限を適用しない。通常・全画面の両方へ適用する。"
+  },
+  {
+    "id": "S031",
+    "section": "4 表示",
+    "setting": "%以上は単純拡大",
+    "reference_behavior": "指定倍率以上を単純拡大にする。100未満ならこの条件を無効化",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::render_settings",
+      "src/core.cpp:View",
+      "src/renderer.cpp:Renderer::filter"
+    ],
+    "evidence": [
+      "render:display_policy_separates_fit_manual_selection_and_drag",
+      "autopilot:09-display-zoom-quality.gvn"
+    ],
+    "note": "フィット表示で指定倍率以上を最近傍に切り替える。100%未満の設定は無効。手動ズームとは別の閾値。"
+  },
+  {
+    "id": "S032",
+    "section": "4 表示",
+    "setting": "縮小方法",
+    "reference_behavior": "通常ウィンドウのフィット用縮小アルゴリズム",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ensure_page",
+      "src/renderer.cpp:Renderer::filter",
+      "src/resample.cpp:resample_display",
+      "src/display_filters.cpp:resample_native_tile"
+    ],
+    "evidence": [
+      "autopilot:16-all-filters-down.gvn",
+      "autopilot:17-all-filters-up.gvn",
+      "settings:display_filter_schema_preserves_legacy_choices_and_all_native_indices",
+      "render:native_filters_match_official_reference_pixels",
+      "render:native_filters_real_renderer_matches_reference_and_keeps_source",
+      "render:visible_tile_matches_full_scaled_image_and_bounds_memory",
+      "settings:display_page_defaults_match_reference_and_preserve_explicit_filters"
+    ],
+    "note": "通常/全画面・縮小/拡大を独立指定し、元の11方式と旧GVNの3方式を選べる。旧INIの方式を移行する。全14候補の実UI・保存/再読込・リセット・RGBAコピーを検査。生成29素材の231参照出力、168実描画を最近傍は完全一致、他は各色最大2階調以内で照合。参照は元アプリの拡大縮小ダイアログ出力で、全素材の表示完全一致は保証しない。表示上限時は高速Linearへ切り替える。 0.24.0の実表示ページ初期化で通常縮小の既定Integraを確認し、新規/初期化を2へ修正。明示的な旧設定は保持し、設定39件と専用16/17で関連検査。全体回帰は別途確認する。"
+  },
+  {
+    "id": "S033",
+    "section": "4 表示",
+    "setting": "拡大方法",
+    "reference_behavior": "通常ウィンドウのフィット用拡大アルゴリズム",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ensure_page",
+      "src/renderer.cpp:Renderer::filter",
+      "src/resample.cpp:resample_display",
+      "src/display_filters.cpp:resample_native_tile"
+    ],
+    "evidence": [
+      "autopilot:16-all-filters-down.gvn",
+      "autopilot:17-all-filters-up.gvn",
+      "settings:display_filter_schema_preserves_legacy_choices_and_all_native_indices",
+      "render:native_filters_match_official_reference_pixels",
+      "render:native_filters_real_renderer_matches_reference_and_keeps_source",
+      "render:visible_tile_matches_full_scaled_image_and_bounds_memory"
+    ],
+    "note": "通常/全画面・縮小/拡大を独立指定し、元の11方式と旧GVNの3方式を選べる。旧INIの方式を移行する。全14候補の実UI・保存/再読込・リセット・RGBAコピーを検査。生成29素材の231参照出力、168実描画を最近傍は完全一致、他は各色最大2階調以内で照合。参照は元アプリの拡大縮小ダイアログ出力で、全素材の表示完全一致は保証しない。表示上限時は高速Linearへ切り替える。"
+  },
+  {
+    "id": "S034",
+    "section": "4 表示",
+    "setting": "連結する前に回転オプションの処理をする",
+    "reference_behavior": "有効なら各画像を回転後に連結。無効なら連結後に回転",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ComicRotateBefore / reset_page",
+      "include/gvn/settings.h:Settings::loading_options",
+      "src/loader.cpp:Loader",
+      "src/view_rotation.cpp:apply_view_rotation"
+    ],
+    "evidence": [
+      "view_rotation:configured_rotation_before_comic_matches_all_reference_shapes_and_directions",
+      "view_rotation:configured_rotation_after_comic_matches_all_reference_shapes_and_directions",
+      "view_rotation:configured_wide_single_policy_uses_dimensions_at_the_selected_rotation_stage",
+      "app:comic_wide_single_command_reloads_current_pair_and_preserves_sources",
+      "autopilot:44-view-rotation.gvn",
+      "autopilot:45-rotation-pending.gvn"
+    ],
+    "note": "0.29.0。各ページの回転→横長単ページ判定→連結、または判定/連結→結果の回転を切替。公式792条件で処理順・条件付き回転・正方形・左右/高さを固定し、実Settings/INIとLoaderの全画素、キャッシュ識別、実メニュー/設定の適用/取消/初期化と別ページ保持を照合した。アニメは従来どおり単画像として再生。形式別120条件のAlpha/全コマとコピー/保存/OLEを追加し、全41項目・専用51本を検証。実クリスタ受信は別の未確認項目として残す。"
+  },
+  {
+    "id": "S035",
+    "section": "4 表示",
+    "setting": "左右の縦サイズが違う場合",
+    "reference_behavior": "指定色で差分を塗り潰す、小さい方に合わせる、大きい方に合わせる",
+    "state": "実装済み",
+    "implementation": [
+      "src/comic.cpp:compose_comic_pages",
+      "src/preferences.cpp:ComicHeightMode / ComicFill / ComicDown / ComicUp",
+      "src/settings.cpp:comic_mode / comic_down / comic_up / comic_fill"
+    ],
+    "evidence": [
+      "comic:comic_all_reference_methods_and_odd_padding_match_opaque_pixels",
+      "comic:comic_padding_changes_only_gaps_and_preserves_alpha_hidden_rgb_and_direction",
+      "settings:comic_defaults_legacy_migration_all_methods_and_invalid_values",
+      "app:comic_default_matches_reference_centered_black_padding",
+      "autopilot:36-comic-options.gvn"
+    ],
+    "note": "0.20.0。指定色の中央余白/小さい方/大きい方の3方式を実装。縦横比の幅は四捨五入、奇数余白は上が切り捨て。旧GVNの最初の高さ/透明余白もINIから移行。独立参照36枚と実設定・既存切替コマンドを照合。"
+  },
+  {
+    "id": "S036",
+    "section": "4 表示",
+    "setting": "塗り潰しの色",
+    "reference_behavior": "指定色による埋め合わせ時だけ表示",
+    "state": "実装済み",
+    "implementation": [
+      "src/comic.cpp:compose_comic_pages",
+      "src/preferences.cpp:ComicHeightMode / ComicFill / ComicDown / ComicUp",
+      "src/settings.cpp:comic_mode / comic_down / comic_up / comic_fill"
+    ],
+    "evidence": [
+      "comic:comic_all_reference_methods_and_odd_padding_match_opaque_pixels",
+      "comic:comic_padding_changes_only_gaps_and_preserves_alpha_hidden_rgb_and_direction",
+      "settings:comic_defaults_legacy_migration_all_methods_and_invalid_values",
+      "app:comic_default_matches_reference_centered_black_padding",
+      "autopilot:36-comic-options.gvn"
+    ],
+    "note": "0.20.0。指定色方式の時だけ色欄と標準色選択を表示。余白だけを不透明RGBで埋め、ページ内の元Alphaと隠れたRGBは保持。実色ダイアログ・適用・取消・保存・初期化と合成画素を照合。"
+  },
+  {
+    "id": "S037",
+    "section": "4 表示",
+    "setting": "縮小方法",
+    "reference_behavior": "小さい方に合わせる場合だけ表示",
+    "state": "実装済み",
+    "implementation": [
+      "src/comic.cpp:compose_comic_pages",
+      "src/preferences.cpp:ComicHeightMode / ComicFill / ComicDown / ComicUp",
+      "src/settings.cpp:comic_mode / comic_down / comic_up / comic_fill"
+    ],
+    "evidence": [
+      "comic:comic_all_reference_methods_and_odd_padding_match_opaque_pixels",
+      "comic:comic_padding_changes_only_gaps_and_preserves_alpha_hidden_rgb_and_direction",
+      "settings:comic_defaults_legacy_migration_all_methods_and_invalid_values",
+      "app:comic_default_matches_reference_centered_black_padding",
+      "autopilot:36-comic-options.gvn"
+    ],
+    "note": "0.20.0。小さい方に合わせる時だけ漫画専用縮小欄を表示。公式の11方式を合成ワーカーへ接続し、通常/全画面の画質とは独立。参照出力、実画面の全候補、RGBA再コピーとINI・初期化を検査。"
+  },
+  {
+    "id": "S038",
+    "section": "4 表示",
+    "setting": "拡大方法",
+    "reference_behavior": "大きい方に合わせる場合だけ表示",
+    "state": "実装済み",
+    "implementation": [
+      "src/comic.cpp:compose_comic_pages",
+      "src/preferences.cpp:ComicHeightMode / ComicFill / ComicDown / ComicUp",
+      "src/settings.cpp:comic_mode / comic_down / comic_up / comic_fill"
+    ],
+    "evidence": [
+      "comic:comic_all_reference_methods_and_odd_padding_match_opaque_pixels",
+      "comic:comic_padding_changes_only_gaps_and_preserves_alpha_hidden_rgb_and_direction",
+      "settings:comic_defaults_legacy_migration_all_methods_and_invalid_values",
+      "app:comic_default_matches_reference_centered_black_padding",
+      "autopilot:36-comic-options.gvn"
+    ],
+    "note": "0.20.0。大きい方に合わせる時だけ漫画専用拡大欄を表示。公式の11方式を合成ワーカーへ接続し、通常/全画面の画質とは独立。参照出力、実画面の全候補、RGBA再コピーとINI・初期化を検査。"
+  },
+  {
+    "id": "S039",
+    "section": "4 表示",
+    "setting": "標準の設定に戻す",
+    "reference_behavior": "表示ページ全体を戻す",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:Impl::reset_page"
+    ],
+    "evidence": [
+      "autopilot:02-settings-validation.gvn",
+      "autopilot:09-display-zoom-quality.gvn",
+      "autopilot:36-comic-options.gvn",
+      "autopilot:43-gif-behavior.gvn",
+      "app:inactive_display_policy_changes_refresh_cached_views_without_resetting_active_manual_zoom",
+      "app:first_fullscreen_policy_honors_one_pixel_image_when_cached_dimensions_already_match",
+      "autopilot:50-display-default-policy.gvn",
+      "autopilot:44-view-rotation.gvn",
+      "autopilot:51-rotation-formats.gvn"
+    ],
+    "note": "0.29.0。表示ページの公式項目を含む15入力の値・適用/取消/OK/初期化、他ページの未適用値、未表示ページ、不正入力と保存失敗を実設定画面で検査した。公式の実Resetで中央ON/速度0/最大5000/単純閾値0/縮小Integra/拡大Linear/漫画の回転前OFF・色埋め・縮小Integra/拡大Linearを確認。塗り色は2種類の実色選択からReset/再読込して42余白画素が黒に戻り全RGBも復元。回転指定・横長単ページなど参照のメニュー専用値を維持し、GVN独自のページ内項目はGVNの既定へ戻す。全41項目・App142件・専用51本が成功。外部受信や他ページの未実装をこの行の成功へ含めない。"
+  },
+  {
+    "id": "S040",
+    "section": "5 ズーム",
+    "setting": "縮小時に補間する",
+    "reference_behavior": "無効なら単純縮小。選択モード中は常に単純縮小",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::render_settings",
+      "src/core.cpp:View",
+      "src/renderer.cpp:Renderer::filter"
+    ],
+    "evidence": [
+      "render:display_policy_separates_fit_manual_selection_and_drag",
+      "app:display_alignment_zoom_policies_and_fullscreen_bounds",
+      "autopilot:09-display-zoom-quality.gvn"
+    ],
+    "note": "手動ズームの縮小補間を個別にON/OFFできる。選択モードでは常に最近傍。通常・全画面の最近傍強制も優先する。"
+  },
+  {
+    "id": "S041",
+    "section": "5 ズーム",
+    "setting": "拡大時に補間する",
+    "reference_behavior": "無効なら単純拡大。選択モード中の低画質化も適用",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::render_settings",
+      "src/core.cpp:View",
+      "src/renderer.cpp:Renderer::filter"
+    ],
+    "evidence": [
+      "render:display_policy_separates_fit_manual_selection_and_drag",
+      "autopilot:09-display-zoom-quality.gvn"
+    ],
+    "note": "手動ズームの拡大補間を縮小と別にON/OFFできる。選択モードでは常に最近傍。補間ON時は線形。"
+  },
+  {
+    "id": "S042",
+    "section": "5 ズーム",
+    "setting": "%以上は単純拡大",
+    "reference_behavior": "大倍率で補間によるぼけを避ける。100未満ならこの条件を無効化",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::render_settings",
+      "src/core.cpp:View",
+      "src/renderer.cpp:Renderer::filter"
+    ],
+    "evidence": [
+      "render:display_policy_separates_fit_manual_selection_and_drag",
+      "autopilot:09-display-zoom-quality.gvn"
+    ],
+    "note": "手動ズームの指定倍率以上を最近傍に切り替える。100%未満は無効。フィット用閾値と別に保存する。"
+  },
+  {
+    "id": "S043",
+    "section": "5 ズーム",
+    "setting": "ドラッグズームの最中は低画質",
+    "reference_behavior": "操作中の処理負荷を下げる",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::render_settings",
+      "src/core.cpp:View",
+      "src/renderer.cpp:Renderer::filter"
+    ],
+    "evidence": [
+      "render:display_policy_separates_fit_manual_selection_and_drag",
+      "autopilot:09-display-zoom-quality.gvn"
+    ],
+    "note": "ドラッグズーム中だけ最近傍にするON/OFF。解放・キャプチャ解除で通常の手動ズーム画質に戻す。"
+  },
+  {
+    "id": "S044",
+    "section": "5 ズーム",
+    "setting": "ズーム倍率の変更方式",
+    "reference_behavior": "倍率ステップの方式を選ぶ",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields / Impl::reset_page",
+      "src/settings.cpp:Settings::load",
+      "src/core.cpp:stepped_zoom / View::zoom_to",
+      "src/viewer.cpp:App::step_zoom / ZoomNumber"
+    ],
+    "evidence": [
+      "core:zoom_steps_match_all_official_native_reference_transitions",
+      "settings:zoom_reference_defaults_and_high_step_range_preserve_explicit_legacy_choice",
+      "app:zoom_reference_transitions_through_numeric_input_and_app_commands_preserve_alpha",
+      "autopilot:54-zoom-reference.gvn"
+    ],
+    "note": "0.31.0。公式474条件が基盤・実App・配布本体の実数値画面で一致。段階的2を新規既定とし、指定目盛り1と旧GVN割合0を選べる。 0.31.0。全45検査・本体161件・専用59本、通常/軽量配布の各10経路、配布本体のズーム474遷移・CP/虹色31ケースが成功。実編集ソフト側の受信、物理DPI、巨大画像・多数起動の性能は全体GOALの残課題。"
+  },
+  {
+    "id": "S045",
+    "section": "5 ズーム",
+    "setting": "100%未満",
+    "reference_behavior": "「指定%ずつ」方式で、100%未満のステップ幅",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields / Impl::reset_page",
+      "src/settings.cpp:Settings::load",
+      "src/core.cpp:stepped_zoom / View::zoom_to",
+      "src/viewer.cpp:App::step_zoom / ZoomNumber"
+    ],
+    "evidence": [
+      "core:zoom_steps_match_all_official_native_reference_transitions",
+      "settings:zoom_reference_defaults_and_high_step_range_preserve_explicit_legacy_choice",
+      "app:zoom_reference_transitions_through_numeric_input_and_app_commands_preserve_alpha",
+      "autopilot:54-zoom-reference.gvn"
+    ],
+    "note": "0.31.0。指定%ずつの100%未満は100%基準の目盛りへ移動する。公式1～100ポイントと既存GVN1～400範囲を保持し、24.5%境界も実入力で照合した。 0.31.0。全45検査・本体161件・専用59本、通常/軽量配布の各10経路、配布本体のズーム474遷移・CP/虹色31ケースが成功。実編集ソフト側の受信、物理DPI、巨大画像・多数起動の性能は全体GOALの残課題。"
+  },
+  {
+    "id": "S046",
+    "section": "5 ズーム",
+    "setting": "100%以上",
+    "reference_behavior": "同方式で、100%以上のステップ幅",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields / Impl::reset_page",
+      "src/settings.cpp:Settings::load",
+      "src/core.cpp:stepped_zoom / View::zoom_to",
+      "src/viewer.cpp:App::step_zoom / ZoomNumber"
+    ],
+    "evidence": [
+      "core:zoom_steps_match_all_official_native_reference_transitions",
+      "settings:zoom_reference_defaults_and_high_step_range_preserve_explicit_legacy_choice",
+      "app:zoom_reference_transitions_through_numeric_input_and_app_commands_preserve_alpha",
+      "autopilot:54-zoom-reference.gvn"
+    ],
+    "note": "0.31.0。指定%ずつの100%以上は公式1～5000ポイントを保存・UI・計算へ接続。100%基準の目盛りとキー/ホイールの共通経路を照合した。 0.31.0。全45検査・本体161件・専用59本、通常/軽量配布の各10経路、配布本体のズーム474遷移・CP/虹色31ケースが成功。実編集ソフト側の受信、物理DPI、巨大画像・多数起動の性能は全体GOALの残課題。"
+  },
+  {
+    "id": "S047",
+    "section": "5 ズーム",
+    "setting": "標準の設定に戻す",
+    "reference_behavior": "ズームページを戻す",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields / Impl::reset_page",
+      "src/settings.cpp:Settings::load",
+      "src/core.cpp:stepped_zoom / View::zoom_to",
+      "src/viewer.cpp:App::step_zoom / ZoomNumber"
+    ],
+    "evidence": [
+      "core:zoom_steps_match_all_official_native_reference_transitions",
+      "settings:zoom_reference_defaults_and_high_step_range_preserve_explicit_legacy_choice",
+      "app:zoom_reference_transitions_through_numeric_input_and_app_commands_preserve_alpha",
+      "autopilot:54-zoom-reference.gvn"
+    ],
+    "note": "0.31.0。ズーム9項目を参照初期値へ戻す。段階的方式とドラッグ中最近傍OFF、初期化の取消/適用/再起動と他ページの未適用値保持を照合した。 0.31.0。全45検査・本体161件・専用59本、通常/軽量配布の各10経路、配布本体のズーム474遷移・CP/虹色31ケースが成功。実編集ソフト側の受信、物理DPI、巨大画像・多数起動の性能は全体GOALの残課題。"
+  },
+  {
+    "id": "S048",
+    "section": "6 全画面表示",
+    "setting": "カーソルを隠す",
+    "reference_behavior": "全画面中に通常カーソルを隠す。ボタンを押している間は表示",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::render_settings",
+      "src/core.cpp:View",
+      "src/renderer.cpp:Renderer::filter"
+    ],
+    "evidence": [
+      "app:display_alignment_zoom_policies_and_fullscreen_bounds",
+      "autopilot:09-display-zoom-quality.gvn"
+    ],
+    "note": "全画面の画像上のカーソルを隠す。ボタン押下時は表示し、待機中は別設定を使う。待機状態をWin32カーソルハンドルで照合。"
+  },
+  {
+    "id": "S049",
+    "section": "6 全画面表示",
+    "setting": "処理待ちカーソルも隠す",
+    "reference_behavior": "通常カーソルを隠す設定が有効な場合に適用",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::render_settings",
+      "src/core.cpp:View",
+      "src/renderer.cpp:Renderer::filter"
+    ],
+    "evidence": [
+      "app:display_alignment_zoom_policies_and_fullscreen_bounds",
+      "autopilot:09-display-zoom-quality.gvn"
+    ],
+    "note": "カーソル非表示ON時、読み込み待機カーソルも隠すかを指定できる。ボタン押下時は待機カーソルを表示する。"
+  },
+  {
+    "id": "S050",
+    "section": "6 全画面表示",
+    "setting": "タスクバーを隠す",
+    "reference_behavior": "無効ならタスクバーを残すサイズで全画面表示",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::render_settings",
+      "src/core.cpp:View",
+      "src/renderer.cpp:Renderer::filter"
+    ],
+    "evidence": [
+      "app:display_alignment_zoom_policies_and_fullscreen_bounds",
+      "autopilot:09-display-zoom-quality.gvn"
+    ],
+    "note": "全画面の矩形をモニタ全体/作業領域で切り替える。全画面中の適用でも即時変更。実HWNDの矩形を照合し、隔離環境外のタスクバー外観は別確認。"
+  },
+  {
+    "id": "S051",
+    "section": "6 全画面表示",
+    "setting": "縮小方法",
+    "reference_behavior": "全画面のフィット用縮小方法",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ensure_page",
+      "src/renderer.cpp:Renderer::filter",
+      "src/resample.cpp:resample_display",
+      "src/display_filters.cpp:resample_native_tile"
+    ],
+    "evidence": [
+      "autopilot:16-all-filters-down.gvn",
+      "autopilot:17-all-filters-up.gvn",
+      "settings:display_filter_schema_preserves_legacy_choices_and_all_native_indices",
+      "render:native_filters_match_official_reference_pixels",
+      "render:native_filters_real_renderer_matches_reference_and_keeps_source",
+      "render:visible_tile_matches_full_scaled_image_and_bounds_memory"
+    ],
+    "note": "通常/全画面・縮小/拡大を独立指定し、元の11方式と旧GVNの3方式を選べる。旧INIの方式を移行する。全14候補の実UI・保存/再読込・リセット・RGBAコピーを検査。生成29素材の231参照出力、168実描画を最近傍は完全一致、他は各色最大2階調以内で照合。参照は元アプリの拡大縮小ダイアログ出力で、全素材の表示完全一致は保証しない。表示上限時は高速Linearへ切り替える。"
+  },
+  {
+    "id": "S052",
+    "section": "6 全画面表示",
+    "setting": "拡大方法",
+    "reference_behavior": "全画面のフィット用拡大方法",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ensure_page",
+      "src/renderer.cpp:Renderer::filter",
+      "src/resample.cpp:resample_display",
+      "src/display_filters.cpp:resample_native_tile"
+    ],
+    "evidence": [
+      "autopilot:16-all-filters-down.gvn",
+      "autopilot:17-all-filters-up.gvn",
+      "settings:display_filter_schema_preserves_legacy_choices_and_all_native_indices",
+      "render:native_filters_match_official_reference_pixels",
+      "render:native_filters_real_renderer_matches_reference_and_keeps_source",
+      "render:visible_tile_matches_full_scaled_image_and_bounds_memory"
+    ],
+    "note": "通常/全画面・縮小/拡大を独立指定し、元の11方式と旧GVNの3方式を選べる。旧INIの方式を移行する。全14候補の実UI・保存/再読込・リセット・RGBAコピーを検査。生成29素材の231参照出力、168実描画を最近傍は完全一致、他は各色最大2階調以内で照合。参照は元アプリの拡大縮小ダイアログ出力で、全素材の表示完全一致は保証しない。表示上限時は高速Linearへ切り替える。"
+  },
+  {
+    "id": "S053",
+    "section": "6 全画面表示",
+    "setting": "全画面時に表示する",
+    "reference_behavior": "キャプションと同じ内容を画面内に表示",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields,choose_overlay_font,reset_page",
+      "src/viewer.cpp:refresh_overlay,render_settings",
+      "src/renderer.cpp:draw_overlay",
+      "src/settings.cpp:Settings"
+    ],
+    "evidence": [
+      "app:caption_overlay_visibility_interactions_and_raw_clipboard",
+      "autopilot:13-caption-overlay.gvn"
+    ],
+    "note": "キャプションへ設定する同じ文字列を描く。全画面の独立した有効/無効、ドラッグ/スクロール中の抑止と復帰を実装。"
+  },
+  {
+    "id": "S054",
+    "section": "6 全画面表示",
+    "setting": "全画面ではない時にキャプション非表示なら表示する",
+    "reference_behavior": "通常ウィンドウでもタイトルバーを消した場合に表示。選択モード中は表示しない",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields,choose_overlay_font,reset_page",
+      "src/viewer.cpp:refresh_overlay,render_settings",
+      "src/renderer.cpp:draw_overlay",
+      "src/settings.cpp:Settings"
+    ],
+    "evidence": [
+      "app:caption_overlay_visibility_interactions_and_raw_clipboard",
+      "autopilot:13-caption-overlay.gvn"
+    ],
+    "note": "通常表示ではキャプション非表示の場合だけ表示する。選択モード中は隠す。全画面とは独立して有効化できる。"
+  },
+  {
+    "id": "S055",
+    "section": "6 全画面表示",
+    "setting": "アニメーション表示中も表示する",
+    "reference_behavior": "GIF再生中にも重ねる。アニメーションが滑らかでなくなる場合あり",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields,choose_overlay_font,reset_page",
+      "src/viewer.cpp:refresh_overlay,render_settings",
+      "src/renderer.cpp:draw_overlay",
+      "src/settings.cpp:Settings"
+    ],
+    "evidence": [
+      "app:caption_overlay_visibility_interactions_and_raw_clipboard",
+      "autopilot:13-caption-overlay.gvn"
+    ],
+    "note": "GIF/APNGの再生/停止によらず、アニメ画像ではこのチェックに従う。両形式の実読込とPNGコピーのRGBA一致を試験。"
+  },
+  {
+    "id": "S056",
+    "section": "6 全画面表示",
+    "setting": "位置",
+    "reference_behavior": "画面内の表示位置",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields,choose_overlay_font,reset_page",
+      "src/viewer.cpp:refresh_overlay,render_settings",
+      "src/renderer.cpp:draw_overlay",
+      "src/settings.cpp:Settings"
+    ],
+    "evidence": [
+      "app:caption_overlay_visibility_interactions_and_raw_clipboard",
+      "autopilot:13-caption-overlay.gvn",
+      "render:caption_overlay_real_pixels_background_modes_and_layout_cache",
+      "core:caption_overlay_nine_positions_clip_and_tiny_viewport"
+    ],
+    "note": "公式0.45のDLG_PROP_04/2083から9方向を確認。全方向を実描画で検査し、画像用領域の内側へクリップする。"
+  },
+  {
+    "id": "S057",
+    "section": "6 全画面表示",
+    "setting": "背景",
+    "reference_behavior": "文字背景の表示方法",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields,choose_overlay_font,reset_page",
+      "src/viewer.cpp:refresh_overlay,render_settings",
+      "src/renderer.cpp:draw_overlay",
+      "src/settings.cpp:Settings"
+    ],
+    "evidence": [
+      "app:caption_overlay_visibility_interactions_and_raw_clipboard",
+      "autopilot:13-caption-overlay.gvn",
+      "render:caption_overlay_real_pixels_background_modes_and_layout_cache"
+    ],
+    "note": "公式0.45のDLG_PROP_04/2084の透明/塗り潰す/影を表示を実装。3背景×9位置を実描画の画素で検査する。"
+  },
+  {
+    "id": "S058",
+    "section": "6 全画面表示",
+    "setting": "フォント選択",
+    "reference_behavior": "フォントダイアログで指定",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields,choose_overlay_font,reset_page",
+      "src/viewer.cpp:refresh_overlay,render_settings",
+      "src/renderer.cpp:draw_overlay",
+      "src/settings.cpp:Settings"
+    ],
+    "evidence": [
+      "app:caption_overlay_visibility_interactions_and_raw_clipboard",
+      "autopilot:13-caption-overlay.gvn",
+      "settings:caption_overlay_font_colors_roundtrip_and_validation",
+      "autopilot:83-native-fonts.gvn",
+      "render:caption_native_fonts_match_windows_gdi_pixels_and_keep_source_and_cache",
+      "settings:caption_native_font_charset_and_large_sizes_roundtrip"
+    ],
+    "note": "0.44。Windows標準の全フォント/文字セット選択を有効にし、ラスタ/＠字体をGDIの実画素と照合。通常はDirectWriteを継続する。独自1000pt制限を撤廃し、公式0.45で1/1639/32767/32768ptの選択と再表示時の保持を確認。GVN実画面で1639ptの適用/保存/取消/リセット、ラスタ/＠字形の描画、文字セット保存と透過RGBAコピーが成功。＠字体はGDIの字形であり、キャプション全体を縦の列に回す追加機能ではない。実プリンタ出力との字形一致は対象外。0.44へ配布反映済み。",
+    "native_process_evidence": "verification/0.44.0-fonts-related.json"
+  },
+  {
+    "id": "S059",
+    "section": "6 全画面表示",
+    "setting": "文字色",
+    "reference_behavior": "文字の色",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields,choose_overlay_font,reset_page",
+      "src/viewer.cpp:refresh_overlay,render_settings",
+      "src/renderer.cpp:draw_overlay",
+      "src/settings.cpp:Settings"
+    ],
+    "evidence": [
+      "app:caption_overlay_visibility_interactions_and_raw_clipboard",
+      "autopilot:13-caption-overlay.gvn",
+      "render:caption_overlay_real_pixels_background_modes_and_layout_cache",
+      "settings:caption_overlay_font_colors_roundtrip_and_validation"
+    ],
+    "note": "16進欄と標準色ダイアログで指定。フォントダイアログの色も反映する。入力前の未適用色を選択の初期値にし、RGB変換と保存を確認。"
+  },
+  {
+    "id": "S060",
+    "section": "6 全画面表示",
+    "setting": "背景色",
+    "reference_behavior": "文字背景の色",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields,choose_overlay_font,reset_page",
+      "src/viewer.cpp:refresh_overlay,render_settings",
+      "src/renderer.cpp:draw_overlay",
+      "src/settings.cpp:Settings"
+    ],
+    "evidence": [
+      "app:caption_overlay_visibility_interactions_and_raw_clipboard",
+      "autopilot:13-caption-overlay.gvn",
+      "render:caption_overlay_real_pixels_background_modes_and_layout_cache",
+      "settings:caption_overlay_font_colors_roundtrip_and_validation"
+    ],
+    "note": "塗り潰しと影の背景色を標準色ダイアログ/16進欄で指定。変更とキャンセルの戻り値、実描画の色と保存を確認。"
+  },
+  {
+    "id": "S061",
+    "section": "6 全画面表示",
+    "setting": "標準の設定に戻す",
+    "reference_behavior": "全画面ページを戻す",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields,choose_overlay_font,reset_page",
+      "src/viewer.cpp:refresh_overlay,render_settings",
+      "src/renderer.cpp:draw_overlay",
+      "src/settings.cpp:Settings"
+    ],
+    "evidence": [
+      "app:caption_overlay_visibility_interactions_and_raw_clipboard",
+      "autopilot:13-caption-overlay.gvn"
+    ],
+    "note": "全画面ページの表示条件・位置・背景・フォント・文字色・背景色も標準へ戻す。他ページの未適用値を保持する。"
+  },
+  {
+    "id": "S062",
+    "section": "7 バー",
+    "setting": "キャプションのファイル名表示",
+    "reference_behavior": "ファイル名の表示方法を選ぶ。フルパス等の表示にも関係",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App",
+      "src/settings.cpp:Settings",
+      "src/ui.cpp:IconToolbar"
+    ],
+    "evidence": [
+      "autopilot:11-bars-customization.gvn",
+      "settings:window_and_bars_roundtrip_negative_coordinates_and_corruption",
+      "autopilot:66-caption-paths.gvn",
+      "app:caption_root_and_unc_match_reference_and_keep_edited_frame_undo"
+    ],
+    "note": "0.43。5方式を維持し、ドライブ/UNC共有の直下ではフォルダ方式でもフルパスを保持するよう修正。公式0.45の実4経路12文字列と、通常GVNの4プロセスのタイトル/全RGBAが一致。本体2件・専用69操作2画面で全画面、貼付/Undo、読込待ちも確認。ZIPはGVN拡張の書庫/内部名を保持し、書式と実表示を検査した。参照の書庫プラグインとの文字列同一性を示すものではない。0.43へ配布反映済み。",
+    "native_process_evidence": "verification/0.43.0-caption-paths-related.json"
+  },
+  {
+    "id": "S063",
+    "section": "7 バー",
+    "setting": "ツールバーを中央揃えにする",
+    "reference_behavior": "ボタン列を中央配置",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App",
+      "src/settings.cpp:Settings",
+      "src/ui.cpp:IconToolbar"
+    ],
+    "evidence": [
+      "app:window_styles_display_options_and_toolbar_rebuild",
+      "autopilot:11-bars-customization.gvn",
+      "app:minimum_window_large_bars_animation_and_visibility",
+      "autopilot:14-minimum-window.gvn"
+    ],
+    "note": "実ボタンの矩形から幅を求め、ツールバーのボタン領域を中央に配置する。折り返し時はボタンブロック全体を中央に置き、切れを検査する。 0.8.0では小窓・アニメ・メニュー折り返しとの併用時に必要高さを確保する。"
+  },
+  {
+    "id": "S064",
+    "section": "7 バー",
+    "setting": "ツールバー上部に横線を表示する",
+    "reference_behavior": "次回起動時から反映",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App",
+      "src/settings.cpp:Settings",
+      "src/ui.cpp:IconToolbar"
+    ],
+    "evidence": [
+      "app:window_styles_display_options_and_toolbar_rebuild",
+      "autopilot:11-bars-customization.gvn",
+      "settings:window_and_bars_roundtrip_negative_coordinates_and_corruption",
+      "app:minimum_window_large_bars_animation_and_visibility",
+      "autopilot:14-minimum-window.gvn"
+    ],
+    "note": "上端の横線をON/OFFできる。保存して次の起動でも適用する。GVNでは設定の適用時にも即時反映する。 0.8.0では小窓・アニメ・メニュー折り返しとの併用時に必要高さを確保する。"
+  },
+  {
+    "id": "S065",
+    "section": "7 バー",
+    "setting": "ツールバーのボタンを大きくする",
+    "reference_behavior": "次回起動時から反映",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App",
+      "src/settings.cpp:Settings",
+      "src/ui.cpp:IconToolbar"
+    ],
+    "evidence": [
+      "app:window_styles_display_options_and_toolbar_rebuild",
+      "app:bars_autohide_fullscreen_and_animation_layout",
+      "autopilot:11-bars-customization.gvn",
+      "settings:window_and_bars_roundtrip_negative_coordinates_and_corruption",
+      "app:minimum_window_large_bars_animation_and_visibility",
+      "autopilot:14-minimum-window.gvn"
+    ],
+    "note": "通常16px/24pxボタン、大24px/32pxボタンを切り替え、DPIに比例させる。上部と下部プレイヤーへ共通適用。再構築後も無効状態・チェック・操作名を維持する。 0.8.0では小窓・アニメ・メニュー折り返しとの併用時に必要高さを確保する。"
+  },
+  {
+    "id": "S066",
+    "section": "7 バー",
+    "setting": "カーソル位置により自動的にツールバーを表示 / 非表示",
+    "reference_behavior": "通常ウィンドウでの自動表示。全画面中はこの設定に関係なく自動表示",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App",
+      "src/settings.cpp:Settings",
+      "src/ui.cpp:IconToolbar"
+    ],
+    "evidence": [
+      "app:bars_autohide_fullscreen_and_animation_layout",
+      "autopilot:11-bars-customization.gvn"
+    ],
+    "note": "通常時の自動表示ON/OFF、全画面での自動表示、全画面独立の有効/無効を実装。バー自身でもCtrl/Shiftで抑止し、退出で隠す。隔離試験ではカーソル位置だけを供給し、実メッセージ経路を通す。"
+  },
+  {
+    "id": "S067",
+    "section": "7 バー",
+    "setting": "カーソル位置により自動的にステータスバーを表示 / 非表示",
+    "reference_behavior": "同上",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App",
+      "src/settings.cpp:Settings",
+      "src/ui.cpp:IconToolbar"
+    ],
+    "evidence": [
+      "app:bars_autohide_fullscreen_and_animation_layout",
+      "autopilot:11-bars-customization.gvn"
+    ],
+    "note": "ステータスも同様に独立した有効/無効と端での自動表示を持つ。Ctrl/Shiftで抑止する。アニメプレイヤーは表示中のステータスの上に配置する。"
+  },
+  {
+    "id": "S068",
+    "section": "7 バー",
+    "setting": "標準の設定に戻す",
+    "reference_behavior": "バーページを戻す",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App",
+      "src/settings.cpp:Settings",
+      "src/ui.cpp:IconToolbar"
+    ],
+    "evidence": [
+      "autopilot:11-bars-customization.gvn",
+      "autopilot:12-canvas-scrollbars.gvn"
+    ],
+    "note": "バーの外観、自動表示、通常/全画面の有効状態、ファイル名方式を既定値に戻す。GVN追加の通常/全画面画像スクロールバーも戻す。適用で実コントロールを更新する。"
+  },
+  {
+    "id": "S069",
+    "section": "8 移動",
+    "setting": "スキップ数",
+    "reference_behavior": "前後スキップで移動するファイル数",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:SkipCount",
+      "src/viewer.cpp:SkipNext,SkipBack"
+    ],
+    "evidence": [
+      "autopilot:04-settings-behavior.gvn",
+      "app:skip_and_slideshow_advance_without_wrap",
+      "autopilot:31-movement-settings.gvn",
+      "autopilot:32-boundary-dialog.gvn",
+      "app:movement_boundary_modes_clamp_skip_confirm_loop_and_folder"
+    ],
+    "note": "1〜100000枚、既定10枚。途中からの大きいスキップはまず端へ進み、すでに端なら終端設定を使う。専用04/31/32とApp試験で照合。"
+  },
+  {
+    "id": "S070",
+    "section": "8 移動",
+    "setting": "次の / 前のフォルダ等で開いたフォルダも履歴に追加",
+    "reference_behavior": "フォルダ移動による訪問も履歴へ逐次登録",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:folder_history",
+      "src/settings.cpp:Settings::load/save",
+      "src/viewer.cpp:App::commit_open_history/WM_CLOSE"
+    ],
+    "evidence": [
+      "app:folder_history_suppression_explicit_departure_and_global_disable",
+      "settings:movement_modes_preserve_legacy_stop_loop_and_roundtrip_independent_options",
+      "app:folder_history_is_saved_on_close_even_when_navigation_visits_are_suppressed",
+      "autopilot:31-movement-settings.gvn"
+    ],
+    "note": "0.16.0。フォルダ移動だけの履歴追加を独立指定。OFFならその中の画像移動も抑制し、明示した別ファイルを開く時と終了時に現在フォルダを記録する。全般の履歴保存OFFを優先。専用31と終了時保存のApp試験、INI往復を照合。"
+  },
+  {
+    "id": "S071",
+    "section": "8 移動",
+    "setting": "前のフォルダでフォルダの先頭へ移動",
+    "reference_behavior": "無効なら末尾。終端通知ダイアログの「前のフォルダへ」とは別の設定",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:previous_folder_first",
+      "src/settings.cpp:Settings::load/save",
+      "src/viewer.cpp:App::move_folder"
+    ],
+    "evidence": [
+      "app:folder_commands_depth_first_empty_adjacent_and_independent_head_choices",
+      "settings:movement_modes_preserve_legacy_stop_loop_and_roundtrip_independent_options",
+      "autopilot:31-movement-settings.gvn",
+      "autopilot:32-boundary-dialog.gvn"
+    ],
+    "note": "0.16.0。通常の前フォルダを深さ優先の逆順で探し、独立指定で先頭/末尾を開く。終端確認・自動終端からの前フォルダは、この指定とは独立して末尾を開く。専用31/32で実画像のパスと表示を照合。"
+  },
+  {
+    "id": "S072",
+    "section": "8 移動",
+    "setting": "前隣のフォルダでフォルダの先頭へ移動",
+    "reference_behavior": "無効なら末尾",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:adjacent_previous_first",
+      "src/settings.cpp:Settings::load/save",
+      "src/viewer.cpp:App::move_folder"
+    ],
+    "evidence": [
+      "app:folder_commands_depth_first_empty_adjacent_and_independent_head_choices",
+      "settings:movement_modes_preserve_legacy_stop_loop_and_roundtrip_independent_options",
+      "autopilot:31-movement-settings.gvn"
+    ],
+    "note": "0.16.0。同階層の前隣で独立した先頭/末尾を選ぶ。空なら画像・Undo・再生を解放して市松表示へ戻り、そのフォルダ位置を保持する。専用31で両指定と空フォルダを照合。"
+  },
+  {
+    "id": "S073",
+    "section": "8 移動",
+    "setting": "親フォルダでフォルダの先頭へ移動",
+    "reference_behavior": "無効なら末尾",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:parent_first",
+      "src/settings.cpp:Settings::load/save",
+      "src/viewer.cpp:App::move_folder"
+    ],
+    "evidence": [
+      "app:folder_commands_depth_first_empty_adjacent_and_independent_head_choices",
+      "settings:movement_modes_preserve_legacy_stop_loop_and_roundtrip_independent_options",
+      "autopilot:31-movement-settings.gvn"
+    ],
+    "note": "0.16.0。親フォルダは一段上へ移動し、独立した先頭/末尾を開く。空でも位置を保持。専用31で設定の両状態を実画像と照合。"
+  },
+  {
+    "id": "S074",
+    "section": "8 移動",
+    "setting": "最後 / 最初に到達した時",
+    "reference_behavior": "終端での動作を選ぶ。全選択肢は文章に列挙されていない",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:end_action",
+      "src/settings.cpp:Settings::load/save",
+      "src/viewer.cpp:App::end_of_folder",
+      "src/ui.cpp:choose_boundary"
+    ],
+    "evidence": [
+      "app:movement_boundary_modes_clamp_skip_confirm_loop_and_folder",
+      "settings:movement_modes_preserve_legacy_stop_loop_and_roundtrip_independent_options",
+      "autopilot:31-movement-settings.gvn",
+      "autopilot:32-boundary-dialog.gvn"
+    ],
+    "note": "0.16.0。停止・確認・同フォルダ内ループ・前後フォルダの4動作。途中からの大きいスキップはまず端へ進む。旧INIの停止/ループを維持。専用32で実終端画面7回・全3ボタン・両方向と4動作を照合。"
+  },
+  {
+    "id": "S075",
+    "section": "8 移動",
+    "setting": "最後 / 最初に到達した時に音を鳴らす",
+    "reference_behavior": "通知ダイアログを出さない設定でも音を鳴らせる",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:boundary_sound",
+      "src/settings.cpp:Settings::load/save",
+      "src/viewer.cpp:App::end_of_folder"
+    ],
+    "evidence": [
+      "app:movement_boundary_modes_clamp_skip_confirm_loop_and_folder",
+      "settings:movement_modes_preserve_legacy_stop_loop_and_roundtrip_independent_options",
+      "autopilot:31-movement-settings.gvn",
+      "autopilot:32-boundary-dialog.gvn"
+    ],
+    "note": "0.16.0。音ONの終端だけでMessageBeepを要求し、確認画面を出さないモードでも有効。専用32で実設定から8回の要求とOFF時の無要求を照合。自動試験では音のAPI境界で数え、実音を鳴らさない。"
+  },
+  {
+    "id": "S076",
+    "section": "8 移動",
+    "setting": "右から左の漫画モードでツールバーの前 / 次を逆にする",
+    "reference_behavior": "機能は反転するがボタン画像はそのまま",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:comic_toolbar_reverse",
+      "src/settings.cpp:Settings::load/save",
+      "src/viewer.cpp:App::message/WM_COMMAND"
+    ],
+    "evidence": [
+      "app:movement_toolbar_reverse_keeps_menu_shortcuts_and_button_bitmaps",
+      "settings:movement_modes_preserve_legacy_stop_loop_and_roundtrip_independent_options",
+      "autopilot:31-movement-settings.gvn"
+    ],
+    "note": "0.16.0。右から左の漫画モードでツールバー由来の前/次だけを反転し、ボタン画像は維持。メニューとキーの意味を変えず、表示名は実処理へ合わせる。専用31で実ボタン・キー・ON/OFF・左右方向、App試験で画像番号とボタン画像を照合。"
+  },
+  {
+    "id": "S077",
+    "section": "8 移動",
+    "setting": "右から左の漫画モードでジャンプのスクロールバーを逆にする",
+    "reference_behavior": "先頭と末尾の対応を反転",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:comic_jump_reverse",
+      "src/settings.cpp:Settings::load/save",
+      "src/viewer.cpp:App::command/Jump",
+      "src/jump_dialog.cpp:JumpDialog::Impl::scroll"
+    ],
+    "evidence": [
+      "settings:jump_options_defaults_legacy_roundtrip_and_invalid_values",
+      "app:jump_cancels_pending_load_and_honors_all_comic_direction_flags",
+      "jump_ui:jump_scroll_normal_and_reverse_with_32bit_order_range",
+      "autopilot:33-jump-dialog.gvn"
+    ],
+    "note": "0.17.0。実ジャンプ画面の番号・名前・総数・プレビュー・品質と水平バーを接続。漫画/右から左/この設定の3条件が揃う時だけ左右を逆にし、番号と並び順は維持。実設定欄と実スクロール、全8条件、32bit範囲と旧INI既定値を検査。"
+  },
+  {
+    "id": "S078",
+    "section": "8 移動",
+    "setting": "標準の設定に戻す",
+    "reference_behavior": "移動ページを戻す",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:Impl::reset_page"
+    ],
+    "evidence": [
+      "autopilot:02-settings-validation.gvn",
+      "autopilot:31-movement-settings.gvn",
+      "autopilot:33-jump-dialog.gvn"
+    ],
+    "note": "0.17.0。専用31で既存の全移動設定、専用33でジャンプ反転の初期化・適用・取消とINIを照合。未適用の他ページを保存せず、ジャンプ画面自身のプレビュー/品質設定は移動ページの初期化対象に含めない。"
+  },
+  {
+    "id": "S079",
+    "section": "9 ファイル操作",
+    "setting": "上書き保存でもダイアログを開く",
+    "reference_behavior": "保存形式ごとの設定を表示。プラグイン画像ではこの設定に関係なく別名保存となる",
+    "state": "実装済み",
+    "implementation": [
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:Page::FileOperations",
+      "src/viewer.cpp:App::save/transfer_file/FileDelete",
+      "src/save_dialog.cpp:choose_save_file",
+      "src/saving.cpp:encode_png/encode_jpeg",
+      "src/saving_indexed.cpp:encode_bmp/encode_gif",
+      "src/saving_file.cpp:save_image",
+      "src/indexed_loading.h:read_indexed/read_indexed_rle_bmp",
+      "src/core.cpp:IndexedPixels/Image::bytes",
+      "src/edit.cpp:transform_indices",
+      "src/indexed_loading.h:indexed_logical_screen",
+      "src/palette_edit.cpp:edit_palette",
+      "src/palette_dialog.cpp:PaletteDialog",
+      "src/viewer.cpp:App::palette_edit",
+      "src/color_depth.cpp:convert_color_depth",
+      "src/color_depth_dialog.cpp:ColorDepthDialog",
+      "src/viewer.cpp:App::color_depth_edit"
+    ],
+    "evidence": [
+      "settings:file_operation_options_defaults_and_roundtrip",
+      "app:save_dialog_overwrite_and_remembered_folder_policy",
+      "autopilot:26-file-operations.gvn",
+      "settings:save_format_options_roundtrip_every_field_and_enum",
+      "app:save_format_proposals_commit_only_after_success",
+      "app:save_command_routes_each_format_options_to_actual_files",
+      "autopilot:27-saving-options.gvn",
+      "autopilot:28-palette-preservation.gvn",
+      "settings:bmp_16_save_depth_roundtrips_and_invalid_neighboring_values_remain_rejected",
+      "autopilot:85-bmp16-save.gvn",
+      "autopilot:86-bmp-auto-depth.gvn",
+      "autopilot:87-gif-logical-palette.gvn",
+      "autopilot:88-palette-editor.gvn",
+      "app:color_depth_command_choices_alpha_copy_save_and_undo_preserve_source",
+      "app:color_depth_cancel_late_source_and_failures_preserve_image_undo_and_preference",
+      "app:color_depth_animation_confirm_current_frame_alpha_and_undo_keep_original_animation",
+      "app:color_depth_effective_metadata_and_failed_preference_save_keep_previous_undo",
+      "autopilot:89-color-depth.gvn",
+      "app:static_gif_loading_and_save_dialog_option_keep_original_indices_and_source_animation",
+      "app:animated_gif_current_frame_copy_save_crop_and_undo_keep_source_numbers_and_alpha"
+    ],
+    "note": "0.52照合で保存ダイアログON/OFF・4形式の設定/確定/取消を実装済みと確認。参照版はアニメ表示中の保存/コピーが無効、OFFでは先頭コマを元番号/全256色表で保存でき、GVNも追加Appで一致。別拡張の合成GIF現在コマの元番号保持は0.53.0で実装・確認した。表現可能なコマで元番号を保持し、局所色表の矛盾等はRGBA出力へ戻す。通常/軽量0.53.0へ反映。実受信等の全体残件は維持。",
+    "native_process_evidence": "verification/0.52.0-animated-saving-related.json"
+  },
+  {
+    "id": "S080",
+    "section": "9 ファイル操作",
+    "setting": "上書き保存の前に上書き確認する",
+    "reference_behavior": "通常の上書き時の確認。別名保存の同名確認は設定によらず行う",
+    "state": "実装済み",
+    "implementation": [
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:Page::FileOperations",
+      "src/viewer.cpp:App::save/transfer_file/FileDelete"
+    ],
+    "evidence": [
+      "settings:file_operation_options_defaults_and_roundtrip",
+      "app:save_dialog_overwrite_and_remembered_folder_policy",
+      "autopilot:26-file-operations.gvn"
+    ],
+    "note": "通常保存の確認を切り替え、別名保存の同名確認は常に行う。確認拒否・許可、未確認の上書き禁止と保存先バイトを検査。"
+  },
+  {
+    "id": "S081",
+    "section": "9 ファイル操作",
+    "setting": "名前を付けて保存のパスを保持する",
+    "reference_behavior": "前回保存したフォルダを次回の基点にする",
+    "state": "実装済み",
+    "implementation": [
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:Page::FileOperations",
+      "src/viewer.cpp:App::save/transfer_file/FileDelete"
+    ],
+    "evidence": [
+      "settings:file_operation_options_defaults_and_roundtrip",
+      "app:save_dialog_overwrite_and_remembered_folder_policy",
+      "autopilot:26-file-operations.gvn"
+    ],
+    "note": "成功した別名保存先だけを記憶し、次回の初期フォルダへ反映。OFF、キャンセル、INI再読込を検査。"
+  },
+  {
+    "id": "S082",
+    "section": "9 ファイル操作",
+    "setting": "ファイル名変更後に表示順を整理",
+    "reference_behavior": "リネーム後に一覧を並べ直す",
+    "state": "実装済み",
+    "implementation": [
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:Page::FileOperations",
+      "src/viewer.cpp:App::save/transfer_file/FileDelete"
+    ],
+    "evidence": [
+      "settings:file_operation_options_defaults_and_roundtrip",
+      "app:rename_resort_preserves_pixels_view_dirty_and_undo",
+      "autopilot:26-file-operations.gvn"
+    ],
+    "note": "ONで改名後に再ソート、OFFで位置を保持。再デコードせず画素・倍率・編集状態・Undoのパスを保つことを検査。"
+  },
+  {
+    "id": "S083",
+    "section": "9 ファイル操作",
+    "setting": "削除する前に確認する",
+    "reference_behavior": "削除確認。Windowsのごみ箱設定によって表示されない場合あり",
+    "state": "実装済み",
+    "implementation": [
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:Page::FileOperations",
+      "src/viewer.cpp:App::save/transfer_file/FileDelete"
+    ],
+    "evidence": [
+      "settings:file_operation_options_defaults_and_roundtrip",
+      "app:delete_confirm_modes_failure_advance_and_gap_rollback",
+      "autopilot:26-file-operations.gvn"
+    ],
+    "note": "ごみ箱/直接削除の文面と確認ON/OFFを独立設定。拒否・許可・ロック失敗後の表示保持を検査。"
+  },
+  {
+    "id": "S084",
+    "section": "9 ファイル操作",
+    "setting": "削除したファイルはごみ箱へ",
+    "reference_behavior": "無効なら直接削除。OS設定により有効でも直接削除になる場合あり",
+    "state": "実装済み",
+    "implementation": [
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:Page::FileOperations",
+      "src/viewer.cpp:App::save/transfer_file/FileDelete",
+      "src/file_operations.cpp"
+    ],
+    "evidence": [
+      "settings:file_operation_options_defaults_and_roundtrip",
+      "app:delete_confirm_modes_failure_advance_and_gap_rollback",
+      "autopilot:26-file-operations.gvn"
+    ],
+    "note": "Shellごみ箱と直接削除を切替。アプリの経路と、GUID専用PNGの実Shell送信・復元・バイト一致を別々に検査。全ドライブのごみ箱設定を保証しない。"
+  },
+  {
+    "id": "S085",
+    "section": "9 ファイル操作",
+    "setting": "削除や移動したら次のファイルを表示",
+    "reference_behavior": "ファイル整理後に次の画像へ進む",
+    "state": "実装済み",
+    "implementation": [
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:Page::FileOperations",
+      "src/viewer.cpp:App::save/transfer_file/FileDelete"
+    ],
+    "evidence": [
+      "settings:file_operation_options_defaults_and_roundtrip",
+      "app:delete_without_advance_keeps_alpha_and_navigation_gap",
+      "autopilot:26-file-operations.gvn"
+    ],
+    "note": "既定OFF。削除後も透明画像を保持してコピー可能、手動の前後移動は欠番位置を考慮。ONで元一覧の次/末尾/残り0枚を検査。移動OFFは移動先フォルダへ追随。"
+  },
+  {
+    "id": "S086",
+    "section": "9 ファイル操作",
+    "setting": "ファイルを移動する時に上書き確認する",
+    "reference_behavior": "移動ダイアログと、登録先への直接移動に共通",
+    "state": "実装済み",
+    "implementation": [
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:Page::FileOperations",
+      "src/viewer.cpp:App::save/transfer_file/FileDelete",
+      "src/file_operations.cpp"
+    ],
+    "evidence": [
+      "settings:file_operation_options_defaults_and_roundtrip",
+      "app:copy_move_independent_confirmation_relative_paths_and_failures",
+      "autopilot:26-file-operations.gvn"
+    ],
+    "note": "移動の同名確認をコピーとは独立に切替。選択先と登録先は同じ経路。相対パスは元画像のフォルダ基準。同一ファイルを拒否。"
+  },
+  {
+    "id": "S087",
+    "section": "9 ファイル操作",
+    "setting": "ファイルをコピーする時に上書き確認する",
+    "reference_behavior": "コピーダイアログと、登録先への直接コピーに共通",
+    "state": "実装済み",
+    "implementation": [
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:Page::FileOperations",
+      "src/viewer.cpp:App::save/transfer_file/FileDelete",
+      "src/file_operations.cpp"
+    ],
+    "evidence": [
+      "settings:file_operation_options_defaults_and_roundtrip",
+      "app:copy_move_independent_confirmation_relative_paths_and_failures",
+      "autopilot:26-file-operations.gvn"
+    ],
+    "note": "コピーの同名確認を移動とは独立に切替。拒否/許可、既存先、ロック、元画像の保持を検査。確定前は一時ファイルへコピー。"
+  },
+  {
+    "id": "S088",
+    "section": "9 ファイル操作",
+    "setting": "標準の設定に戻す",
+    "reference_behavior": "ファイル操作ページを戻す",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:Impl::reset_page",
+      "src/settings.cpp:Settings::load/save"
+    ],
+    "evidence": [
+      "autopilot:26-file-operations.gvn",
+      "autopilot:29-registered-destinations.gvn",
+      "settings:registered_destinations_migrate_legacy_and_keep_explicit_empty_slots",
+      "settings:registered_destinations_twenty_independent_values_roundtrip",
+      "autopilot:30-file-transfer-dialog.gvn",
+      "settings:file_transfer_dialog_modes_basic_paths_and_old_settings_roundtrip"
+    ],
+    "note": "0.15.0で既存10設定とコピー/移動各10登録先に加え、基本パス2件と基本/10件モード2件の初期化を実画面で照合。専用26/29/30で入力・適用・取消・再表示、別ページの編集中の値の保持を検査。形式別の保存オプションは別画面のためページの初期化対象外。"
+  },
+  {
+    "id": "S089",
+    "section": "10 ファイル読み込み",
+    "setting": "透過BMPを透過表示",
+    "reference_behavior": "V4 / V5ヘッダの、アルファマスクが有効なビットフィールドBMPを対象とする",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:Settings",
+      "src/settings.cpp:Settings",
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::apply_settings",
+      "src/codecs.cpp:decode",
+      "src/animation.cpp:decode_animation",
+      "src/loading.h:finish_loading",
+      "src/loader.cpp:Loader"
+    ],
+    "evidence": [
+      "autopilot:18-loading-options.gvn",
+      "settings:loading_settings_roundtrip_validation_and_legacy_attribute_migration",
+      "app:loading_options_reload_without_changing_clipboard_or_edited_images",
+      "app:loading_animation_orientation_archive_and_attribute_settings",
+      "codecs:loading_transparency_preserve_ignore_and_composite",
+      "loader:loading_options_are_part_of_cache_identity"
+    ],
+    "note": "V4/V5のアルファ付きBMPを検査。透過ONは既定でRGBAを保持し、アルファ保持OFFなら背景と合成。透過OFFでは元の色を不透明にする。元ファイルは変更しない。"
+  },
+  {
+    "id": "S090",
+    "section": "10 ファイル読み込み",
+    "setting": "透過GIFを透過表示",
+    "reference_behavior": "アニメーション表示中は設定によらず透明情報を利用",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:Settings",
+      "src/settings.cpp:Settings",
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::apply_settings",
+      "src/codecs.cpp:decode",
+      "src/animation.cpp:decode_animation",
+      "src/loading.h:finish_loading",
+      "src/loader.cpp:Loader"
+    ],
+    "evidence": [
+      "autopilot:18-loading-options.gvn",
+      "settings:loading_settings_roundtrip_validation_and_legacy_attribute_migration",
+      "app:loading_options_reload_without_changing_clipboard_or_edited_images",
+      "app:loading_animation_orientation_archive_and_attribute_settings",
+      "codecs:gif_loading_static_animation_first_frame_and_embedded_background",
+      "loader:loading_options_are_part_of_cache_identity"
+    ],
+    "note": "静止GIFの透過ON/OFF、背景合成、アニメ中に透過情報を利用する条件を検査。透過無効時は透明インデックスの元のパレット色を保持する。"
+  },
+  {
+    "id": "S091",
+    "section": "10 ファイル読み込み",
+    "setting": "GIF背景色を利用",
+    "reference_behavior": "ファイルに背景色があれば透過表示の背景に使う",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:Settings",
+      "src/settings.cpp:Settings",
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::apply_settings",
+      "src/codecs.cpp:decode",
+      "src/animation.cpp:decode_animation",
+      "src/loading.h:finish_loading",
+      "src/loader.cpp:Loader"
+    ],
+    "evidence": [
+      "autopilot:18-loading-options.gvn",
+      "settings:loading_settings_roundtrip_validation_and_legacy_attribute_migration",
+      "app:loading_options_reload_without_changing_clipboard_or_edited_images",
+      "app:loading_animation_orientation_archive_and_attribute_settings",
+      "codecs:gif_loading_static_animation_first_frame_and_embedded_background",
+      "loader:loading_options_are_part_of_cache_identity"
+    ],
+    "note": "アルファ保持OFFの背景合成で、GIFの背景色を使うか選択する。保持ONではRGBAを変更しない。"
+  },
+  {
+    "id": "S092",
+    "section": "10 ファイル読み込み",
+    "setting": "透過PNGを透過表示",
+    "reference_behavior": "透明色情報付き、ビット深度16のPNGは対象外",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:Settings",
+      "src/settings.cpp:Settings",
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::apply_settings",
+      "src/codecs.cpp:decode",
+      "src/animation.cpp:decode_animation",
+      "src/loading.h:finish_loading",
+      "src/loader.cpp:Loader"
+    ],
+    "evidence": [
+      "autopilot:18-loading-options.gvn",
+      "settings:loading_settings_roundtrip_validation_and_legacy_attribute_migration",
+      "app:loading_options_reload_without_changing_clipboard_or_edited_images",
+      "app:loading_animation_orientation_archive_and_attribute_settings",
+      "codecs:loading_transparency_preserve_ignore_and_composite",
+      "loader:loading_options_are_part_of_cache_identity"
+    ],
+    "note": "PNG/APNGの透過を独立選択。既定はRGBA保持。保持OFFで背景合成、透過OFFで元の色を不透明化。16bitと透明色情報のWIC対応を利用し、旧制限は再現しない。"
+  },
+  {
+    "id": "S093",
+    "section": "10 ファイル読み込み",
+    "setting": "PNG背景色を利用",
+    "reference_behavior": "ファイル内の背景色を利用",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:Settings",
+      "src/settings.cpp:Settings",
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::apply_settings",
+      "src/codecs.cpp:decode",
+      "src/animation.cpp:decode_animation",
+      "src/loading.h:finish_loading",
+      "src/loader.cpp:Loader"
+    ],
+    "evidence": [
+      "autopilot:18-loading-options.gvn",
+      "settings:loading_settings_roundtrip_validation_and_legacy_attribute_migration",
+      "app:loading_options_reload_without_changing_clipboard_or_edited_images",
+      "app:loading_animation_orientation_archive_and_attribute_settings",
+      "codecs:png_embedded_backgrounds_rgb_indexed_low_depth_and_16bit",
+      "loader:loading_options_are_part_of_cache_identity"
+    ],
+    "note": "PNGのRGB/パレット/2bitグレー/16bitの背景色とAPNG背景を検査。背景色情報がない時は選択色へ戻る。"
+  },
+  {
+    "id": "S094",
+    "section": "10 ファイル読み込み",
+    "setting": "透過表示の背景色",
+    "reference_behavior": "読み込み時の合成先背景色",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:Settings",
+      "src/settings.cpp:Settings",
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::apply_settings",
+      "src/codecs.cpp:decode",
+      "src/animation.cpp:decode_animation",
+      "src/loading.h:finish_loading",
+      "src/loader.cpp:Loader"
+    ],
+    "evidence": [
+      "autopilot:18-loading-options.gvn",
+      "settings:loading_settings_roundtrip_validation_and_legacy_attribute_migration",
+      "app:loading_options_reload_without_changing_clipboard_or_edited_images",
+      "app:loading_animation_orientation_archive_and_attribute_settings",
+      "codecs:png_embedded_backgrounds_rgb_indexed_low_depth_and_16bit",
+      "loader:loading_options_are_part_of_cache_identity"
+    ],
+    "note": "合成用RGB色を直接入力または実色選択から変更。確定/キャンセル、PNG・BMP・GIFへの反映、保持ON時の不変、保存とリセットを検査。"
+  },
+  {
+    "id": "S095",
+    "section": "10 ファイル読み込み",
+    "setting": "アニメGIFをアニメーション表示",
+    "reference_behavior": "無効なら最初のフレームだけを表示",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:Settings",
+      "src/settings.cpp:Settings",
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::apply_settings",
+      "src/codecs.cpp:decode",
+      "src/animation.cpp:decode_animation",
+      "src/loading.h:finish_loading",
+      "src/loader.cpp:Loader"
+    ],
+    "evidence": [
+      "autopilot:18-loading-options.gvn",
+      "settings:loading_settings_roundtrip_validation_and_legacy_attribute_migration",
+      "app:loading_options_reload_without_changing_clipboard_or_edited_images",
+      "app:loading_animation_orientation_archive_and_attribute_settings",
+      "codecs:gif_loading_static_animation_first_frame_and_embedded_background",
+      "loader:loading_options_are_part_of_cache_identity"
+    ],
+    "note": "GIFアニメ表示をOFFにするとWICで先頭コマだけを読み、論理画面と開始位置を反映。後続全フレームのメモリは不要。自動再生とAPNG表示とは独立。"
+  },
+  {
+    "id": "S096",
+    "section": "10 ファイル読み込み",
+    "setting": "JPEGのExif情報に従い回転して表示",
+    "reference_behavior": "方向情報を使って表示。ファイルを書き換えない",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:Settings",
+      "src/settings.cpp:Settings",
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::apply_settings",
+      "src/codecs.cpp:decode",
+      "src/animation.cpp:decode_animation",
+      "src/loading.h:finish_loading",
+      "src/loader.cpp:Loader"
+    ],
+    "evidence": [
+      "autopilot:18-loading-options.gvn",
+      "settings:loading_settings_roundtrip_validation_and_legacy_attribute_migration",
+      "app:loading_options_reload_without_changing_clipboard_or_edited_images",
+      "app:loading_animation_orientation_archive_and_attribute_settings",
+      "codecs:jpeg_loading_orientation_all_eight_values_can_be_disabled",
+      "loader:loading_options_are_part_of_cache_identity"
+    ],
+    "note": "JPEGのExif全8方向とOFFを独立参照画像で照合。5/7の逆転を修正。ファイルは変更せず、設定変更で未編集画像を読み直す。"
+  },
+  {
+    "id": "S097",
+    "section": "10 ファイル読み込み",
+    "setting": "ビットフィールド画像を読み込んだら自動的に24 BPP化",
+    "reference_behavior": "表示品質のための内部変換。ファイルを書き換えない。True Color画面以外では意味がないとされる",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/loading.h:LoadingOptions::bitfield_to24 / flags",
+      "include/gvn/settings.h:Settings::bitfield_to24 / loading_options",
+      "src/preferences.cpp:BitfieldTo24",
+      "src/image_metadata.cpp:normalize_bmp_bitfields",
+      "src/codecs.cpp:decode",
+      "src/viewer.cpp:apply_settings"
+    ],
+    "evidence": [
+      "app:bitfield_loading_toggle_reloads_cached_file_and_archive_but_preserves_edits_clipboard_and_alpha",
+      "settings:loading_settings_roundtrip_validation_and_legacy_attribute_migration",
+      "autopilot:91-bitfield-loading.gvn"
+    ],
+    "note": "0.56。読み込みタブへON/OFFを追加、既定ON。参照の実11プロセスで初期値と3種の16bit入力を観測し、丸めた24bit RGB出力へ一致させた。OFFはRGB16と自動16bit保存を保持。ファイル/書庫/キャッシュの再読み込み、編集/クリップボードの保持、Alpha付きBMP/PNG/コピー、適用/リセット/取消/INIを確認。Raw decodeの既定は保持モードで、通常表示は設定を明示する。通常版/軽量版0.56.0へ反映し、配布本体の主要10経路も確認済み。",
+    "native_process_evidence": "verification/0.56.0-bitfield-loading-related.json"
+  },
+  {
+    "id": "S098",
+    "section": "10 ファイル読み込み",
+    "setting": "隠しファイルも読み込む",
+    "reference_behavior": "ファイルリストへ隠し属性のファイルも含める",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:Settings",
+      "src/settings.cpp:Settings",
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::apply_settings",
+      "src/core.cpp:list_files"
+    ],
+    "evidence": [
+      "autopilot:18-loading-options.gvn",
+      "settings:loading_settings_roundtrip_validation_and_legacy_attribute_migration",
+      "app:loading_options_reload_without_changing_clipboard_or_edited_images",
+      "app:loading_animation_orientation_archive_and_attribute_settings",
+      "core:file_visibility_attributes_are_independent"
+    ],
+    "note": "隠しのみの属性を独立指定。属性全8組を単体・実設定画面・Appの一覧で検査。旧hidden=1のINIは従来の全属性表示を保持。"
+  },
+  {
+    "id": "S099",
+    "section": "10 ファイル読み込み",
+    "setting": "システムファイルも読み込む",
+    "reference_behavior": "システム属性のファイルも含める",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:Settings",
+      "src/settings.cpp:Settings",
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::apply_settings",
+      "src/core.cpp:list_files"
+    ],
+    "evidence": [
+      "autopilot:18-loading-options.gvn",
+      "settings:loading_settings_roundtrip_validation_and_legacy_attribute_migration",
+      "app:loading_options_reload_without_changing_clipboard_or_edited_images",
+      "app:loading_animation_orientation_archive_and_attribute_settings",
+      "core:file_visibility_attributes_are_independent"
+    ],
+    "note": "システムのみの属性を独立指定。隠しとシステムの両属性は別の保護項目だけで判定する。"
+  },
+  {
+    "id": "S100",
+    "section": "10 ファイル読み込み",
+    "setting": "保護されたオペレーティングシステムファイルも読み込む",
+    "reference_behavior": "隠し属性とシステム属性の両方を持つファイルも含める",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:Settings",
+      "src/settings.cpp:Settings",
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::apply_settings",
+      "src/core.cpp:list_files"
+    ],
+    "evidence": [
+      "autopilot:18-loading-options.gvn",
+      "settings:loading_settings_roundtrip_validation_and_legacy_attribute_migration",
+      "app:loading_options_reload_without_changing_clipboard_or_edited_images",
+      "app:loading_animation_orientation_archive_and_attribute_settings",
+      "core:file_visibility_attributes_are_independent"
+    ],
+    "note": "隠し＋システムの両属性を独立指定。他2項目をOFFにしたまま両属性の画像を含められる。"
+  },
+  {
+    "id": "S101",
+    "section": "10 ファイル読み込み",
+    "setting": "標準の設定に戻す",
+    "reference_behavior": "ファイル読み込みページを戻す",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:Settings",
+      "src/settings.cpp:Settings",
+      "src/preferences.cpp:fields",
+      "src/viewer.cpp:App::apply_settings",
+      "src/preferences.cpp:Impl::reset_page"
+    ],
+    "evidence": [
+      "autopilot:18-loading-options.gvn",
+      "settings:loading_settings_roundtrip_validation_and_legacy_attribute_migration",
+      "app:loading_options_reload_without_changing_clipboard_or_edited_images",
+      "app:loading_animation_orientation_archive_and_attribute_settings"
+    ],
+    "note": "読み込みタブの透過、背景、GIF、Exif、3属性、再生設定を標準へ戻す。専用シナリオ18で新項目、RGBAと他タブの値の保持、INIを照合。"
+  },
+  {
+    "id": "S102",
+    "section": "11 マスク",
+    "setting": "FLマスクの色反転",
+    "reference_behavior": "FL処理内のネガポジ反転を有効にする",
+    "state": "実装済み",
+    "implementation": [
+      "src/masks.cpp:fl_mask",
+      "include/gvn/settings.h:Settings::fl_negative / mask_options",
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:fields / Impl::reset_page",
+      "src/viewer.cpp:App::command"
+    ],
+    "evidence": [
+      "settings:mask_options_reference_defaults_all_flags_legacy_and_invalid_ini",
+      "app:fl_native_reference_commands_copy_save_drag_and_undo",
+      "app:fl_actual_formats_current_frame_cancel_keyboard_and_mouse",
+      "autopilot:56-fl-mask.gvn"
+    ],
+    "note": "0.31.0。FL色反転は既定ON。OFF、保存・取消・初期化、公式FL92条件とAlpha72条件、実Appの現在コマ/選択/Undoを照合した。 0.31.0。全45検査・本体161件・専用59本、通常/軽量配布の各10経路、配布本体のズーム474遷移・CP/虹色31ケースが成功。実編集ソフト側の受信、物理DPI、巨大画像・多数起動の性能は全体GOALの残課題。"
+  },
+  {
+    "id": "S103",
+    "section": "11 マスク",
+    "setting": "ガラスの余りも反転",
+    "reference_behavior": "処理範囲がガラスサイズの倍数でない場合、端の余りも反転",
+    "state": "実装済み",
+    "implementation": [
+      "src/masks.cpp:mask_image",
+      "include/gvn/settings.h:Settings::mask_options",
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:fields / Impl::reset_page",
+      "src/viewer.cpp:App::command"
+    ],
+    "evidence": [
+      "settings:mask_options_reference_defaults_all_flags_legacy_and_invalid_ini",
+      "app:mask_reference_commands_preserve_alpha_undo_copy_save_and_ole",
+      "app:mask_psd_gif_apng_current_frame_and_selected_alpha_restore_with_undo",
+      "autopilot:55-mask-options.gvn",
+      "app:selected_mask_commands_and_undo_keep_official_selection_rectangle"
+    ],
+    "note": "0.31.0。余りONで短い末尾の帯も反転。公式ガラス24条件とQ0512条件を含む560出力、実UI・INI・RGBA・選択範囲を照合した。 0.31.0。全45検査・本体161件・専用59本、通常/軽量配布の各10経路、配布本体のズーム474遷移・CP/虹色31ケースが成功。実編集ソフト側の受信、物理DPI、巨大画像・多数起動の性能は全体GOALの残課題。"
+  },
+  {
+    "id": "S104",
+    "section": "11 マスク",
+    "setting": "ガラスのサイズ",
+    "reference_behavior": "縦・横ガラスの処理間隔",
+    "state": "実装済み",
+    "implementation": [
+      "src/masks.cpp:mask_image",
+      "include/gvn/settings.h:Settings::mask_options",
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:fields / Impl::reset_page",
+      "src/viewer.cpp:App::command"
+    ],
+    "evidence": [
+      "settings:mask_options_reference_defaults_all_flags_legacy_and_invalid_ini",
+      "app:mask_reference_commands_preserve_alpha_undo_copy_save_and_ole",
+      "app:mask_psd_gif_apng_current_frame_and_selected_alpha_restore_with_undo",
+      "autopilot:55-mask-options.gvn",
+      "app:selected_mask_commands_and_undo_keep_official_selection_rectangle"
+    ],
+    "note": "0.31.0。公式2～999の範囲と旧GVNの明示1を保持。実UIで1000を拒否し999を適用、保存/再読込・初期化と他設定の保持を確認した。設定サイズを直ちに処理へ反映し、端数と選択も照合した。 0.31.0。全45検査・本体161件・専用59本、通常/軽量配布の各10経路、配布本体のズーム474遷移・CP/虹色31ケースが成功。実編集ソフト側の受信、物理DPI、巨大画像・多数起動の性能は全体GOALの残課題。"
+  },
+  {
+    "id": "S105",
+    "section": "11 マスク",
+    "setting": "RGB入れ替え",
+    "reference_behavior": "マスク用RGB入れ替えの方法",
+    "state": "実装済み",
+    "implementation": [
+      "src/masks.cpp:mask_image",
+      "include/gvn/settings.h:Settings::mask_options",
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:fields / Impl::reset_page",
+      "src/viewer.cpp:App::command"
+    ],
+    "evidence": [
+      "settings:mask_options_reference_defaults_all_flags_legacy_and_invalid_ini",
+      "app:mask_reference_commands_preserve_alpha_undo_copy_save_and_ole",
+      "app:mask_psd_gif_apng_current_frame_and_selected_alpha_restore_with_undo",
+      "autopilot:55-mask-options.gvn",
+      "app:selected_mask_commands_and_undo_keep_official_selection_rectangle"
+    ],
+    "note": "0.31.0。マスク用5方式と既定添字3を接続。旧5直接交換と独立し、全選択の実コントロール・INI・RGBAと4bitの色番号/パレットを照合した。 0.31.0。全45検査・本体161件・専用59本、通常/軽量配布の各10経路、配布本体のズーム474遷移・CP/虹色31ケースが成功。実編集ソフト側の受信、物理DPI、巨大画像・多数起動の性能は全体GOALの残課題。"
+  },
+  {
+    "id": "S106",
+    "section": "11 マスク",
+    "setting": "ネガポジ反転",
+    "reference_behavior": "RGBのどの成分を反転するか",
+    "state": "実装済み",
+    "implementation": [
+      "src/masks.cpp:mask_image",
+      "include/gvn/settings.h:Settings::mask_options",
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:fields / Impl::reset_page",
+      "src/viewer.cpp:App::command"
+    ],
+    "evidence": [
+      "settings:mask_options_reference_defaults_all_flags_legacy_and_invalid_ini",
+      "app:mask_reference_commands_preserve_alpha_undo_copy_save_and_ole",
+      "app:mask_psd_gif_apng_current_frame_and_selected_alpha_restore_with_undo",
+      "autopilot:55-mask-options.gvn",
+      "app:selected_mask_commands_and_undo_keep_official_selection_rectangle"
+    ],
+    "note": "0.31.0。マスクのR/G/B個別指定を接続。通常の画像色反転は全成分のまま。全8指定とQ0、Alphaコピーとパレットを照合した。 0.31.0。全45検査・本体161件・専用59本、通常/軽量配布の各10経路、配布本体のズーム474遷移・CP/虹色31ケースが成功。実編集ソフト側の受信、物理DPI、巨大画像・多数起動の性能は全体GOALの残課題。"
+  },
+  {
+    "id": "S107",
+    "section": "11 マスク",
+    "setting": "XOR 0x80",
+    "reference_behavior": "RGBのどの成分へ演算するか",
+    "state": "実装済み",
+    "implementation": [
+      "src/masks.cpp:mask_image",
+      "include/gvn/settings.h:Settings::mask_options",
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:fields / Impl::reset_page",
+      "src/viewer.cpp:App::command"
+    ],
+    "evidence": [
+      "settings:mask_options_reference_defaults_all_flags_legacy_and_invalid_ini",
+      "app:mask_reference_commands_preserve_alpha_undo_copy_save_and_ole",
+      "app:mask_psd_gif_apng_current_frame_and_selected_alpha_restore_with_undo",
+      "autopilot:55-mask-options.gvn",
+      "app:selected_mask_commands_and_undo_keep_official_selection_rectangle"
+    ],
+    "note": "0.31.0。R/G/B個別XORとQ0への接続を実装。全8指定、参照RGB・Alpha・選択範囲と4bitパレットを照合した。 0.31.0。全45検査・本体161件・専用59本、通常/軽量配布の各10経路、配布本体のズーム474遷移・CP/虹色31ケースが成功。実編集ソフト側の受信、物理DPI、巨大画像・多数起動の性能は全体GOALの残課題。"
+  },
+  {
+    "id": "S108",
+    "section": "11 マスク",
+    "setting": "Q0マスク",
+    "reference_behavior": "縦ガラス、横ガラス、ネガポジ反転、XOR、上下反転、左右反転の適用選択",
+    "state": "実装済み",
+    "implementation": [
+      "src/masks.cpp:mask_image",
+      "include/gvn/settings.h:Settings::mask_options",
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:fields / Impl::reset_page",
+      "src/viewer.cpp:App::command"
+    ],
+    "evidence": [
+      "settings:mask_options_reference_defaults_all_flags_legacy_and_invalid_ini",
+      "app:mask_reference_commands_preserve_alpha_undo_copy_save_and_ole",
+      "app:mask_psd_gif_apng_current_frame_and_selected_alpha_restore_with_undo",
+      "autopilot:55-mask-options.gvn",
+      "app:selected_mask_commands_and_undo_keep_official_selection_rectangle"
+    ],
+    "note": "0.31.0。縦/横ガラス・色反転・XOR・上下/左右反転の6指定を実装。公式全64組・512条件と対応軸の切詰めが一致し、元の選択矩形を保持する。 0.31.0。全45検査・本体161件・専用59本、通常/軽量配布の各10経路、配布本体のズーム474遷移・CP/虹色31ケースが成功。実編集ソフト側の受信、物理DPI、巨大画像・多数起動の性能は全体GOALの残課題。"
+  },
+  {
+    "id": "S109",
+    "section": "11 マスク",
+    "setting": "標準の設定に戻す",
+    "reference_behavior": "マスクページを戻す",
+    "state": "実装済み",
+    "implementation": [
+      "src/masks.cpp:mask_image",
+      "include/gvn/settings.h:Settings::mask_options",
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:fields / Impl::reset_page",
+      "src/viewer.cpp:App::command"
+    ],
+    "evidence": [
+      "settings:mask_options_reference_defaults_all_flags_legacy_and_invalid_ini",
+      "app:mask_reference_commands_preserve_alpha_undo_copy_save_and_ole",
+      "app:mask_psd_gif_apng_current_frame_and_selected_alpha_restore_with_undo",
+      "autopilot:55-mask-options.gvn",
+      "autopilot:56-fl-mask.gvn"
+    ],
+    "note": "0.31.0。公式に対応する全16入力を初期化。取消・適用・保存と他ページの未適用値保持を実コントロールで確認し、FLを含む処理を照合した。 0.31.0。全45検査・本体161件・専用59本、通常/軽量配布の各10経路、配布本体のズーム474遷移・CP/虹色31ケースが成功。実編集ソフト側の受信、物理DPI、巨大画像・多数起動の性能は全体GOALの残課題。"
+  },
+  {
+    "id": "S110",
+    "section": "12 キー設定",
+    "setting": "分類",
+    "reference_behavior": "制限",
+    "state": "見出し",
+    "implementation": [],
+    "evidence": [],
+    "note": "元の表の分類見出し。独立した設定項目の件数に含めない。"
+  },
+  {
+    "id": "S111",
+    "section": "12 キー設定",
+    "setting": "記号キー",
+    "reference_behavior": "英数字以外の文字キーとCtrlの組み合わせは不可",
+    "state": "代替実装",
+    "implementation": [
+      "src/settings.cpp:parse_key,valid_bindings"
+    ],
+    "evidence": [
+      "settings:multiple_shortcuts_clear_reorder_roundtrip_and_conflicts"
+    ],
+    "note": "Ctrlと記号キーの併用もGVNでは許可する。入力形式を共通の仮想キーへ正規化し、別名による重複は拒否。"
+  },
+  {
+    "id": "S112",
+    "section": "12 キー設定",
+    "setting": "テンキーとShift",
+    "reference_behavior": "Shift併用で別のキーとして認識される場合あり",
+    "state": "部分対応",
+    "implementation": [
+      "src/settings.cpp:parse_key,format_key"
+    ],
+    "evidence": [],
+    "note": "Num0〜Num9等と修飾キーを登録可能。実キーボードのNumLock/ShiftによるOS変換の組合せは未検証。"
+  },
+  {
+    "id": "S113",
+    "section": "12 キー設定",
+    "setting": "日本語入力キー",
+    "reference_behavior": "半角 / 全角、カタカナ / ひらがなは登録不可",
+    "state": "実装済み",
+    "implementation": [
+      "src/settings.cpp:parse_key,format_key,assignable_key",
+      "src/preferences.cpp:key_proc"
+    ],
+    "evidence": [
+      "settings:jis_shortcuts_parse_format_and_reject_unsupported_ime_keys"
+    ],
+    "note": "半角/全角・かな切替の仮想キーは登録候補に変換せず拒否する。無変換/変換は別扱いで登録できる。有限の対応キー表と入力欄の拒否経路を確認。設定55件の既存成功記録で該当キー拒否を照合し、今回の再実行なし。物理キーボード/IMEの全環境での動作確認とは分ける。"
+  },
+  {
+    "id": "S114",
+    "section": "12 キー設定",
+    "setting": "Lock系",
+    "reference_behavior": "CapsLockなどは登録不可",
+    "state": "実装済み",
+    "implementation": [
+      "src/settings.cpp:parse_key,format_key,assignable_key",
+      "src/preferences.cpp:key_proc"
+    ],
+    "evidence": [
+      "settings:jis_shortcuts_parse_format_and_reject_unsupported_ime_keys"
+    ],
+    "note": "CapsLock/NumLock/ScrollLockは登録候補に変換せず拒否する。有限の対応キー表と入力欄の拒否経路を確認。設定55件の既存成功記録で該当キー拒否を照合し、今回の再実行なし。物理キーボード/IMEの全環境での動作確認とは分ける。"
+  },
+  {
+    "id": "S115",
+    "section": "12 キー設定",
+    "setting": "特殊キー",
+    "reference_behavior": "音量操作などは登録不可",
+    "state": "実装済み",
+    "implementation": [
+      "src/settings.cpp:parse_key,format_key,assignable_key",
+      "src/preferences.cpp:key_proc"
+    ],
+    "evidence": [
+      "autopilot:82-special-keys.gvn"
+    ],
+    "note": "0.43。公式の音量操作などを登録不可とする説明と、有限の対応キー表・実入力欄を照合。音量上げ/下げ/ミュート、メディア再生/一時停止、メール起動の5キーとVolumeUp文字列を拒否し、有効なF12を保持。その後のCtrl+Alt+F12取込み・追加・適用・INI保存が成功。専用47操作1画面。本体の挙動変更は不要だった。物理キーボード、OSのグローバル入力・音量・アプリ起動を操作した意味ではない。0.43へ配布反映済み。",
+    "native_process_evidence": "verification/0.43.0-special-keys-related.json"
+  },
+  {
+    "id": "S116",
+    "section": "12 キー設定",
+    "setting": "OS予約",
+    "reference_behavior": "Alt + Tab、Alt + Shift + Tab、Alt + Esc、Ctrl + Esc、Ctrl + Alt + Delete、PrintScreen、Windowsキーは不可",
+    "state": "実装済み",
+    "implementation": [
+      "src/settings.cpp:assignable_key"
+    ],
+    "evidence": [
+      "settings:multiple_shortcuts_clear_reorder_roundtrip_and_conflicts"
+    ],
+    "note": "OS予約キーとフォーカス脱出用Ctrl+Alt+Shift+Tabを登録不可とする。Esc単独は解除操作として予約。"
+  },
+  {
+    "id": "S117",
+    "section": "12 キー設定",
+    "setting": "無変換",
+    "reference_behavior": "単独は登録可能。Ctrl + Alt、またはCtrl + Alt + Shiftとの組み合わせは登録できない可能性あり",
+    "state": "実装済み",
+    "implementation": [
+      "src/settings.cpp:parse_key / format_key / Settings::command_for",
+      "src/preferences.cpp:Impl::key_proc"
+    ],
+    "evidence": [
+      "settings:jis_shortcuts_parse_format_and_reject_unsupported_ime_keys",
+      "settings:jis_shortcuts_alias_conflicts_and_ini_roundtrip",
+      "autopilot:65-jis-shortcuts.gvn"
+    ],
+    "note": "0.35.0。無変換/変換の英語名・日本語名、修飾、重複拒否、INI保存、実キー欄の通常/IME通知取り込みと実コマンドを検査。IME関連付けは保持する。物理JIS/各IMEによるOS側の変換・予約の全組み合わせは別範囲。0.35.0へ配布反映済み。"
+  },
+  {
+    "id": "S118",
+    "section": "12 キー設定",
+    "setting": "変換",
+    "reference_behavior": "0.44の更新で登録可能になったと記載",
+    "state": "実装済み",
+    "implementation": [
+      "src/settings.cpp:parse_key / format_key / Settings::command_for",
+      "src/preferences.cpp:Impl::key_proc"
+    ],
+    "evidence": [
+      "settings:jis_shortcuts_parse_format_and_reject_unsupported_ime_keys",
+      "settings:jis_shortcuts_alias_conflicts_and_ini_roundtrip",
+      "autopilot:65-jis-shortcuts.gvn"
+    ],
+    "note": "0.35.0。無変換/変換の英語名・日本語名、修飾、重複拒否、INI保存、実キー欄の通常/IME通知取り込みと実コマンドを検査。IME関連付けは保持する。物理JIS/各IMEによるOS側の変換・予約の全組み合わせは別範囲。0.35.0へ配布反映済み。"
+  },
+  {
+    "id": "S119",
+    "section": "13 マウス設定",
+    "setting": "ホイールのスクロール量",
+    "reference_behavior": "ボタンを押しながらのホイール等による移動量",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "autopilot:06-mouse-controls.gvn"
+    ],
+    "note": "1〜2000px。90pxへ変更し、押下中の実ホイールで90px移動を確認。"
+  },
+  {
+    "id": "S120",
+    "section": "13 マウス設定",
+    "setting": "ドラッグのスクロール量",
+    "reference_behavior": "ドラッグによる移動量",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "autopilot:06-mouse-controls.gvn",
+      "app:mouse_click_drag_select_zoom_and_capture_cancel"
+    ],
+    "note": "ドラッグ量1〜1000%。200%で12pxの移動を24pxへ反映。"
+  },
+  {
+    "id": "S121",
+    "section": "13 マウス設定",
+    "setting": "ドラッグのズーム速度",
+    "reference_behavior": "ドラッグ量に対する倍率変化",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "autopilot:06-mouse-controls.gvn",
+      "app:mouse_click_drag_select_zoom_and_capture_cancel"
+    ],
+    "note": "速度1〜1000%と上下左右4方向。4方向の倍率・中心点と、画面から200%へ変更した実操作を確認。"
+  },
+  {
+    "id": "S122",
+    "section": "13 マウス設定",
+    "setting": "ドラッグのズーム方向",
+    "reference_behavior": "ズームを判定するドラッグ方向",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "autopilot:06-mouse-controls.gvn",
+      "app:mouse_click_drag_select_zoom_and_capture_cancel"
+    ],
+    "note": "速度1〜1000%と上下左右4方向。4方向の倍率・中心点と、画面から200%へ変更した実操作を確認。"
+  },
+  {
+    "id": "S123",
+    "section": "13 マウス設定",
+    "setting": "ドラッグ開始までの余裕",
+    "reference_behavior": "移動量が閾値を超えたらドラッグ、以内で離せばクリック",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "autopilot:06-mouse-controls.gvn",
+      "app:mouse_click_drag_select_zoom_and_capture_cancel"
+    ],
+    "note": "0〜100論理px。余裕を上回るとドラッグ、以内ならクリック。範囲選択とシステム移動は余裕の対象外。"
+  },
+  {
+    "id": "S124",
+    "section": "13 マウス設定",
+    "setting": "ホバースクロールの余白",
+    "reference_behavior": "上下左右の判定領域の余白。50%なら全面が余白となる",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "autopilot:06-mouse-controls.gvn",
+      "app:mouse_hover_scroll_and_ole_drag_path"
+    ],
+    "note": "余白0〜50%、最小移動量0〜100px。25%で両端へ移動、50%で移動なし。小さな可動範囲でも最小値による逆向きの振動を防ぐ。"
+  },
+  {
+    "id": "S125",
+    "section": "13 マウス設定",
+    "setting": "ホバースクロールの最小移動量",
+    "reference_behavior": "カーソル移動に対する画像スクロールの最小値。0で遅すぎる場合は1が案内される",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "autopilot:06-mouse-controls.gvn",
+      "app:mouse_hover_scroll_and_ole_drag_path"
+    ],
+    "note": "余白0〜50%、最小移動量0〜100px。25%で両端へ移動、50%で移動なし。小さな可動範囲でも最小値による逆向きの振動を防ぐ。"
+  },
+  {
+    "id": "S126",
+    "section": "13 マウス設定",
+    "setting": "クリックによるアクティブ化時はクリックの機能を無効化",
+    "reference_behavior": "非アクティブ画面の最初のクリックで割り当て機能を発動させない",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "app:mouse_chords_wheel_double_click_nonclient_and_activation",
+      "autopilot:06-mouse-controls.gvn"
+    ],
+    "note": "非アクティブへのクリック通知WM_MOUSEACTIVATEでMA_ACTIVATEANDEATを返す。通知の戻り値を統合試験。"
+  },
+  {
+    "id": "S127",
+    "section": "13 マウス設定",
+    "setting": "ホイールの反応を鈍くする",
+    "reference_behavior": "緩いホイール等による反応を抑える",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "autopilot:07-mouse-chords.gvn",
+      "app:mouse_chords_wheel_double_click_nonclient_and_activation"
+    ],
+    "note": "通常は1刻み、ON時は2刻みで1操作。細かな入力を蓄積し、修飾・併用条件を変更したときは混ぜない。"
+  },
+  {
+    "id": "S128",
+    "section": "13 マウス設定",
+    "setting": "標準の設定に戻す",
+    "reference_behavior": "オプションページを戻す",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "autopilot:07-mouse-chords.gvn"
+    ],
+    "note": "マウスオプションを標準へ戻す。他ページの未適用値と、無関係なカスタム割り当てを保持。"
+  },
+  {
+    "id": "S129",
+    "section": "13 マウス設定",
+    "setting": "規則",
+    "reference_behavior": "内容",
+    "state": "見出し",
+    "implementation": [],
+    "evidence": [],
+    "note": "元の表の分類見出し。独立した設定項目の件数に含めない。"
+  },
+  {
+    "id": "S130",
+    "section": "13 マウス設定",
+    "setting": "単独の機能",
+    "reference_behavior": "他ボタンを押していない場合。操作の種類により表示位置が変わる",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "autopilot:08-mouse-all-buttons.gvn",
+      "settings:mouse_chords_modifiers_inheritance_and_explicit_none"
+    ],
+    "note": "5ボタンの単独・他ボタン併用とCtrl/Shift/Altを指定。5ボタン・全7修飾組合せと各ボタンを押したホイールを確認。"
+  },
+  {
+    "id": "S131",
+    "section": "13 マウス設定",
+    "setting": "ボタン併用",
+    "reference_behavior": "左・右・中・X1・X2を押しながらの操作を設定",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "autopilot:08-mouse-all-buttons.gvn",
+      "settings:mouse_chords_modifiers_inheritance_and_explicit_none"
+    ],
+    "note": "5ボタンの単独・他ボタン併用とCtrl/Shift/Altを指定。5ボタン・全7修飾組合せと各ボタンを押したホイールを確認。"
+  },
+  {
+    "id": "S132",
+    "section": "13 マウス設定",
+    "setting": "ドラッグ",
+    "reference_behavior": "「単独」の欄はなく、ボタン別のドラッグ機能を設定",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "autopilot:06-mouse-controls.gvn",
+      "autopilot:08-mouse-all-buttons.gvn"
+    ],
+    "note": "5ボタンへスクロール・ズーム・範囲選択・OLEファイルドラッグ等を割り当てる。システム標準移動は左専用。"
+  },
+  {
+    "id": "S133",
+    "section": "13 マウス設定",
+    "setting": "重複割り当て",
+    "reference_behavior": "ドラッグでは同じ機能を複数ボタンに設定できない",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "autopilot:06-mouse-controls.gvn",
+      "settings:mouse_rejects_conflicts_and_system_window_move_disables_left_chords"
+    ],
+    "note": "併用・修飾が同じ条件で同じドラッグ機能を複数ボタンへ指定すると拒否。"
+  },
+  {
+    "id": "S134",
+    "section": "13 マウス設定",
+    "setting": "システム標準のウィンドウ移動",
+    "reference_behavior": "左ドラッグ専用。これを選ぶと左クリックと、他操作の「左を押しながら」が使えない",
+    "state": "部分対応",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "autopilot:07-mouse-chords.gvn",
+      "settings:mouse_rejects_conflicts_and_system_window_move_disables_left_chords"
+    ],
+    "note": "0.48追加調査（本体0.47）。通常GVNと標準ウィンドウで4条件を比較したが、隔離環境でカーソル準備ができず両方ともOS移動ループは0回。実移動/取消は未確認のまま。GVNのWS_VISIBLEと実PNGコピーで動作中を確認し、4条件で元RGBA配列と前後PNGの一致、正常終了を検査。左クリック/左を押しながらの無効化は従来の実UI確認を保持。移動の合格とは扱わず同じ隔離試験を繰り返さない。",
+    "native_process_evidence": "verification/0.48.0-window-move-investigation.json"
+  },
+  {
+    "id": "S135",
+    "section": "13 マウス設定",
+    "setting": "クリックとダブルクリック",
+    "reference_behavior": "1回目のクリックが先に実行され、ダブルクリック機能が発動できない場合あり",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "autopilot:08-mouse-all-buttons.gvn"
+    ],
+    "note": "最初のクリックを先に実行し、その後にダブルクリック。2回目を離したときは余分なクリックを発火しない。"
+  },
+  {
+    "id": "S136",
+    "section": "13 マウス設定",
+    "setting": "ウィンドウ枠上のX1 / X2",
+    "reference_behavior": "カスタマイズを無視して前 / 次のファイル",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "app:mouse_chords_wheel_double_click_nonclient_and_activation"
+    ],
+    "note": "枠上のX1/X2はカスタマイズを無視して前/次へ移動。"
+  },
+  {
+    "id": "S137",
+    "section": "13 マウス設定",
+    "setting": "標準の設定に戻す",
+    "reference_behavior": "カスタマイズページ全体を戻す",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/mouse.h:MouseSettings",
+      "src/preferences.cpp:MouseCustom",
+      "src/viewer.cpp:pointer input"
+    ],
+    "evidence": [
+      "autopilot:08-mouse-all-buttons.gvn"
+    ],
+    "note": "マウス割り当てをすべて標準へ戻す。オプションのリセットとは分離。"
+  },
+  {
+    "id": "S138",
+    "section": "14 メニュー以外の割り当て可能な機能",
+    "setting": "機能群",
+    "reference_behavior": "内容",
+    "state": "見出し",
+    "implementation": [],
+    "evidence": [],
+    "note": "元の表の分類見出し。独立した設定項目の件数に含めない。"
+  },
+  {
+    "id": "S139",
+    "section": "14 メニュー以外の割り当て可能な機能",
+    "setting": "直接削除",
+    "reference_behavior": "ごみ箱を経由しない",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/commands.h:FileDeleteDirect",
+      "src/commands.cpp:command_catalog",
+      "src/settings.cpp:default_bindings",
+      "src/viewer.cpp:FileDeleteDirect"
+    ],
+    "evidence": [
+      "settings:direct_delete_catalog_default_key_and_mouse_assignment_roundtrip",
+      "settings:direct_delete_new_shortcut_does_not_replace_existing_profile_keys",
+      "app:direct_delete_permanent_routing_confirmation_failure_and_document_guards",
+      "autopilot:67-direct-delete.gvn"
+    ],
+    "note": "独立した直接削除をキー・マウスへ割当可能。ごみ箱の全体設定を変えず、削除確認と次画像設定に従う。新規設定はShift+Delete、既存設定へは明示登録。失敗・取消では保持。貼付け/ZIP/画像なしは対象外。関連検証0.36.0-direct-delete-relatedを参照。"
+  },
+  {
+    "id": "S140",
+    "section": "14 メニュー以外の割り当て可能な機能",
+    "setting": "ランダムジャンプ",
+    "reference_behavior": "フォルダ内からランダムに1件を表示",
+    "state": "実装済み",
+    "implementation": [
+      "src/commands.cpp:command_catalog",
+      "src/viewer.cpp:App::command"
+    ],
+    "evidence": [
+      "app:configurable_scroll_fit_read_random_and_popups"
+    ],
+    "note": "ランダム移動、原寸/フィット切替2方式、方向/端/隅/中央スクロール、漫画の読み方向を考慮した前後左右を登録可能。ホイール量を共用。"
+  },
+  {
+    "id": "S141",
+    "section": "14 メニュー以外の割り当て可能な機能",
+    "setting": "ダイアログなしの自動スライド",
+    "reference_behavior": "開始・停止を直接切り替える",
+    "state": "実装済み",
+    "implementation": [
+      "src/commands.cpp:Slideshow",
+      "src/viewer.cpp:Slideshow"
+    ],
+    "evidence": [
+      "app:folders_slideshow_and_settings"
+    ],
+    "note": "Slideshowコマンドをキーへ割り当て可能。間隔ダイアログなしで開始/停止。"
+  },
+  {
+    "id": "S142",
+    "section": "14 メニュー以外の割り当て可能な機能",
+    "setting": "原寸とフィットの切り替え",
+    "reference_behavior": "原寸ならフィット、それ以外なら原寸",
+    "state": "実装済み",
+    "implementation": [
+      "src/commands.cpp:command_catalog",
+      "src/viewer.cpp:App::command"
+    ],
+    "evidence": [
+      "app:configurable_scroll_fit_read_random_and_popups"
+    ],
+    "note": "ランダム移動、原寸/フィット切替2方式、方向/端/隅/中央スクロール、漫画の読み方向を考慮した前後左右を登録可能。ホイール量を共用。"
+  },
+  {
+    "id": "S143",
+    "section": "14 メニュー以外の割り当て可能な機能",
+    "setting": "フィットと原寸の切り替え",
+    "reference_behavior": "フィットなら原寸、それ以外ならフィット",
+    "state": "実装済み",
+    "implementation": [
+      "src/commands.cpp:command_catalog",
+      "src/viewer.cpp:App::command"
+    ],
+    "evidence": [
+      "app:configurable_scroll_fit_read_random_and_popups"
+    ],
+    "note": "ランダム移動、原寸/フィット切替2方式、方向/端/隅/中央スクロール、漫画の読み方向を考慮した前後左右を登録可能。ホイール量を共用。"
+  },
+  {
+    "id": "S144",
+    "section": "14 メニュー以外の割り当て可能な機能",
+    "setting": "ポップアップメニュー",
+    "reference_behavior": "親メニュー、子メニュー、孫メニューを直接開く",
+    "state": "実装済み",
+    "implementation": [
+      "src/viewer.cpp:App::popup_menu"
+    ],
+    "evidence": [
+      "app:configurable_scroll_fit_read_random_and_popups"
+    ],
+    "note": "配布0.41と同じ本体で親/子/孫の13種類を実メニューとして開き、各入口の項目を照合。専用操作29メッセージで階層展開・ハイライト・5選択・8取消を確認し、再表示2件のチェックも一致。透過コピーとRGB入替えは透明画素のRGBを含む全RGBA、表示切替は実ステータスバーと照合。[実行記録](verification/0.42.0-popup-related.json)。Windows内部のメニュー操作メッセージを使う専用ドライバーであり、物理キーボード・グローバル入力・OS標準移動まで確認した意味ではない。",
+    "native_process_evidence": "verification/0.42.0-popup-related.json"
+  },
+  {
+    "id": "S145",
+    "section": "14 メニュー以外の割り当て可能な機能",
+    "setting": "スクロール",
+    "reference_behavior": "上下左右へ移動",
+    "state": "実装済み",
+    "implementation": [
+      "src/commands.cpp:command_catalog",
+      "src/viewer.cpp:App::command"
+    ],
+    "evidence": [
+      "app:configurable_scroll_fit_read_random_and_popups"
+    ],
+    "note": "ランダム移動、原寸/フィット切替2方式、方向/端/隅/中央スクロール、漫画の読み方向を考慮した前後左右を登録可能。ホイール量を共用。"
+  },
+  {
+    "id": "S146",
+    "section": "14 メニュー以外の割り当て可能な機能",
+    "setting": "位置指定スクロール",
+    "reference_behavior": "右上、左上等へ移動",
+    "state": "実装済み",
+    "implementation": [
+      "src/commands.cpp:command_catalog",
+      "src/viewer.cpp:App::command"
+    ],
+    "evidence": [
+      "app:configurable_scroll_fit_read_random_and_popups"
+    ],
+    "note": "ランダム移動、原寸/フィット切替2方式、方向/端/隅/中央スクロール、漫画の読み方向を考慮した前後左右を登録可能。ホイール量を共用。"
+  },
+  {
+    "id": "S147",
+    "section": "14 メニュー以外の割り当て可能な機能",
+    "setting": "右から左の漫画モードに対応した機能",
+    "reference_behavior": "前後や左右を読み方向に応じて反転",
+    "state": "実装済み",
+    "implementation": [
+      "src/commands.cpp:command_catalog",
+      "src/viewer.cpp:App::command"
+    ],
+    "evidence": [
+      "app:configurable_scroll_fit_read_random_and_popups"
+    ],
+    "note": "ランダム移動、原寸/フィット切替2方式、方向/端/隅/中央スクロール、漫画の読み方向を考慮した前後左右を登録可能。ホイール量を共用。"
+  },
+  {
+    "id": "S148",
+    "section": "14 メニュー以外の割り当て可能な機能",
+    "setting": "ホイールによるスクロール",
+    "reference_behavior": "設定したホイール量だけ動かす。キーやボタンにも割り当て可能",
+    "state": "実装済み",
+    "implementation": [
+      "src/commands.cpp:command_catalog",
+      "src/viewer.cpp:App::command"
+    ],
+    "evidence": [
+      "app:configurable_scroll_fit_read_random_and_popups"
+    ],
+    "note": "ランダム移動、原寸/フィット切替2方式、方向/端/隅/中央スクロール、漫画の読み方向を考慮した前後左右を登録可能。ホイール量を共用。"
+  },
+  {
+    "id": "S149",
+    "section": "14 メニュー以外の割り当て可能な機能",
+    "setting": "登録フォルダへの移動 / コピー",
+    "reference_behavior": "登録済みの送り先へダイアログなしで実行",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:DestinationList",
+      "src/settings.cpp:Settings::load/save",
+      "src/viewer.cpp:App::registered_transfer",
+      "src/commands.cpp:CopyDestBase,MoveDestBase",
+      "src/file_transfer_dialog.cpp:FileTransferDialog"
+    ],
+    "evidence": [
+      "autopilot:05-multiple-shortcuts.gvn",
+      "autopilot:29-registered-destinations.gvn",
+      "app:independent_twenty_destinations_transfer_original_files",
+      "app:unregistered_destination_accept_cancel_and_empty",
+      "settings:registered_destinations_migrate_legacy_and_keep_explicit_empty_slots",
+      "settings:registered_destinations_twenty_independent_values_roundtrip",
+      "app:registered_destination_cancels_pending_load_before_registration",
+      "autopilot:30-file-transfer-dialog.gvn",
+      "settings:file_transfer_dialog_modes_basic_paths_and_old_settings_roundtrip",
+      "file_transfer_ui:transfer_every_number_button_and_forced_initial_slot",
+      "file_transfer_ui:transfer_button_focus_and_leave_do_not_execute_or_validate",
+      "file_transfer_ui:transfer_shell_folder_data_to_actual_ole_targets_and_legacy_hdrop",
+      "app:transfer_dialog_proposal_options_and_rejected_overwrite",
+      "app:transfer_dialog_settings_failure_keeps_source_and_target",
+      "app:transfer_dialog_changed_document_aborts_before_options_and_file"
+    ],
+    "note": "0.15.0でコピー10件・移動10件を独立保持し、登録済み全20コマンドは画面なしで実行。未登録番号は基本/10件の専用画面の該当欄を開く。10実行ボタン、参照、ホイール/Enter、フォルダ受け取り、取消、上書き拒否、INI保存失敗と読込の対象固定を検査。OLEは実Shellデータと登録した実ターゲットへの直接照合で、物理Explorer操作の外部E2Eは未確認。"
+  },
+  {
+    "id": "S150",
+    "section": "15 プラグイン設定",
+    "setting": "プラグインがあるフォルダ",
+    "reference_behavior": "絶対・相対パスの入力、フォルダのドロップに対応",
+    "state": "対象外",
+    "implementation": [],
+    "evidence": [],
+    "note": "ユーザー指定によりプラグイン機構は実装しない。必要なデコーダは本体へ組み込む。"
+  },
+  {
+    "id": "S151",
+    "section": "15 プラグイン設定",
+    "setting": "参照",
+    "reference_behavior": "フォルダ選択ダイアログ",
+    "state": "対象外",
+    "implementation": [],
+    "evidence": [],
+    "note": "ユーザー指定によりプラグイン機構は実装しない。必要なデコーダは本体へ組み込む。"
+  },
+  {
+    "id": "S152",
+    "section": "15 プラグイン設定",
+    "setting": "画像用 / 書庫用プラグイン",
+    "reference_behavior": "一覧の表示切り替え。どちらか一方しか使えないという制約ではない",
+    "state": "対象外",
+    "implementation": [],
+    "evidence": [],
+    "note": "ユーザー指定によりプラグイン機構は実装しない。必要なデコーダは本体へ組み込む。"
+  },
+  {
+    "id": "S153",
+    "section": "15 プラグイン設定",
+    "setting": "プラグイン一覧",
+    "reference_behavior": "ファイル名と対応拡張子。利用するものをチェック",
+    "state": "対象外",
+    "implementation": [],
+    "evidence": [],
+    "note": "ユーザー指定によりプラグイン機構は実装しない。必要なデコーダは本体へ組み込む。"
+  },
+  {
+    "id": "S154",
+    "section": "15 プラグイン設定",
+    "setting": "設定",
+    "reference_behavior": "選択プラグイン自身の設定画面を開く。設定画面がないものもある",
+    "state": "対象外",
+    "implementation": [],
+    "evidence": [],
+    "note": "ユーザー指定によりプラグイン機構は実装しない。必要なデコーダは本体へ組み込む。"
+  },
+  {
+    "id": "S155",
+    "section": "15 プラグイン設定",
+    "setting": "情報",
+    "reference_behavior": "プラグインの情報を表示",
+    "state": "対象外",
+    "implementation": [],
+    "evidence": [],
+    "note": "ユーザー指定によりプラグイン機構は実装しない。必要なデコーダは本体へ組み込む。"
+  },
+  {
+    "id": "S156",
+    "section": "15 プラグイン設定",
+    "setting": "標準のローダよりプラグインを優先する",
+    "reference_behavior": "重複する形式をプラグインで読む",
+    "state": "対象外",
+    "implementation": [],
+    "evidence": [],
+    "note": "ユーザー指定によりプラグイン機構は実装しない。必要なデコーダは本体へ組み込む。"
+  },
+  {
+    "id": "S157",
+    "section": "15 プラグイン設定",
+    "setting": "プラグインと版",
+    "reference_behavior": "公式記載の状況",
+    "state": "対象外",
+    "implementation": [],
+    "evidence": [],
+    "note": "ユーザー指定によりプラグイン機構は実装しない。必要なデコーダは本体へ組み込む。"
+  },
+  {
+    "id": "S158",
+    "section": "15 プラグイン設定",
+    "setting": "ifTEXT.spi 0.7",
+    "reference_behavior": "読み込み後にプラグイン設定を開くとエラー。利用しないよう警告",
+    "state": "対象外",
+    "implementation": [],
+    "evidence": [],
+    "note": "ユーザー指定によりプラグイン機構は実装しない。必要なデコーダは本体へ組み込む。"
+  },
+  {
+    "id": "S159",
+    "section": "15 プラグイン設定",
+    "setting": "マンガミーヤ同梱DLL 7.3",
+    "reference_behavior": "spiへ拡張子変更したpng.dllでエラー、jpg.dllで幅の誤認や読み込み失敗。利用しないよう警告",
+    "state": "対象外",
+    "implementation": [],
+    "evidence": [],
+    "note": "ユーザー指定によりプラグイン機構は実装しない。必要なデコーダは本体へ組み込む。"
+  },
+  {
+    "id": "S160",
+    "section": "15 プラグイン設定",
+    "setting": "ifpsd.spi / axpsd.spi 1.0.2.1",
+    "reference_behavior": "設定画面を閉じると「設定ダイアログはありません」と表示するが問題なし",
+    "state": "対象外",
+    "implementation": [],
+    "evidence": [],
+    "note": "ユーザー指定によりプラグイン機構は実装しない。必要なデコーダは本体へ組み込む。"
+  },
+  {
+    "id": "S161",
+    "section": "15 プラグイン設定",
+    "setting": "tar32.dll 2.39",
+    "reference_behavior": "spiへ変更して使用可能。内部フォルダ単位で整列できない",
+    "state": "対象外",
+    "implementation": [],
+    "evidence": [],
+    "note": "ユーザー指定によりプラグイン機構は実装しない。必要なデコーダは本体へ組み込む。"
+  },
+  {
+    "id": "S162",
+    "section": "15 プラグイン設定",
+    "setting": "ifmm.spi 1.3.6",
+    "reference_behavior": "プラグインの「登録アプリ」にMassiGraを登録すると使用可能",
+    "state": "対象外",
+    "implementation": [],
+    "evidence": [],
+    "note": "ユーザー指定によりプラグイン機構は実装しない。必要なデコーダは本体へ組み込む。"
+  },
+  {
+    "id": "S163",
+    "section": "16 他のアプリの設定",
+    "setting": "リスト",
+    "reference_behavior": "1〜9の登録枠を選ぶ",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ExternalList / external_*",
+      "src/settings.cpp:external_application / set_external_application",
+      "src/external.cpp:plan_external_application",
+      "src/viewer.cpp:external / external_context",
+      "src/external_launch.cpp:launch_external_application"
+    ],
+    "evidence": [
+      "external_settings:all_nine_external_entries_roundtrip_every_option_and_quoted_command",
+      "app:external_menu_names_hidden_slots_separators_keys_and_configuration",
+      "autopilot:49-external-settings.gvn"
+    ],
+    "note": "0.27.0。1〜9の実コンボで選び、全設定を枠ごとに保持。全枠の保存・再読込、UI適用/取消、通常GVNの同じINIによる正常終了・再起動を検査。"
+  },
+  {
+    "id": "S164",
+    "section": "16 他のアプリの設定",
+    "setting": "順番を1つ上 / 下に",
+    "reference_behavior": "登録の順序を変更",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ExternalList / external_*",
+      "src/settings.cpp:external_application / set_external_application",
+      "src/external.cpp:plan_external_application",
+      "src/viewer.cpp:external / external_context",
+      "src/external_launch.cpp:launch_external_application"
+    ],
+    "evidence": [
+      "external_plan:move_and_reset_keep_every_field_and_other_slots",
+      "external_settings:reordering_and_single_row_reset_survive_reload_without_changing_other_options",
+      "autopilot:49-external-settings.gvn"
+    ],
+    "note": "0.27.0。名前・コマンド・送信・状態・全フラグをまとめて上下へ移動。先頭/末尾境界と他枠・他タブ保持を基盤、INI、実UIで照合。"
+  },
+  {
+    "id": "S165",
+    "section": "16 他のアプリの設定",
+    "setting": "メニュー項目名",
+    "reference_behavior": "最大50文字。空欄ならその登録枠はメニューに表示しない",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ExternalList / external_*",
+      "src/settings.cpp:external_application / set_external_application",
+      "src/external.cpp:plan_external_application",
+      "src/viewer.cpp:external / external_context",
+      "src/external_launch.cpp:launch_external_application"
+    ],
+    "evidence": [
+      "external_plan:names_follow_observed_bmp_limit_without_splitting_a_surrogate_pair",
+      "external_settings:empty_names_hide_entries_and_outer_quotes_edge_spaces_and_apostrophes_survive_ini",
+      "app:external_menu_names_hidden_slots_separators_keys_and_configuration",
+      "autopilot:49-external-settings.gvn"
+    ],
+    "note": "0.27.0。名前は最大50 UTF-16単位、空名はメニューから除外。番号と割当キー、文字としての&、保存を検査。参照のASCII/BMP上限を観測し、GVNではサロゲートの途中切断も避ける。"
+  },
+  {
+    "id": "S166",
+    "section": "16 他のアプリの設定",
+    "setting": "実行ファイル名",
+    "reference_behavior": "ドロップでフルパスを入力。相対パスはMassiGra本体が基準",
+    "state": "部分対応",
+    "implementation": [
+      "src/preferences.cpp:ExternalList / external_*",
+      "src/settings.cpp:external_application / set_external_application",
+      "src/external.cpp:plan_external_application",
+      "src/viewer.cpp:external / external_context",
+      "src/external_launch.cpp:launch_external_application"
+    ],
+    "evidence": [
+      "external_plan:relative_executable_is_based_on_viewer_not_process_current_directory",
+      "app:external_legacy_registration_and_unregistered_picker_keep_original_or_rendered_image",
+      "autopilot:49-external-settings.gvn",
+      "autopilot:84-executable-picker.gvn"
+    ],
+    "note": "0.44追加検証。実Windows選択画面を2回開き、日本語/空白入りEXEの選択と取消、実設定欄/適用/INI再読込、作業ディレクトリの保持、元RGBAコピーが成功。実ページのWS_EX_ACCEPTFILESとCF_HDROPのWM_DROPFILES入力も確認。選択結果の代入は0回。専用47操作、GVN画面1件とOSの参考画像1件。物理ExplorerのOLEループとは区別し、その受信は引き続き未確認。0.44本体は変更不要で配布済み本体と同じハッシュ。",
+    "native_process_evidence": "verification/0.44.0-executable-picker-related.json"
+  },
+  {
+    "id": "S167",
+    "section": "16 他のアプリの設定",
+    "setting": "送る",
+    "reference_behavior": "起動先へ渡す対象を指定。現在ファイルやフォルダのパス等",
+    "state": "部分対応",
+    "implementation": [
+      "src/preferences.cpp:ExternalList / external_*",
+      "src/settings.cpp:external_application / set_external_application",
+      "src/external.cpp:plan_external_application",
+      "src/viewer.cpp:external / external_context",
+      "src/external_launch.cpp:launch_external_application"
+    ],
+    "evidence": [
+      "app:external_file_folder_none_and_explicit_arguments_keep_edited_source",
+      "app:external_clipboard_has_full_alpha_selection_and_current_animation_frame_before_launch",
+      "app:external_empty_and_anonymous_images_keep_launch_paths_and_copy_only_semantics",
+      "autopilot:49-external-settings.gvn"
+    ],
+    "note": "0.27の無し/ファイル/フォルダ/画像コピーと旧GVN方式を維持。0.48追加検証で、実行ファイル空欄のファイル送信をWindowsの専用関連付け先で受信し、open/edit等の5起動、全引数とAlpha付きPNGの全RGBA一致を確認。フォルダの実関連付け先、実クリスタ/編集ソフトの受信は未確認。元ファイル・現在コマ/選択・Alpha・画像なしの既存検査を保持。旧GVN方式は未加工なら元ファイル、加工/匿名/アニメ等は表示全体のPNG。",
+    "native_process_evidence": "verification/0.48.0-association-related.json"
+  },
+  {
+    "id": "S168",
+    "section": "16 他のアプリの設定",
+    "setting": "起動後MassiGraを終了",
+    "reference_behavior": "外部アプリの起動後に終了",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ExternalList / external_*",
+      "src/settings.cpp:external_application / set_external_application",
+      "src/external.cpp:plan_external_application",
+      "src/viewer.cpp:external / external_context",
+      "src/external_launch.cpp:launch_external_application"
+    ],
+    "evidence": [
+      "app:external_successful_launch_quit_honors_optional_unsaved_prompt_and_copy_only_does_not_close",
+      "app:external_launch_failure_and_malformed_arguments_keep_source_and_no_quit",
+      "autopilot:49-external-settings.gvn"
+    ],
+    "note": "0.27.0。空でない起動要求が成功した後だけ通常の終了経路へ進む。失敗とコピーだけでは閉じない。任意の未保存確認を尊重。通常GVNと実受信アプリでも成功時の終了/失敗時の継続を検査。"
+  },
+  {
+    "id": "S169",
+    "section": "16 他のアプリの設定",
+    "setting": "ウィンドウ",
+    "reference_behavior": "最大化等の起動状態。ただし相手アプリが従わない場合あり",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ExternalList / external_*",
+      "src/settings.cpp:external_application / set_external_application",
+      "src/external.cpp:plan_external_application",
+      "src/viewer.cpp:external / external_context",
+      "src/external_launch.cpp:launch_external_application"
+    ],
+    "evidence": [
+      "external_plan:show_and_verb_and_quit_are_passed_to_native_launch_boundary",
+      "app:external_file_folder_none_and_explicit_arguments_keep_edited_source",
+      "autopilot:49-external-settings.gvn"
+    ],
+    "note": "0.27.0。通常/最小化/最大化を保存してShellへ渡す。通常GVNからの実受信側で起動情報とIsIconic/IsZoomedの状態、UI保存後の再起動を検査。相手アプリによっては指定を無視する。"
+  },
+  {
+    "id": "S170",
+    "section": "16 他のアプリの設定",
+    "setting": "アクション",
+    "reference_behavior": "通常は空欄。システムの関連付けを使う場合、`edit`等の動詞を指定可能",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ExternalList / external_*",
+      "src/settings.cpp:external_application / set_external_application",
+      "src/external.cpp:plan_external_application",
+      "src/viewer.cpp:external / external_context",
+      "src/external_launch.cpp:launch_external_application"
+    ],
+    "evidence": [
+      "external_plan:show_and_verb_and_quit_are_passed_to_native_launch_boundary",
+      "app:external_file_folder_none_and_explicit_arguments_keep_edited_source",
+      "autopilot:49-external-settings.gvn"
+    ],
+    "note": "0.48追加検証（本体0.47）。実設定画面でアクションをopenからeditへ変更し、保存/正常終了/同じINIの再起動で保持。Windowsへ一時登録した検証専用拡張子で、空欄/open/edit/独自verb/起動失敗/成功時終了の6経路を通常GVNから実行。受信5回の日本語・空白・&を含むパスと引数/CWDが一致し、Alpha付きPNGも全RGBA一致。失敗時は終了要求があっても継続し、正常な別プロセスの成功時終了はコード0。既存関連付けと本体は不変。実クリスタ/編集ソフト受信はS167で継続。",
+    "native_process_evidence": "verification/0.48.0-association-related.json"
+  },
+  {
+    "id": "S171",
+    "section": "16 他のアプリの設定",
+    "setting": "メニュー項目の下に区切りを表示",
+    "reference_behavior": "区切り線を追加",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ExternalList / external_*",
+      "src/settings.cpp:external_application / set_external_application",
+      "src/external.cpp:plan_external_application",
+      "src/viewer.cpp:external / external_context",
+      "src/external_launch.cpp:launch_external_application"
+    ],
+    "evidence": [
+      "app:external_menu_names_hidden_slots_separators_keys_and_configuration",
+      "autopilot:49-external-settings.gvn"
+    ],
+    "note": "0.27.0。選んだ表示項目の直後に実メニュー区切りを置く。非表示の空名と&を含む名前、カスタムキー、適用/取消と保存を検査。"
+  },
+  {
+    "id": "S172",
+    "section": "16 他のアプリの設定",
+    "setting": "書庫内でファイルパスを送る時、書庫内パスを含める",
+    "reference_behavior": "無効なら書庫ファイル自体のパス",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ExternalList / external_*",
+      "src/settings.cpp:external_application / set_external_application",
+      "src/external.cpp:plan_external_application",
+      "src/viewer.cpp:external / external_context",
+      "src/external_launch.cpp:launch_external_application"
+    ],
+    "evidence": [
+      "app:external_archive_file_folder_and_macro_policies_use_named_displayed_member",
+      "app:external_pending_archive_replacement_uses_source_archive_metadata",
+      "autopilot:49-external-settings.gvn"
+    ],
+    "note": "0.48追加検証（本体0.47）。通常MassiGra0.45の書庫直下/入れ子2例で実測し、ONは書庫パス＋バックスラッシュ＋内部パス、OFFは書庫自体。送信とマクロ、フォルダ側フラグの参照12経路と通常GVN12経路で実受信引数が一致。日本語・空白・&入り書庫を使用し、実設定保存/次プロセスでの再読込、各画像の前後全画素コピーと正常終了も成功。従来の読込待ち旧表示元の検査は保持。",
+    "native_process_evidence": "verification/0.48.0-archive-external-related.json"
+  },
+  {
+    "id": "S173",
+    "section": "16 他のアプリの設定",
+    "setting": "書庫内でフォルダパスを送る時、書庫ファイルのパスを送る",
+    "reference_behavior": "無効なら書庫が所在するフォルダ",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ExternalList / external_*",
+      "src/settings.cpp:external_application / set_external_application",
+      "src/external.cpp:plan_external_application",
+      "src/viewer.cpp:external / external_context",
+      "src/external_launch.cpp:launch_external_application"
+    ],
+    "evidence": [
+      "app:external_archive_file_folder_and_macro_policies_use_named_displayed_member",
+      "app:external_pending_archive_replacement_uses_source_archive_metadata",
+      "autopilot:49-external-settings.gvn"
+    ],
+    "note": "0.27の書庫内フォルダ送信は、ONで書庫ファイル、OFFでその親フォルダ。0.48追加検証で通常MassiGra/GVNの直下/入れ子書庫と実マクロ置換の受信引数が一致。実設定を保存し次プロセスで再読込する。全フラグ組合せと次画像読込中の旧表示元を扱う従来のApp検査は保持。",
+    "native_process_evidence": "verification/0.48.0-archive-external-related.json"
+  },
+  {
+    "id": "S174",
+    "section": "16 他のアプリの設定",
+    "setting": "初期状態に戻す",
+    "reference_behavior": "選択している番号だけを戻す",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ExternalList / external_*",
+      "src/settings.cpp:external_application / set_external_application",
+      "src/external.cpp:plan_external_application",
+      "src/viewer.cpp:external / external_context",
+      "src/external_launch.cpp:launch_external_application"
+    ],
+    "evidence": [
+      "external_plan:move_and_reset_keep_every_field_and_other_slots",
+      "external_settings:reordering_and_single_row_reset_survive_reload_without_changing_other_options",
+      "autopilot:49-external-settings.gvn"
+    ],
+    "note": "0.27.0。現在の番号だけを初期化し、他枠と他ページの保留値を保持。専用ボタンとページ標準化、8/9番の復元、保存/取消/再読込を検査。"
+  },
+  {
+    "id": "S175",
+    "section": "16 他のアプリの設定",
+    "setting": "記号",
+    "reference_behavior": "置換対象",
+    "state": "見出し",
+    "implementation": [],
+    "evidence": [],
+    "note": "元の表の分類見出し。独立した設定項目の件数に含めない。"
+  },
+  {
+    "id": "S176",
+    "section": "16 他のアプリの設定",
+    "setting": "`($f)`",
+    "reference_behavior": "現在ファイルのパス",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ExternalList / external_*",
+      "src/settings.cpp:external_application / set_external_application",
+      "src/external.cpp:plan_external_application",
+      "src/viewer.cpp:external / external_context",
+      "src/external_launch.cpp:launch_external_application"
+    ],
+    "evidence": [
+      "external_plan:explicit_arguments_suppress_automatic_paths_and_replace_each_macro_once",
+      "external_plan:unquoted_macro_expansion_stays_raw_for_user_controlled_argument_quoting",
+      "app:external_file_folder_none_and_explicit_arguments_keep_edited_source",
+      "app:external_archive_file_folder_and_macro_policies_use_named_displayed_member",
+      "autopilot:49-external-settings.gvn"
+    ],
+    "note": "0.27.0。($f)を表示中の元ファイルへ1回ずつ置換し、実引数がある時は自動パス追加を抑止。引用符は利用者が指定する。日本語/空白/空引数/反復、画像なしと書庫方針を検査。通常GVNの受信argvでも照合。"
+  },
+  {
+    "id": "S177",
+    "section": "16 他のアプリの設定",
+    "setting": "`($d)`",
+    "reference_behavior": "現在フォルダのパス",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ExternalList / external_*",
+      "src/settings.cpp:external_application / set_external_application",
+      "src/external.cpp:plan_external_application",
+      "src/viewer.cpp:external / external_context",
+      "src/external_launch.cpp:launch_external_application"
+    ],
+    "evidence": [
+      "external_plan:explicit_arguments_suppress_automatic_paths_and_replace_each_macro_once",
+      "external_plan:empty_image_keeps_app_launch_and_viewer_folder_without_copying_clipboard",
+      "app:external_file_folder_none_and_explicit_arguments_keep_edited_source",
+      "app:external_archive_file_folder_and_macro_policies_use_named_displayed_member",
+      "autopilot:49-external-settings.gvn"
+    ],
+    "note": "0.27.0。($d)を表示元フォルダへ置換。画像なしはGVN本体、書庫は独立フラグを反映。別の初期作業フォルダから起動した通常GVNの受信argv/CWD、日本語/空白/空引数を照合。"
+  },
+  {
+    "id": "S178",
+    "section": "17 ヘルプから確認できる初期状態",
+    "setting": "内容",
+    "reference_behavior": "根拠",
+    "state": "見出し",
+    "implementation": [],
+    "evidence": [],
+    "note": "元の表の分類見出し。独立した設定項目の件数に含めない。"
+  },
+  {
+    "id": "S179",
+    "section": "17 ヘルプから確認できる初期状態",
+    "setting": "基本の表示は大きな画像をウィンドウに合わせて縮小",
+    "reference_behavior": "基本的な使い方",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:display_mode / full_display_mode",
+      "src/viewer.cpp:apply_display_policy / fullscreen / apply_settings",
+      "src/preferences.cpp:DisplayMode / FullDisplayMode / reset_page"
+    ],
+    "evidence": [
+      "display_policy:fresh_display_policy_keeps_small_images_at_actual_size_and_fullscreen_fits",
+      "display_policy:all_thirty_six_explicit_normal_and_fullscreen_policy_pairs_survive_save_and_reload",
+      "app:display_default_shrinks_large_images_and_preserves_small_alpha_in_normal_mode",
+      "app:display_explicit_policy_changes_survive_save_without_crossing_screen_modes",
+      "app:inactive_display_policy_changes_refresh_cached_views_without_resetting_active_manual_zoom",
+      "app:first_fullscreen_policy_honors_one_pixel_image_when_cached_dimensions_already_match",
+      "autopilot:50-display-default-policy.gvn"
+    ],
+    "note": "0.28.0。新規通常表示は大きい画像だけを縮小し、小さい画像は原寸。実参照の通常メニュー41023と照合。サイズ変更でも原寸を超えず、明示保存の0〜5とフィット方法は保持。欠落キーは新既定、読込だけではINIを作成/書換しない。Appと専用50、通常GVN6プロセス8経路、配布検査で確認。全画面側の変更で現在側の手動ズームを変えず、変更した画面へ入る時だけ方針を更新。"
+  },
+  {
+    "id": "S180",
+    "section": "17 ヘルプから確認できる初期状態",
+    "setting": "前後スキップは10個",
+    "reference_behavior": "リストメニュー",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:skip_count"
+    ],
+    "evidence": [
+      "app:skip_and_slideshow_advance_without_wrap"
+    ],
+    "note": "既定のスキップ枚数は10。"
+  },
+  {
+    "id": "S181",
+    "section": "17 ヘルプから確認できる初期状態",
+    "setting": "XP以降では名前の数値順が有効",
+    "reference_behavior": "並び順",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:natural"
+    ],
+    "evidence": [
+      "app:navigation_and_sorting"
+    ],
+    "note": "既定で自然数順ソートを有効にする。"
+  },
+  {
+    "id": "S182",
+    "section": "17 ヘルプから確認できる初期状態",
+    "setting": "外部アプリ8番と9番は現在ファイルと現在フォルダ",
+    "reference_behavior": "外部アプリメニューと設定",
+    "state": "実装済み",
+    "implementation": [
+      "src/preferences.cpp:ExternalList / external_*",
+      "src/settings.cpp:external_application / set_external_application",
+      "src/external.cpp:plan_external_application",
+      "src/viewer.cpp:external / external_context",
+      "src/external_launch.cpp:launch_external_application"
+    ],
+    "evidence": [
+      "external_plan:defaults_match_nine_observed_reference_slots",
+      "external_plan:empty_executable_file_and_folder_use_the_source_as_association_target",
+      "app:external_menu_names_hidden_slots_separators_keys_and_configuration",
+      "autopilot:49-external-settings.gvn"
+    ],
+    "note": "0.27の新規/個別初期化で8番は現在ファイル、9番は現在フォルダ、実行ファイルは空欄。名前・送信・起動状態と他枠を公式実コントロールに照合。0.48で空欄の現在ファイルの関連付け受信を追加検証。現在フォルダの関連付け先と実編集ソフト受信はS167で継続。"
+  },
+  {
+    "id": "S183",
+    "section": "17 ヘルプから確認できる初期状態",
+    "setting": "選択範囲なしの貼り付けは新規画像へ",
+    "reference_behavior": "0.42の変更",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:paste_new"
+    ],
+    "evidence": [
+      "app:customization_changes_real_paste_undo_and_shortcut_dispatch",
+      "app:clipboard_new_document_undo_identity"
+    ],
+    "note": "既定は選択なし貼り付けで新規文書。OFFにした場合も実合成を確認。"
+  },
+  {
+    "id": "S184",
+    "section": "17 ヘルプから確認できる初期状態",
+    "setting": "全画面時の表示オプションは画像をウィンドウに合わせる",
+    "reference_behavior": "0.43の変更",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:display_mode / full_display_mode",
+      "src/viewer.cpp:apply_display_policy / fullscreen / apply_settings",
+      "src/preferences.cpp:DisplayMode / FullDisplayMode / reset_page"
+    ],
+    "evidence": [
+      "display_policy:fresh_display_policy_keeps_small_images_at_actual_size_and_fullscreen_fits",
+      "display_policy:all_thirty_six_explicit_normal_and_fullscreen_policy_pairs_survive_save_and_reload",
+      "app:display_default_shrinks_large_images_and_preserves_small_alpha_in_normal_mode",
+      "app:display_explicit_policy_changes_survive_save_without_crossing_screen_modes",
+      "app:inactive_display_policy_changes_refresh_cached_views_without_resetting_active_manual_zoom",
+      "app:first_fullscreen_policy_honors_one_pixel_image_when_cached_dimensions_already_match",
+      "autopilot:50-display-default-policy.gvn"
+    ],
+    "note": "0.28.0。新規全画面は画像を画面にフィットする方式1。実参照メニュー41022と2250%キャプションを取得し、通常へ戻ると通常の方式2を保持。GVNでは3×2画像の5000%と通常100%、設定保存/再起動、旧明示値1/2の保持、1×1の初回全画面を検査。参照PrintWindowの黒い診断画像は描画一致の根拠にせず、既定値のメニュー観測とGVNの実動作を分ける。"
+  },
+  {
+    "id": "S185",
+    "section": "17 ヘルプから確認できる初期状態",
+    "setting": "右から左の漫画モードでツールバーとジャンプ方向を反転",
+    "reference_behavior": "0.24の変更、および現行説明",
+    "state": "実装済み",
+    "implementation": [
+      "include/gvn/settings.h:comic_toolbar_reverse,comic_jump_reverse",
+      "src/viewer.cpp:update,WM_COMMAND,Jump",
+      "src/jump_dialog.cpp:synchronize,scroll"
+    ],
+    "evidence": [
+      "settings:movement_modes_preserve_legacy_stop_loop_and_roundtrip_independent_options",
+      "settings:jump_options_defaults_legacy_roundtrip_and_invalid_values",
+      "app:movement_toolbar_reverse_keeps_menu_shortcuts_and_button_bitmaps",
+      "app:jump_cancels_pending_load_and_honors_all_comic_direction_flags",
+      "autopilot:31-movement-settings.gvn",
+      "autopilot:33-jump-dialog.gvn"
+    ],
+    "note": "両反転設定は初期状態でON。漫画表示＋右から左の場合のみ、ツールバーの前/次の機能を入替え、画像は維持する。ジャンプの先頭/末尾も反転する。各反転のOFF、左から右、通常表示を別に扱う。既存の本体2件・専用31/33と設定55件の成功記録を再照合し、今回の再実行なし。"
+  },
+  {
+    "id": "S186",
+    "section": "17 ヘルプから確認できる初期状態",
+    "setting": "ガラスの余りは反転しない",
+    "reference_behavior": "マスク処理",
+    "state": "実装済み",
+    "implementation": [
+      "src/masks.cpp:mask_image",
+      "include/gvn/settings.h:Settings::mask_options",
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:fields / Impl::reset_page",
+      "src/viewer.cpp:App::command"
+    ],
+    "evidence": [
+      "settings:mask_options_reference_defaults_all_flags_legacy_and_invalid_ini",
+      "app:mask_reference_commands_preserve_alpha_undo_copy_save_and_ole",
+      "app:mask_psd_gif_apng_current_frame_and_selected_alpha_restore_with_undo",
+      "autopilot:55-mask-options.gvn",
+      "app:selected_mask_commands_and_undo_keep_official_selection_rectangle"
+    ],
+    "note": "0.31.0。ガラス余りは新規既定OFF。旧INIの欠落キー、実UI初期化、保存と余り処理を照合した。 0.31.0。全45検査・本体161件・専用59本、通常/軽量配布の各10経路、配布本体のズーム474遷移・CP/虹色31ケースが成功。実編集ソフト側の受信、物理DPI、巨大画像・多数起動の性能は全体GOALの残課題。"
+  },
+  {
+    "id": "S187",
+    "section": "17 ヘルプから確認できる初期状態",
+    "setting": "Q0のXOR、上下反転、左右反転は無効",
+    "reference_behavior": "マスク処理",
+    "state": "実装済み",
+    "implementation": [
+      "src/masks.cpp:mask_image",
+      "include/gvn/settings.h:Settings::mask_options",
+      "src/settings.cpp:Settings::load/save",
+      "src/preferences.cpp:fields / Impl::reset_page",
+      "src/viewer.cpp:App::command"
+    ],
+    "evidence": [
+      "settings:mask_options_reference_defaults_all_flags_legacy_and_invalid_ini",
+      "app:mask_reference_commands_preserve_alpha_undo_copy_save_and_ole",
+      "app:mask_psd_gif_apng_current_frame_and_selected_alpha_restore_with_undo",
+      "autopilot:55-mask-options.gvn",
+      "app:selected_mask_commands_and_undo_keep_official_selection_rectangle"
+    ],
+    "note": "0.31.0。Q0の既定フラグ7で縦/横ガラス・色反転ON、XOR・上下/左右OFF。実UI初期化、64組の保存と512条件の画素を照合した。 0.31.0。全45検査・本体161件・専用59本、通常/軽量配布の各10経路、配布本体のズーム474遷移・CP/虹色31ケースが成功。実編集ソフト側の受信、物理DPI、巨大画像・多数起動の性能は全体GOALの残課題。"
+  },
+  {
+    "id": "S188",
+    "section": "12 キー設定（本文から補足）",
+    "setting": "1機能に最大8キー",
+    "reference_behavior": "現在のキー一覧と、新しいキーの登録。",
+    "state": "実装済み",
+    "note": "実コントロールから登録・優先順・削除・再表示・INI往復・実キー発火を確認。",
+    "implementation": [
+      "src/preferences.cpp:KeySlots,KeyCapture",
+      "src/settings.cpp:Settings::set_keys",
+      "src/viewer.cpp:App::add"
+    ],
+    "evidence": [
+      "autopilot:05-multiple-shortcuts.gvn",
+      "settings:multiple_shortcuts_clear_reorder_roundtrip_and_conflicts"
+    ]
+  },
+  {
+    "id": "S189",
+    "section": "12 キー設定（本文から補足）",
+    "setting": "先頭キーとメニュー表示",
+    "reference_behavior": "先頭へ移動し、そのキーをメニューの右に表示。",
+    "state": "実装済み",
+    "note": "実コントロールから登録・優先順・削除・再表示・INI往復・実キー発火を確認。",
+    "implementation": [
+      "src/preferences.cpp:KeySlots,KeyCapture",
+      "src/settings.cpp:Settings::set_keys",
+      "src/viewer.cpp:App::add"
+    ],
+    "evidence": [
+      "autopilot:05-multiple-shortcuts.gvn",
+      "settings:multiple_shortcuts_clear_reorder_roundtrip_and_conflicts"
+    ]
+  },
+  {
+    "id": "S190",
+    "section": "12 キー設定（本文から補足）",
+    "setting": "キーの削除と割り当てなし",
+    "reference_behavior": "選択したキーを削除し、0個の状態も保存する。",
+    "state": "実装済み",
+    "note": "実コントロールから登録・優先順・削除・再表示・INI往復・実キー発火を確認。",
+    "implementation": [
+      "src/preferences.cpp:KeySlots,KeyCapture",
+      "src/settings.cpp:Settings::set_keys",
+      "src/viewer.cpp:App::add"
+    ],
+    "evidence": [
+      "autopilot:05-multiple-shortcuts.gvn",
+      "settings:multiple_shortcuts_clear_reorder_roundtrip_and_conflicts"
+    ]
+  },
+  {
+    "id": "S191",
+    "section": "12 キー設定（本文から補足）",
+    "setting": "キーを押して入力",
+    "reference_behavior": "Tabを含むキー入力。Ctrl+Alt+Shift+Tabで入力欄から脱出する。",
+    "state": "実装済み",
+    "note": "実コントロールから登録・優先順・削除・再表示・INI往復・実キー発火を確認。",
+    "implementation": [
+      "src/preferences.cpp:KeySlots,KeyCapture",
+      "src/settings.cpp:Settings::set_keys",
+      "src/viewer.cpp:App::add"
+    ],
+    "evidence": [
+      "autopilot:05-multiple-shortcuts.gvn",
+      "settings:multiple_shortcuts_clear_reorder_roundtrip_and_conflicts"
+    ]
+  }
+]

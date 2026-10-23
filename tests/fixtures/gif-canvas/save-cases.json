@@ -1,0 +1,62 @@
+[
+  {
+    "file": "global-duplicate.gif.png",
+    "source": "global-duplicate.gif",
+    "operation": 0,
+    "format": "Png"
+  },
+  {
+    "file": "global-alpha.gif.png",
+    "source": "global-alpha.gif",
+    "operation": 0,
+    "format": "Png"
+  },
+  {
+    "file": "local-background.gif.png",
+    "source": "local-background.gif",
+    "operation": 0,
+    "format": "Png"
+  },
+  {
+    "file": "local-overflow.gif.png",
+    "source": "local-overflow.gif",
+    "operation": 0,
+    "format": "Png"
+  },
+  {
+    "file": "cropped-global.gif.png",
+    "source": "cropped-global.gif",
+    "operation": 0,
+    "format": "Png"
+  },
+  {
+    "file": "rotated.png",
+    "source": "global-alpha.gif",
+    "operation": 1,
+    "format": "Png"
+  },
+  {
+    "file": "negative.png",
+    "source": "global-alpha.gif",
+    "operation": 2,
+    "format": "Png"
+  },
+  {
+    "file": "undo.png",
+    "source": "global-alpha.gif",
+    "operation": 1,
+    "format": "Png"
+  },
+  {
+    "file": "original-depth.bmp",
+    "source": "global-duplicate.gif",
+    "operation": 0,
+    "format": "Bmp"
+  },
+  {
+    "file": "opaque.gif",
+    "source": "global-duplicate.gif",
+    "operation": 0,
+    "format": "Gif"
+  }
+]

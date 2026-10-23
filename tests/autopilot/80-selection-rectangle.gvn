@@ -1,0 +1,85 @@
+open	${fixtures}/selection-units.png
+wait
+remember	source
+rect_dialog
+rect_expect	Left	0
+rect_expect	Top	0
+rect_expect	Right	95
+rect_expect	Bottom	79
+rect_expect	Width	96
+rect_expect	Height	80
+rect_set	Left	8
+rect_set	Top	8
+rect_set	Right	31
+rect_set	Bottom	27
+rect_expect	Width	24
+rect_expect	Height	20
+rect_snapshot	selection-rectangle-six-fields.png
+rect_click	Cancel
+expect_selection_rect	0	0	0	0
+native_command	SelectNumbers
+prompt_text	8, 8, 24, 20
+prompt_accept
+expect_selection_rect	8	8	24	20
+rect_dialog
+rect_expect	Left	8
+rect_expect	Top	8
+rect_expect	Right	31
+rect_expect	Bottom	27
+rect_set	Left	12
+rect_expect	Width	20
+rect_set	Top	10
+rect_expect	Height	18
+rect_set	Right	35
+rect_expect	Width	24
+rect_set	Bottom	29
+rect_expect	Height	20
+rect_set	Width	18
+rect_expect	Right	29
+rect_set	Height	17
+rect_expect	Bottom	26
+rect_spin	Top	decrease
+rect_expect	Top	9
+rect_expect	Height	18
+rect_spin	Height	increase
+rect_expect	Height	19
+rect_snapshot	selection-rectangle-linked.png
+rect_click	Cancel
+expect_selection_rect	8	8	24	20
+rect_dialog
+rect_set	Width	90
+rect_expect	Left	6
+rect_expect	Right	95
+rect_set	Height	75
+rect_expect	Top	5
+rect_expect	Bottom	79
+rect_click	OK
+expect_selection_rect	6	5	90	75
+expect_same	source	true
+pixel_copy
+command	Crop
+expect	width	90
+expect	height	75
+command	Undo
+expect_same	source	true
+rect_dialog
+rect_set	Left	8
+rect_set	Top	8
+rect_set	Right	31
+rect_set	Bottom	27
+rect_set	Left	90
+rect_expect	Width	60
+rect_click	OK
+expect_selection_rect	31	8	60	20
+rect_dialog
+rect_expect	Left	31
+rect_expect	Right	90
+rect_set	Width	0
+expect	rect.ok_enabled	false
+rect_set	Width	20
+expect	rect.ok_enabled	true
+rect_set	Left	empty
+expect	rect.valid	false
+rect_click	Cancel
+expect_selection_rect	31	8	60	20
+expect	error_count	0

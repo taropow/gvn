@@ -1,0 +1,59 @@
+copy_fixture	display-alpha.png	pages/a/1.png
+copy_fixture	rgb.bmp	pages/b/2.bmp
+copy_fixture	page1.png	pages/c/3.png
+open	${output}/pages/a/1.png
+wait
+remember	first
+open_hold
+open	${output}/pages/b/2.bmp
+wait_open_blocked
+expect	open.pending	true
+expect	open.blocked	true
+expect	open.list_count	1
+expect_location	image	${output}/pages/a/1.png
+expect_same	first	true
+main_button	ZoomIn
+expect	open.blocked	true
+snapshot	open-preparing.png
+key	Esc
+expect	open.pending	false
+expect	open.loading	false
+expect	open.blocked	true
+expect_location	image	${output}/pages/a/1.png
+open_release
+wait_cache
+expect	open.forced_release	false
+expect_same	first	true
+open_hold
+open	${output}/pages/b/2.bmp
+wait_open_blocked
+open_detach
+open	${output}/pages/c/3.png
+expect	open.pending	true
+expect	open.blocked	true
+expect_location	image	${output}/pages/a/1.png
+open_release
+wait
+wait_cache
+expect_location	image	${output}/pages/c/3.png
+expect	open.forced_release	false
+expect	open.list_count	1
+remember	third
+pixel_copy
+snapshot	open-latest.png
+open_hold
+open	${output}/pages/b/2.bmp
+wait_open_blocked
+command	CloseImage
+expect	open.pending	false
+expect	open.loading	false
+expect	has_image	false
+open_release
+wait_cache
+expect	open.forced_release	false
+expect	has_image	false
+snapshot	open-cancelled-empty.png
+open	${output}/pages/c/3.png
+wait
+expect_same	third	true
+pixel_copy

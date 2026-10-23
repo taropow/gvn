@@ -1,0 +1,122 @@
+# Actual settings, page reset, high-step persistence, native keys/wheel and alpha copy.
+open	${fixtures}/alpha.png
+wait
+expect	settings.zoom_mode	2
+expect	settings.drag_simple	false
+command	Actual
+key	Plus
+expect	scale	1.25
+key	Plus
+expect	scale	1.5
+pointer	wheel	120	100	100	0
+expect	scale	1.75
+main_button	ZoomIn
+expect	scale	2
+pointer	wheel	-120	100	100	0
+expect	scale	1.75
+key	Minus
+expect	scale	1.5
+pixel_copy
+settings
+tab	Zoom
+expect	enabled.ZoomStep	false
+expect	enabled.ZoomBelow	false
+expect	enabled.ZoomAbove	false
+set	ZoomMode	1
+expect	enabled.ZoomStep	false
+expect	enabled.ZoomBelow	true
+expect	enabled.ZoomAbove	true
+set	ZoomBelow	3
+set	ZoomAbove	5000
+set	KeepZoom	true
+set	ZoomReduce	false
+set	ZoomEnlarge	false
+set	ZoomSimple	750
+set	DragSimple	true
+snapshot	zoom-high-step.png
+click	OK
+expect	settings.zoom_mode	1
+expect	settings.zoom_above	5000
+expect	settings.zoom_below	3
+expect	settings.zoom_simple	750
+expect	settings.drag_simple	true
+persisted
+command	Actual
+command	ZoomIn
+expect	scale	50
+command	ZoomOut
+expect	scale	1
+command	ZoomOut
+expect	scale	0.97
+settings
+tab	Zoom
+set	ZoomAbove	17
+click	OK
+command	Actual
+pointer	wheel	120	100	100	0
+expect	scale	1.17
+pointer	wheel	120	100	100	0
+expect	scale	1.34
+key	Minus
+expect	scale	1.17
+key	Minus
+expect	scale	1
+key	Minus
+expect	scale	0.97
+settings
+tab	Zoom
+click	Reset
+expect_checked	KeepZoom	false
+expect_checked	ZoomReduce	true
+expect_checked	ZoomEnlarge	true
+expect_checked	DragSimple	false
+expect_text	ZoomStep	25
+expect_text	ZoomBelow	10
+expect_text	ZoomAbove	25
+expect_text	ZoomSimple	0
+expect	enabled.ZoomStep	false
+expect	enabled.ZoomBelow	false
+expect	enabled.ZoomAbove	false
+click	Cancel
+expect	settings.zoom_mode	1
+expect	settings.zoom_above	17
+expect	settings.drag_simple	true
+persisted
+settings
+tab	Background
+scroll_page	bottom
+set	Cell	13
+tab	Zoom
+click	Reset
+snapshot	zoom-reset.png
+click	ApplyButton
+expect	settings.zoom_mode	2
+expect	settings.zoom_step	25
+expect	settings.zoom_below	10
+expect	settings.zoom_above	25
+expect	settings.zoom_simple	0
+expect	settings.drag_simple	false
+expect	settings.zoom_reduce	true
+expect	settings.zoom_enlarge	true
+expect	settings.keep_zoom	false
+expect	settings.checker_size	13
+expect	apply_enabled	false
+click	Cancel
+persisted
+settings
+tab	Zoom
+expect_checked	DragSimple	false
+set	ZoomMode	0
+expect	enabled.ZoomStep	true
+expect	enabled.ZoomBelow	false
+set	ZoomStep	50
+click	OK
+command	Actual
+key	Plus
+expect	scale	1.5
+key	Plus
+expect	scale	2.25
+key	Minus
+expect	scale	1.5
+pixel_copy
+persisted

@@ -1,0 +1,77 @@
+settings
+expect	tabs	16
+snapshot	01-general.png
+tab	Background
+set	Checker	true
+set	Background	112233
+set	Light	EEEEEE
+set	Dark	BBBBBB
+set	Cell	12
+snapshot	02-background.png
+tab	Window
+set	Topmost	true
+snapshot	03-window.png
+tab	Display
+set	InitialFit	4
+snapshot	04-display.png
+tab	Zoom
+set	ZoomMode	0
+set	ZoomStep	50
+snapshot	05-zoom.png
+tab	Fullscreen
+set	FullDown	0
+set	FullUp	0
+snapshot	06-fullscreen.png
+tab	Bars
+set	TitleMode	1
+set	Menu	true
+snapshot	07-bars.png
+tab	Move
+set	SkipCount	2
+snapshot	08-move.png
+tab	FileOperations
+snapshot	09-files.png
+tab	Loading
+set	Autoplay	false
+snapshot	10-loading.png
+tab	Mask
+set	GlassSize	16
+snapshot	11-mask.png
+tab	Keys
+snapshot	12-keys.png
+tab	Mouse
+set	Middle	0
+snapshot	13-mouse.png
+tab	MouseCustom
+snapshot	14-mouse-custom.png
+tab	Slideshow
+set	Interval	1.25
+set	SlideRandom	true
+snapshot	14-slideshow.png
+tab	External
+snapshot	15-external.png
+click	ApplyButton
+expect	settings.checker_size	12
+expect	settings.background	1122867
+expect	renderer.background	1122867
+expect	renderer.cell	12
+expect	settings.initial_fit	4
+expect	settings.zoom_step	50
+expect	settings.skip_count	2
+expect	settings.glass_size	16
+expect	settings.animation_autoplay	false
+expect	settings.interval	1250
+expect	settings.slide_random	true
+expect	settings.middle	0
+expect	apply_enabled	false
+persisted
+tab	Background
+set	Background	FF0000
+click	Cancel
+expect	settings_open	false
+expect	settings.background	1122867
+open	${fixtures}/display-alpha.png
+wait
+expect	scale	1
+expect_text	title	display-alpha.png
+snapshot	16-applied.png

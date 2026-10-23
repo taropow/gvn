@@ -1,0 +1,786 @@
+{
+  "reference_sha256": "c23b73887a3a98833f9318e7e3321a6a5b9825ad442b88e8bd3b0333ba28a3e5",
+  "reference_report_sha256": "bd3c3ef44f93ab69d56c2468f5c202c29b6f57f5afb33b8765e113944e624f98",
+  "deterministic_cases": [
+    {
+      "name": "flat-stop",
+      "options": {
+        "loop": false,
+        "next_folder": false,
+        "subtree": false,
+        "random": false
+      },
+      "actual_checks": {
+        "2001": false,
+        "2002": false,
+        "2003": false,
+        "2004": false,
+        "2005": false
+      },
+      "before": {
+        "file": "flat-0.png",
+        "slideshow": false,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "started": {
+        "file": "flat-0.png",
+        "slideshow": true,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "steps": [
+        {
+          "file": "flat-1.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "flat-2.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "flat-3.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "flat-3.png",
+          "slideshow": false,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        }
+      ],
+      "ended_naturally": true,
+      "after": {
+        "file": "flat-3.png",
+        "slideshow": false,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "graceful_exit": true,
+      "timer": {
+        "interval_ms": 600000,
+        "callback_nonzero": false,
+        "original_api_results_forwarded": true
+      }
+    },
+    {
+      "name": "flat-loop",
+      "options": {
+        "loop": true,
+        "next_folder": false,
+        "subtree": false,
+        "random": false
+      },
+      "actual_checks": {
+        "2001": false,
+        "2002": true,
+        "2003": false,
+        "2004": false,
+        "2005": false
+      },
+      "before": {
+        "file": "flat-0.png",
+        "slideshow": false,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "started": {
+        "file": "flat-0.png",
+        "slideshow": true,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "steps": [
+        {
+          "file": "flat-1.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "flat-2.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "flat-3.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "flat-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "flat-1.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "flat-2.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "flat-3.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "flat-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "flat-1.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        }
+      ],
+      "ended_naturally": false,
+      "after": {
+        "file": "flat-1.png",
+        "slideshow": false,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "graceful_exit": true,
+      "timer": {
+        "interval_ms": 600000,
+        "callback_nonzero": false,
+        "original_api_results_forwarded": true
+      }
+    },
+    {
+      "name": "last-file-stop",
+      "options": {
+        "loop": false,
+        "next_folder": false,
+        "subtree": false,
+        "random": false
+      },
+      "actual_checks": {
+        "2001": false,
+        "2002": false,
+        "2003": false,
+        "2004": false,
+        "2005": false
+      },
+      "before": {
+        "file": "flat-3.png",
+        "slideshow": false,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "started": {
+        "file": "flat-3.png",
+        "slideshow": true,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "steps": [
+        {
+          "file": "flat-3.png",
+          "slideshow": false,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        }
+      ],
+      "ended_naturally": true,
+      "after": {
+        "file": "flat-3.png",
+        "slideshow": false,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "graceful_exit": true,
+      "timer": {
+        "interval_ms": 600000,
+        "callback_nonzero": false,
+        "original_api_results_forwarded": true
+      }
+    },
+    {
+      "name": "subtree-stop",
+      "options": {
+        "loop": false,
+        "next_folder": true,
+        "subtree": true,
+        "random": false
+      },
+      "actual_checks": {
+        "2001": false,
+        "2002": false,
+        "2003": true,
+        "2004": true,
+        "2005": false
+      },
+      "before": {
+        "file": "root-0.png",
+        "slideshow": false,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "started": {
+        "file": "root-0.png",
+        "slideshow": true,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "steps": [
+        {
+          "file": "a-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "a-1.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "c-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "b-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "b-0.png",
+          "slideshow": false,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        }
+      ],
+      "ended_naturally": true,
+      "after": {
+        "file": "b-0.png",
+        "slideshow": false,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "graceful_exit": true,
+      "timer": {
+        "interval_ms": 600000,
+        "callback_nonzero": false,
+        "original_api_results_forwarded": true
+      }
+    },
+    {
+      "name": "subtree-loop",
+      "options": {
+        "loop": true,
+        "next_folder": true,
+        "subtree": true,
+        "random": false
+      },
+      "actual_checks": {
+        "2001": false,
+        "2002": true,
+        "2003": true,
+        "2004": true,
+        "2005": false
+      },
+      "before": {
+        "file": "root-0.png",
+        "slideshow": false,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "started": {
+        "file": "root-0.png",
+        "slideshow": true,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "steps": [
+        {
+          "file": "a-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "a-1.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "c-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "b-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "root-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "a-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "a-1.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "c-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "b-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "root-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "a-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "a-1.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "c-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        }
+      ],
+      "ended_naturally": false,
+      "after": {
+        "file": "c-0.png",
+        "slideshow": false,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "graceful_exit": true,
+      "timer": {
+        "interval_ms": 600000,
+        "callback_nonzero": false,
+        "original_api_results_forwarded": true
+      }
+    },
+    {
+      "name": "nested-subtree-stop",
+      "options": {
+        "loop": false,
+        "next_folder": true,
+        "subtree": true,
+        "random": false
+      },
+      "actual_checks": {
+        "2001": false,
+        "2002": false,
+        "2003": true,
+        "2004": true,
+        "2005": false
+      },
+      "before": {
+        "file": "a-0.png",
+        "slideshow": false,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "started": {
+        "file": "a-0.png",
+        "slideshow": true,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "steps": [
+        {
+          "file": "a-1.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "c-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "c-0.png",
+          "slideshow": false,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        }
+      ],
+      "ended_naturally": true,
+      "after": {
+        "file": "c-0.png",
+        "slideshow": false,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "graceful_exit": true,
+      "timer": {
+        "interval_ms": 600000,
+        "callback_nonzero": false,
+        "original_api_results_forwarded": true
+      }
+    },
+    {
+      "name": "nested-subtree-loop",
+      "options": {
+        "loop": true,
+        "next_folder": true,
+        "subtree": true,
+        "random": false
+      },
+      "actual_checks": {
+        "2001": false,
+        "2002": true,
+        "2003": true,
+        "2004": true,
+        "2005": false
+      },
+      "before": {
+        "file": "a-0.png",
+        "slideshow": false,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "started": {
+        "file": "a-0.png",
+        "slideshow": true,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "steps": [
+        {
+          "file": "a-1.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "c-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "a-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "a-1.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "c-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "a-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "a-1.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "c-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "a-0.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        },
+        {
+          "file": "a-1.png",
+          "slideshow": true,
+          "full": false,
+          "checked_sort_commands": [
+            40801,
+            40807
+          ]
+        }
+      ],
+      "ended_naturally": false,
+      "after": {
+        "file": "a-1.png",
+        "slideshow": false,
+        "full": false,
+        "checked_sort_commands": [
+          40801,
+          40807
+        ]
+      },
+      "graceful_exit": true,
+      "timer": {
+        "interval_ms": 600000,
+        "callback_nonzero": false,
+        "original_api_results_forwarded": true
+      }
+    }
+  ],
+  "random_invariants": {
+    "each_cycle_is_permutation": true,
+    "reshuffle_each_loop": true,
+    "temporary_sort_command": 40805,
+    "stop_restores_previous_sort": true,
+    "prior_random_sort_preserved": true
+  },
+  "interval_ms": 600000,
+  "synthetic_timer_notifications": true,
+  "elapsed_timing_measured": false,
+  "unrestricted_drive_end_verified": false
+}

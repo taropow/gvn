@@ -1,0 +1,112 @@
+settings
+tab	Keys
+expect	key_functions	238
+function	PreviousAdjacentFolder
+expect	key_slots	0
+function	NextAdjacentFolder
+expect	key_slots	0
+function	FlipH
+expect	key_slots	0
+set	KeyEdit	Ctrl+Alt+1
+click	KeyAdd
+expect	key_slots	1
+set	KeyEdit	Ctrl+Alt+2
+click	KeyAdd
+expect	key_slots	2
+set	KeyEdit	Ctrl+Alt+3
+click	KeyAdd
+expect	key_slots	3
+set	KeyEdit	Ctrl+Alt+4
+click	KeyAdd
+expect	key_slots	4
+set	KeyEdit	Ctrl+Alt+5
+click	KeyAdd
+expect	key_slots	5
+set	KeyEdit	Ctrl+Alt+6
+click	KeyAdd
+expect	key_slots	6
+set	KeyEdit	Ctrl+Alt+7
+click	KeyAdd
+expect	key_slots	7
+set	KeyEdit	Ctrl+Alt+8
+click	KeyAdd
+expect	key_slots	8
+set	KeyEdit	Ctrl+Alt+9
+click	KeyAdd
+expect	error_count	1
+expect	key_slots	8
+set	KeyEdit	Ctrl+Alt+8
+function	Open
+set	KeyEdit	Ctrl+Alt+1
+click	KeyAssign
+expect	error_count	2
+set	KeyEdit	Ctrl+O
+function	FlipH
+slot	7
+click	KeyFirst
+click	ApplyButton
+expect_first_key	FlipH	Ctrl+Alt+8
+expect_menu_key	FlipH	Ctrl+Alt+8
+persisted
+snapshot	eight-shortcuts.png
+function	Print
+click	KeyRemove
+expect	key_slots	0
+function	FlipH
+click	KeyRemove
+expect	key_slots	7
+set	KeyEdit	Ctrl+P
+click	KeyAdd
+click	KeyFirst
+function	ArmDrag
+expect	key_slots	2
+click	KeyRemove
+click	KeyRemove
+expect	key_slots	0
+function	CopyDestBase
+set	KeyEdit	Ctrl+Alt+D
+click	KeyAdd
+function	ExternalBase
+click	KeyCapture
+key	Ctrl+Alt+E
+expect_text	KeyEdit	Ctrl+Alt+E
+click	KeyAdd
+click	KeyCapture
+key	Tab
+expect_text	KeyEdit	Tab
+click	KeyAdd
+expect	key_slots	2
+slot	0
+click	KeyCapture
+key	Esc
+expect_text	KeyEdit	Ctrl+Alt+E
+click	KeyCapture
+key	Ctrl+Alt+Shift+Tab
+expect	key_capture_focused	true
+click	OK
+expect_first_key	FlipH	Ctrl+P
+expect_menu_key	FlipH	Ctrl+P
+expect_menu_key	Print	
+expect_binding	FlipH	Ctrl+P
+expect_binding	CopyDestBase	Ctrl+Alt+D
+expect_binding	ExternalBase	Ctrl+Alt+E
+expect_binding	ExternalBase	Tab
+expect_unbound	Ctrl+Alt+8
+expect_unbound	F6
+expect_unbound	Ctrl+Shift+D
+persisted
+settings
+tab	Keys
+function	FlipH
+expect	key_slots	8
+expect_text	KeyEdit	Ctrl+P
+snapshot	primary-shortcut.png
+click	Cancel
+open	${fixtures}/alpha.png
+wait
+remember	original
+key	Ctrl+Alt+1
+expect_same	original	false
+key	Ctrl+P
+expect_same	original	true
+snapshot	shortcut-dispatch.png

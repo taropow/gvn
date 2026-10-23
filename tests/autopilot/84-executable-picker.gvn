@@ -1,0 +1,48 @@
+# Actual product GetOpenFileNameW, owned Unicode/space EXE, Apply/Cancel/reload.
+resize	900	650
+open	${fixtures}/display-alpha.png
+wait
+remember	still
+copy_owned_executable	Apps 日本語/編集 ビューアー.exe
+copy_owned_executable	Apps 日本語/取消 アプリ.exe
+settings
+tab	External
+expect_value	ExternalEdit	empty
+external_native_browse
+picker_filename	Apps 日本語/編集 ビューアー.exe
+picker_snapshot	native-executable-picker.png
+picker_close	OK
+picker_wait_closed
+expect_value	ExternalName	編集 ビューアー
+expect_value	ExternalEdit	${output}\Apps 日本語\編集 ビューアー.exe
+snapshot	selected-executable.png
+click	ApplyButton
+expect_external	1	name	編集 ビューアー
+expect_external	1	path	${output}\Apps 日本語\編集 ビューアー.exe
+remember_external	selected	1
+persisted
+external_native_browse
+picker_filename	Apps 日本語/取消 アプリ.exe
+picker_close	Cancel
+picker_wait_closed
+expect_value	ExternalName	編集 ビューアー
+expect_value	ExternalEdit	${output}\Apps 日本語\編集 ビューアー.exe
+expect	enabled.ApplyButton	false
+set	ExternalList	1
+external_drop	${output}\Apps 日本語\取消 アプリ.exe
+expect_value	ExternalName	取消 アプリ
+expect_value	ExternalEdit	${output}\Apps 日本語\取消 アプリ.exe
+click	ApplyButton
+expect_external	2	name	取消 アプリ
+expect_external	2	path	${output}\Apps 日本語\取消 アプリ.exe
+persisted
+click	OK
+expect_external_equal	selected	1
+reload_external_settings
+settings
+tab	External
+expect_value	ExternalName	編集 ビューアー
+expect_value	ExternalEdit	${output}\Apps 日本語\編集 ビューアー.exe
+click	Cancel
+expect_same	still	true
+pixel_copy

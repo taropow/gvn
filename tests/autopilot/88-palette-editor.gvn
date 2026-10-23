@@ -1,0 +1,86 @@
+expect_menu_enabled	PaletteEdit	false
+open	${fixtures}/palette/png-4-alpha.png
+wait
+remember	original
+expect_indexed	4
+expect_menu_enabled	PaletteEdit	true
+menu	PaletteEdit
+expect	palette.index	0
+expect	palette.preview	true
+expect	palette.apply	false
+pal_grid	1
+expect	palette.index	1
+pal_set	Red	11
+pal_set	Green	22
+pal_slide	Blue	33
+pal_rgb	11	22	33	53
+pal_expect	${fixtures}/palette-dialog/applied.png
+expect_same	original	true
+expect	modified	false
+pal_snapshot	palette-preview.png
+pal_apply
+expect	palette.apply	false
+expect	modified	true
+expect	undo_available	true
+pal_set	Red	201
+pal_expect	${fixtures}/palette-dialog/draft.png
+pal_cancel
+expect_image	${fixtures}/palette-dialog/applied.png	0
+pixel_copy
+save_target	pixels/applied.bmp
+command	SaveAs
+save_type	Bmp
+save_set	BmpBits	2
+answer	OK
+save_accept
+wait_save
+save_target	pixels/applied.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_accept
+wait_save
+expect_saved	pixels/applied.png
+command	Undo
+expect_image	${fixtures}/palette/png-4-alpha.png	0
+command	Undo
+expect_image	${fixtures}/palette-dialog/applied.png	0
+menu	PaletteEdit
+pal_preview	false
+pal_grid	0
+pal_pick
+pal_picker_rgb	18	52	86
+pal_picker_snapshot	palette-color-picker.png
+pal_picker_accept
+pal_rgb	18	52	86	0
+pal_expect	${fixtures}/palette-dialog/applied.png
+pal_pick
+pal_picker_rgb	201	203	207
+pal_picker_cancel
+pal_rgb	18	52	86	0
+pal_accept
+expect_image	${fixtures}/palette-dialog/accepted.png	0
+expect	settings.palette_preview	false
+persisted
+pixel_copy
+save_target	pixels/accepted.png
+command	SaveAs
+save_type	Png
+save_set	PngTransparency	0
+save_accept
+wait_save
+expect_saved	pixels/accepted.png
+menu	PaletteEdit
+expect	palette.index	0
+expect	palette.preview	false
+pal_set	Index	999
+expect	palette.valid	false
+pal_set	Index	1
+expect	palette.valid	true
+pal_preview	true
+pal_cancel
+expect	settings.palette_preview	false
+persisted
+expect_image	${fixtures}/palette-dialog/accepted.png	0
+expect	error_count	0
+snapshot	palette-result.png

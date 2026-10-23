@@ -1,0 +1,329 @@
+mkdir	copy-basic
+mkdir	move-basic
+mkdir	copy1
+mkdir	copy2
+mkdir	copy3
+mkdir	copy4
+mkdir	copy5
+mkdir	copy6
+mkdir	copy7
+mkdir	copy8
+mkdir	copy9
+mkdir	copy10
+mkdir	move1
+mkdir	move2
+mkdir	move3
+mkdir	move4
+mkdir	move5
+mkdir	move6
+mkdir	move7
+mkdir	move8
+mkdir	move9
+mkdir	move10
+copy_fixture	alpha.png	files/base.png
+open	${output}/files/base.png
+wait
+command	Actual
+expect	scale	1
+command	FileCopy
+transfer_expect	Mode	false
+transfer_expect	BasicEdit	empty
+transfer_expect	Confirm	true
+transfer_wheel	-120
+expect	scale	1
+transfer_set	BasicEdit	missing-folder
+transfer_click	OK
+expect	transfer_open	true
+expect	error_count	1
+transfer_browse_reply	cancel
+transfer_click	Browse
+transfer_expect	BasicEdit	missing-folder
+transfer_browse_reply	copy-basic
+transfer_click	Browse
+transfer_expect	BasicEdit	${output}/copy-basic
+transfer_set	Confirm	false
+transfer_drop	BasicEdit	files/base.png	false
+expect	error_count	2
+transfer_expect	BasicEdit	${output}/copy-basic
+transfer_drop	BasicEdit	copy-basic	true
+transfer_snapshot	copy-basic.png
+transfer_enter
+expect_file	copy-basic/base.png	alpha.png
+expect_file	files/base.png	alpha.png
+expect_transfer_option	copy	basic	${output}/copy-basic
+expect_transfer_option	copy	confirm	false
+expect_transfer_option	copy	registered	false
+expect_transfer_option	move	basic	empty
+expect_transfer_option	move	confirm	true
+persisted
+command	FileCopy
+transfer_expect	BasicEdit	${output}/copy-basic
+transfer_set	BasicEdit	discarded-basic
+transfer_set	Registered	true
+transfer_set	Edit10	${output}/copy10
+transfer_set	Confirm	true
+transfer_close
+expect_transfer_option	copy	basic	${output}/copy-basic
+expect_transfer_option	copy	registered	false
+expect_transfer_option	copy	confirm	false
+expect_destination	copy	10	empty
+command	FileCopy
+transfer_set	BasicEdit	"${output}/copy-basic"
+transfer_set	Registered	true
+transfer_set	Edit1	"${output}/copy1"
+transfer_set	Edit2	"${output}/copy2"
+transfer_set	Edit3	"${output}/copy3"
+transfer_set	Edit4	"${output}/copy4"
+transfer_set	Edit5	"${output}/copy5"
+transfer_set	Edit6	"${output}/copy6"
+transfer_set	Edit7	"${output}/copy7"
+transfer_set	Edit8	"${output}/copy8"
+transfer_set	Edit9	"${output}/copy9"
+transfer_set	Edit10	"${output}/copy10"
+transfer_focus	Edit1
+transfer_resize	520	390
+transfer_wheel	-60
+transfer_expect	Slot	1
+transfer_wheel	-60
+transfer_expect	Slot	2
+transfer_wheel	240
+transfer_expect	Slot	1
+transfer_wheel	-2400
+transfer_expect	Slot	10
+transfer_expect	Focus	Edit10
+transfer_snapshot	copy-ten-small.png
+transfer_set	Registered	false
+transfer_expect	BasicEdit	"${output}/copy-basic"
+transfer_set	Registered	true
+transfer_click	Execute1
+expect_file	copy1/base.png	alpha.png
+expect_transfer_option	copy	registered	true
+expect_transfer_option	copy	basic	${output}/copy-basic
+persisted
+command	FileCopy
+transfer_expect	Mode	true
+transfer_expect	Edit2	${output}/copy2
+transfer_click	Execute2
+expect_file	copy2/base.png	alpha.png
+expect_file	files/base.png	alpha.png
+command	FileCopy
+transfer_expect	Mode	true
+transfer_expect	Edit3	${output}/copy3
+transfer_click	Execute3
+expect_file	copy3/base.png	alpha.png
+expect_file	files/base.png	alpha.png
+command	FileCopy
+transfer_expect	Mode	true
+transfer_expect	Edit4	${output}/copy4
+transfer_focus	Edit4
+transfer_browse_reply	copy4
+transfer_click	Browse
+transfer_browse_reply	cancel
+transfer_click	Browse
+transfer_expect	Edit4	${output}/copy4
+transfer_click	Execute4
+expect_file	copy4/base.png	alpha.png
+expect_file	files/base.png	alpha.png
+command	FileCopy
+transfer_expect	Mode	true
+transfer_expect	Edit5	${output}/copy5
+transfer_click	Execute5
+expect_file	copy5/base.png	alpha.png
+expect_file	files/base.png	alpha.png
+command	FileCopy
+transfer_expect	Mode	true
+transfer_expect	Edit6	${output}/copy6
+transfer_click	Execute6
+expect_file	copy6/base.png	alpha.png
+expect_file	files/base.png	alpha.png
+command	FileCopy
+transfer_expect	Mode	true
+transfer_expect	Edit7	${output}/copy7
+transfer_click	Execute7
+expect_file	copy7/base.png	alpha.png
+expect_file	files/base.png	alpha.png
+command	FileCopy
+transfer_expect	Mode	true
+transfer_expect	Edit8	${output}/copy8
+transfer_click	Execute8
+expect_file	copy8/base.png	alpha.png
+expect_file	files/base.png	alpha.png
+command	FileCopy
+transfer_expect	Mode	true
+transfer_expect	Edit9	${output}/copy9
+transfer_click	Execute9
+expect_file	copy9/base.png	alpha.png
+expect_file	files/base.png	alpha.png
+command	FileCopy
+transfer_expect	Mode	true
+transfer_expect	Edit10	${output}/copy10
+transfer_click	Execute10
+expect_file	copy10/base.png	alpha.png
+expect_file	files/base.png	alpha.png
+copy_fixture	rgb.bmp	rejected/base.png
+command	FileCopy
+transfer_set	Edit1	${output}/rejected
+transfer_set	Confirm	true
+answer	No
+transfer_click	Execute1
+expect_file	rejected/base.png	rgb.bmp
+expect_transfer_option	copy	confirm	true
+expect_destination	copy	1	${output}/rejected
+answer	Yes
+destination_command	copy	1
+expect	transfer_open	false
+expect_file	rejected/base.png	alpha.png
+copy_fixture	alpha.png	files/basic-move.png
+open	${output}/files/basic-move.png
+wait
+command	FileMove
+transfer_expect	Mode	false
+transfer_expect	BasicEdit	empty
+transfer_expect	Confirm	true
+transfer_set	BasicEdit	${output}/move-basic
+transfer_set	Confirm	false
+transfer_snapshot	move-basic.png
+transfer_click	OK
+expect_file	files/basic-move.png	absent
+expect_file	move-basic/basic-move.png	alpha.png
+expect_transfer_option	move	basic	${output}/move-basic
+expect_transfer_option	move	registered	false
+expect_transfer_option	move	confirm	false
+expect_transfer_option	copy	basic	${output}/copy-basic
+persisted
+copy_fixture	alpha.png	files/move-1.png
+open	${output}/files/move-1.png
+wait
+command	FileMove
+transfer_set	Registered	true
+transfer_set	Edit1	${output}/move1
+transfer_set	Edit2	${output}/move2
+transfer_set	Edit3	${output}/move3
+transfer_set	Edit4	${output}/move4
+transfer_set	Edit5	${output}/move5
+transfer_set	Edit6	${output}/move6
+transfer_set	Edit7	${output}/move7
+transfer_set	Edit8	${output}/move8
+transfer_set	Edit9	${output}/move9
+transfer_set	Edit10	${output}/move10
+transfer_focus	Edit5
+transfer_drop	Edit5	move5	true
+transfer_snapshot	move-ten.png
+transfer_click	Execute1
+expect_file	files/move-1.png	absent
+expect_file	move1/move-1.png	alpha.png
+copy_fixture	alpha.png	files/move-2.png
+open	${output}/files/move-2.png
+wait
+command	FileMove
+transfer_expect	Mode	true
+transfer_click	Execute2
+expect_file	files/move-2.png	absent
+expect_file	move2/move-2.png	alpha.png
+copy_fixture	alpha.png	files/move-3.png
+open	${output}/files/move-3.png
+wait
+command	FileMove
+transfer_expect	Mode	true
+transfer_click	Execute3
+expect_file	files/move-3.png	absent
+expect_file	move3/move-3.png	alpha.png
+copy_fixture	alpha.png	files/move-4.png
+open	${output}/files/move-4.png
+wait
+command	FileMove
+transfer_expect	Mode	true
+transfer_click	Execute4
+expect_file	files/move-4.png	absent
+expect_file	move4/move-4.png	alpha.png
+copy_fixture	alpha.png	files/move-5.png
+open	${output}/files/move-5.png
+wait
+command	FileMove
+transfer_expect	Mode	true
+transfer_click	Execute5
+expect_file	files/move-5.png	absent
+expect_file	move5/move-5.png	alpha.png
+copy_fixture	alpha.png	files/move-6.png
+open	${output}/files/move-6.png
+wait
+command	FileMove
+transfer_expect	Mode	true
+transfer_click	Execute6
+expect_file	files/move-6.png	absent
+expect_file	move6/move-6.png	alpha.png
+copy_fixture	alpha.png	files/move-7.png
+open	${output}/files/move-7.png
+wait
+command	FileMove
+transfer_expect	Mode	true
+transfer_click	Execute7
+expect_file	files/move-7.png	absent
+expect_file	move7/move-7.png	alpha.png
+copy_fixture	alpha.png	files/move-8.png
+open	${output}/files/move-8.png
+wait
+command	FileMove
+transfer_expect	Mode	true
+transfer_click	Execute8
+expect_file	files/move-8.png	absent
+expect_file	move8/move-8.png	alpha.png
+copy_fixture	alpha.png	files/move-9.png
+open	${output}/files/move-9.png
+wait
+command	FileMove
+transfer_expect	Mode	true
+transfer_click	Execute9
+expect_file	files/move-9.png	absent
+expect_file	move9/move-9.png	alpha.png
+copy_fixture	alpha.png	files/move-10.png
+open	${output}/files/move-10.png
+wait
+command	FileMove
+transfer_expect	Mode	true
+transfer_click	Execute10
+expect_file	files/move-10.png	absent
+expect_file	move10/move-10.png	alpha.png
+persisted
+settings
+tab	Background
+set	Cell	23
+tab	FileOperations
+click	Reset
+click	ApplyButton
+expect_transfer_option	copy	registered	false
+expect_transfer_option	copy	basic	empty
+expect_transfer_option	copy	confirm	true
+expect_destination	copy	1	empty
+expect_destination	copy	2	empty
+expect_destination	copy	3	empty
+expect_destination	copy	4	empty
+expect_destination	copy	5	empty
+expect_destination	copy	6	empty
+expect_destination	copy	7	empty
+expect_destination	copy	8	empty
+expect_destination	copy	9	empty
+expect_destination	copy	10	empty
+expect_transfer_option	move	registered	false
+expect_transfer_option	move	basic	empty
+expect_transfer_option	move	confirm	true
+expect_destination	move	1	empty
+expect_destination	move	2	empty
+expect_destination	move	3	empty
+expect_destination	move	4	empty
+expect_destination	move	5	empty
+expect_destination	move	6	empty
+expect_destination	move	7	empty
+expect_destination	move	8	empty
+expect_destination	move	9	empty
+expect_destination	move	10	empty
+expect	settings.checker_size	23
+persisted
+click	OK
+command	FileCopy
+transfer_expect	Mode	false
+transfer_expect	BasicEdit	empty
+transfer_close
+expect	error_count	2
+pixel_copy
+snapshot	transfer-final.png

@@ -1,0 +1,143 @@
+{
+  "reference_sha256": "c23b73887a3a98833f9318e7e3321a6a5b9825ad442b88e8bd3b0333ba28a3e5",
+  "private_station": true,
+  "default_checked": true,
+  "source_files": {
+    "rgb555.bmp": "7e03527c58f51bdb5f323ad2940006907645aac7f217c77e13968150827b76b9",
+    "rgb555-fields.bmp": "b5dd99769aa01c28cb35ba4d58dadf96fed085f1a61e8570f98af8cdadeab9d7",
+    "rgb565.bmp": "d605f880c728d25b2f6db5771bfde24e7fd264b46bdfe32f7d18e28322052b14",
+    "alpha-v5.bmp": "ead4d2aa79546daf828e4f8c09f921fd2ac132c5f6786f4044b1c625751f3661"
+  },
+  "observed": [
+    {
+      "pid": 136060,
+      "source": "rgb555.bmp",
+      "enabled": false,
+      "copied": {
+        "bpp": 16,
+        "compression": 0,
+        "rgb_sha256": "465cd146ed7199c8301b9de2bc8bb0b2bf9fb21f5903e26509d873b71f645776",
+        "size": [
+          65,
+          3
+        ]
+      },
+      "normal_close": true,
+      "exit_code": 0
+    },
+    {
+      "pid": 82132,
+      "source": "rgb555-fields.bmp",
+      "enabled": false,
+      "copied": {
+        "bpp": 16,
+        "compression": 3,
+        "rgb_sha256": "465cd146ed7199c8301b9de2bc8bb0b2bf9fb21f5903e26509d873b71f645776",
+        "size": [
+          65,
+          3
+        ]
+      },
+      "normal_close": true,
+      "exit_code": 0
+    },
+    {
+      "pid": 117784,
+      "source": "rgb565.bmp",
+      "enabled": false,
+      "copied": {
+        "bpp": 16,
+        "compression": 3,
+        "rgb_sha256": "96a70f5b127f748a978418704c727eb4bbeb554f90dd0de913a35a1410b248a2",
+        "size": [
+          65,
+          3
+        ]
+      },
+      "normal_close": true,
+      "exit_code": 0
+    },
+    {
+      "pid": 21476,
+      "source": "alpha-v5.bmp",
+      "enabled": false,
+      "copied": {
+        "bpp": 24,
+        "compression": 0,
+        "rgb_sha256": "0f8f9df356807ab167d8cd74dc08a5e4cc0fff31bc03d37b2296694da76318f0",
+        "size": [
+          3,
+          2
+        ]
+      },
+      "normal_close": true,
+      "exit_code": 0
+    },
+    {
+      "pid": 133080,
+      "source": "rgb555.bmp",
+      "enabled": true,
+      "copied": {
+        "bpp": 24,
+        "compression": 0,
+        "rgb_sha256": "ab45b91278959c0c96567c60cd20552a67c9b2cc75157474321f676f458da37b",
+        "size": [
+          65,
+          3
+        ]
+      },
+      "normal_close": true,
+      "exit_code": 0
+    },
+    {
+      "pid": 125540,
+      "source": "rgb555-fields.bmp",
+      "enabled": true,
+      "copied": {
+        "bpp": 24,
+        "compression": 0,
+        "rgb_sha256": "ab45b91278959c0c96567c60cd20552a67c9b2cc75157474321f676f458da37b",
+        "size": [
+          65,
+          3
+        ]
+      },
+      "normal_close": true,
+      "exit_code": 0
+    },
+    {
+      "pid": 121244,
+      "source": "rgb565.bmp",
+      "enabled": true,
+      "copied": {
+        "bpp": 24,
+        "compression": 0,
+        "rgb_sha256": "7f3ebbe6597cae42a11379bb1559c774ffaea4303393f63f58126b32c0458675",
+        "size": [
+          65,
+          3
+        ]
+      },
+      "normal_close": true,
+      "exit_code": 0
+    },
+    {
+      "pid": 48720,
+      "source": "alpha-v5.bmp",
+      "enabled": true,
+      "copied": {
+        "bpp": 24,
+        "compression": 0,
+        "rgb_sha256": "0f8f9df356807ab167d8cd74dc08a5e4cc0fff31bc03d37b2296694da76318f0",
+        "size": [
+          3,
+          2
+        ]
+      },
+      "normal_close": true,
+      "exit_code": 0
+    }
+  ],
+  "source_inputs_unchanged": true,
+  "alpha_policy": "Native clipboard flattening is not the GVN alpha policy. GVN preserves alpha independently."
+}

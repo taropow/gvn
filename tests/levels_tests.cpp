@@ -1,0 +1,62 @@
+#include "gvn/levels_dialog.h"
+#include "gvn/codecs.h"
+#include "gvn/saving.h"
+#include "gvn/settings.h"
+#include "gvn/ui.h"
+#include "test.h"
+#include "test_desktop.h"
+#include <commctrl.h>
+#include <chrono>
+#include <fstream>
+#include <numeric>
+#include <set>
+using namespace gvn;
+namespace id=levels_control;
+namespace {
+const auto fixtures=std::filesystem::path(GVN_SOURCE_ROOT)/L"tests/fixtures";
+struct Fixture {
+    HWND owner{};std::shared_ptr<const Image> shown;std::unique_ptr<LevelsDialog> dialog;Image source=load_image(fixtures/L"levels/narrow.png");bool current{true},fail{};unsigned processed{};
+    Fixture(){owner=CreateWindowExW(0,L"STATIC",L"Owned levels test",WS_OVERLAPPEDWINDOW|WS_VISIBLE,0,0,1000,800,nullptr,nullptr,GetModuleHandleW(nullptr),nullptr);CHECK(owner);}
+    ~Fixture(){dialog.reset();DestroyWindow(owner);}
+    void pump(){MSG m{};while(PeekMessageW(&m,nullptr,0,0,PM_REMOVE)){if(dialog&&IsWindow(dialog->window())&&IsDialogMessageW(dialog->window(),&m))continue;TranslateMessage(&m);DispatchMessageW(&m);}}
+    template<class F>void until(F condition){const auto end=std::chrono::steady_clock::now()+std::chrono::seconds(3);do{pump();if(condition())return;MsgWaitForMultipleObjects(0,nullptr,FALSE,5,QS_ALLINPUT);}while(std::chrono::steady_clock::now()<end);CHECK(condition());}
+    void settle(){until([&]{return dialog->ready();});}
+    void open(LevelsChoice choice={}){dialog=std::make_unique<LevelsDialog>(choice,levels_histogram(source),[&](const LevelsAdjustment &value){++processed;if(fail)throw std::bad_alloc();auto image=adjust_levels(source,value);return image?std::make_shared<Image>(std::move(*image)):nullptr;},[&](std::shared_ptr<const Image> image){shown=std::move(image);},[&]{return current;});CHECK(dialog->create(owner));ShowWindow(dialog->window(),SW_SHOWNOACTIVATE);settle();}
+    void set(int key,const wchar_t *text){SetWindowTextW(dialog->control(key),text);}
+    void click(int key){SendMessageW(dialog->control(key),BM_CLICK,0,0);pump();if(IsWindow(dialog->window()))settle();}
+    std::wstring text(int key){wchar_t value[64]{};GetWindowTextW(dialog->control(key),value,64);return value;}
+    void spin(int n,int delta){NMUPDOWN event{};event.hdr.hwndFrom=dialog->control(id::SpinBlack+n);event.hdr.idFrom=id::SpinBlack+n;event.hdr.code=UDN_DELTAPOS;event.iDelta=delta;SendMessageW(dialog->window(),WM_NOTIFY,event.hdr.idFrom,reinterpret_cast<LPARAM>(&event));settle();}
+};
+void print_tree(HWND window,HDC dc,const RECT &root){
+    DWORD pid{};GetWindowThreadProcessId(window,&pid);CHECK(pid==GetCurrentProcessId());if(!(GetWindowLongPtrW(window,GWL_STYLE)&WS_VISIBLE))return;
+    RECT bounds{};CHECK(GetWindowRect(window,&bounds));const int saved=SaveDC(dc);CHECK(saved);SetViewportOrgEx(dc,bounds.left-root.left,bounds.top-root.top,nullptr);IntersectClipRect(dc,0,0,bounds.right-bounds.left,bounds.bottom-bounds.top);SendMessageW(window,WM_PRINT,reinterpret_cast<WPARAM>(dc),PRF_NONCLIENT|PRF_CLIENT|PRF_ERASEBKGND);
+    CHECK(RestoreDC(dc,saved));for(auto child=GetWindow(window,GW_CHILD);child;child=GetWindow(child,GW_HWNDNEXT))print_tree(child,dc,root);
+}
+void snapshot(const std::filesystem::path &path){
+    Fixture f;f.open();f.click(id::Automatic);f.click(id::Individual);f.click(id::Red);f.set(id::Gamma,L"1.250");f.set(id::OutputBlack,L"10");f.set(id::OutputWhite,L"240");f.settle();CHECK(f.dialog->valid());const auto window=f.dialog->window();RECT bounds{};CHECK(GetWindowRect(window,&bounds));const int width=bounds.right-bounds.left,height=bounds.bottom-bounds.top;auto dc=GetDC(window);CHECK(dc);auto memory=CreateCompatibleDC(dc);CHECK(memory);BITMAPINFO info{};info.bmiHeader={sizeof(BITMAPINFOHEADER),width,-height,1,32,BI_RGB};void *raw{};auto bitmap=CreateDIBSection(dc,&info,DIB_RGB_COLORS,&raw,nullptr,0);CHECK(bitmap&&raw);auto previous=SelectObject(memory,bitmap);std::fill_n(static_cast<uint32_t*>(raw),size_t(width)*height,0xff5a5a5a);print_tree(window,memory,bounds);GdiFlush();Image image;image.width=width;image.height=height;image.frames.push_back({std::vector<Pixel>(size_t(width)*height),100});std::set<uint32_t> colors;const auto bytes=static_cast<const uint8_t*>(raw);
+    for(size_t n=0;n<image.frames[0].pixels.size();++n){const auto at=bytes+n*4;image.frames[0].pixels[n]={at[2],at[1],at[0],255};colors.insert(uint32_t(at[0])|(uint32_t(at[1])<<8)|(uint32_t(at[2])<<16));}
+    SelectObject(memory,previous);DeleteObject(bitmap);DeleteDC(memory);ReleaseDC(window,dc);CHECK(colors.size()>32);save_image(image,0,path,SaveOptions{});f.click(IDCANCEL);std::cout<<"PASS actual levels control-tree snapshot "<<width<<"x"<<height<<" colors="<<colors.size()<<'\n';
+}
+}
+TEST(levels_reference_combined_individual_gamma_bounds_and_output_inversion_match_observed_pixels){
+    std::ifstream cases(fixtures/L"levels/cases.tsv");std::string name,input;int individual{},tolerance{},count{};
+    while(cases>>name>>input>>individual){LevelsAdjustment choice;choice.individual=individual!=0;for(auto &v:choice.curves)CHECK(cases>>v.black>>v.gamma>>v.white>>v.output_black>>v.output_white);CHECK(cases>>tolerance);const auto source=load_image(fixtures/L"levels"/input),reference=load_image(fixtures/L"levels"/(name+".png"));const auto result=adjust_levels(source,choice);const auto &actual=result?*result:source;CHECK(actual.width==reference.width&&actual.height==reference.height);for(size_t n=0;n<actual.frames[0].pixels.size();++n){const auto a=actual.frames[0].pixels[n],r=reference.frames[0].pixels[n];CHECK(a.a==r.a&&std::abs(int(a.r)-r.r)<=tolerance&&std::abs(int(a.g)-r.g)<=tolerance&&std::abs(int(a.b)-r.b)<=tolerance);}++count;}CHECK(count==12);
+}
+TEST(levels_histogram_auto_alpha_roi_palette_and_allocation_are_transactional){
+    const auto narrow=load_image(fixtures/L"levels/narrow.png");const auto histogram=levels_histogram(narrow);CHECK(std::accumulate(histogram[0].begin(),histogram[0].end(),uint64_t{})==2304);LevelsAdjustment choice;choice.curves[0]={10,1300,230,15,240};auto automatic=automatic_levels(choice,histogram);CHECK(automatic.curves[0]==LevelCurve{20,1000,200,0,255});choice.individual=true;for(auto &v:choice.curves)v={10,1300,230,15,240};automatic=automatic_levels(choice,histogram);CHECK(automatic.curves[0]==choice.curves[0]);CHECK(automatic.curves[1]==LevelCurve{20,1000,200,0,255});CHECK(automatic.curves[2]==LevelCurve{50,1000,180,0,255});CHECK(automatic.curves[3]==LevelCurve{80,1000,160,0,255});
+    auto tiny=new_image(3,1);tiny.frames[0].pixels={{1,2,3,0},{20,40,60,128},{100,110,120,255}};const auto full=levels_histogram(tiny),roi=levels_histogram(tiny,{0,0,2,1});CHECK(full[1][1]==0&&full[1][20]==1&&full[1][100]==1&&roi[1][100]==0);CHECK(automatic_levels({},roi).curves[0]==LevelCurve{20,1000,60,0,255});CHECK(automatic_levels({},levels_histogram(new_image(2,2))).neutral());
+    const auto source=load_image(fixtures/L"palette/png-4-alpha.png");const auto pixels=source.frames[0].pixels;const auto indices=source.frames[0].indexed;CHECK(indices);choice={};choice.curves[0]={20,1250,225,10,240};const auto whole=adjust_levels(source,choice),part=adjust_levels(source,choice,{1,1,2,1});CHECK(whole&&part&&whole->frames[0].indexed&&whole->frames[0].indexed->packed==indices->packed&&whole->frames[0].indexed->palette.size()==indices->palette.size()&&!part->frames[0].indexed);
+    for(int y=0;y<int(source.height);++y)for(int x=0;x<int(source.width);++x){const auto at=size_t(y)*source.width+x;CHECK(whole->frames[0].pixels[at].a==pixels[at].a);CHECK(part->frames[0].pixels[at]==(y==1&&x>=1&&x<3?whole->frames[0].pixels[at]:pixels[at]));}CHECK(decode(encode_for_save(*whole,0,SaveFormat::Png,{})).frames[0].pixels==whole->frames[0].pixels);EditMemory memory;memory.before_allocate=[](size_t){throw std::bad_alloc();};THROWS(adjust_levels(source,choice,{},memory));CHECK(source.frames[0].pixels==pixels&&source.frames[0].indexed==indices);CHECK(!adjust_levels(source,{})&&!adjust_levels(source,choice,{1000,1000,2,2}));choice.curves[0].black=choice.curves[0].white;THROWS(adjust_levels(source,choice));auto invalid=source;invalid.frames[0].pixels.pop_back();THROWS(levels_histogram(invalid));
+}
+TEST(levels_actual_controls_hold_separate_rgb_states_auto_reset_and_reuse_preview){
+    Fixture f;f.open();CHECK(f.dialog->valid()&&f.processed==0&&!IsWindowEnabled(f.dialog->control(id::Red)));f.set(id::Black,L"17");f.set(id::Gamma,L"1.300");f.set(id::White,L"225");f.settle();CHECK(f.shown);const auto combined=f.dialog->options().adjustment.curves[0];f.click(id::Individual);CHECK(f.text(id::Black)==L"0"&&f.text(id::Gamma)==L"1.000"&&IsWindowEnabled(f.dialog->control(id::Red)));f.set(id::Black,L"20");f.spin(1,250);CHECK(f.text(id::Gamma)==L"1.250");f.click(id::Green);f.set(id::Black,L"30");f.click(id::Blue);f.set(id::Black,L"40");f.click(id::Red);CHECK(f.text(id::Black)==L"20"&&f.text(id::Gamma)==L"1.250");f.click(id::Individual);CHECK(f.dialog->options().adjustment.curves[0]==combined&&f.text(id::Black)==L"17");f.click(id::Individual);f.click(id::Automatic);CHECK(f.dialog->options().adjustment.curves[1]==LevelCurve{20,1000,200,0,255}&&f.dialog->options().adjustment.curves[2]==LevelCurve{50,1000,180,0,255}&&f.dialog->options().adjustment.curves[3]==LevelCurve{80,1000,160,0,255});f.settle();const auto candidate=f.dialog->preview_image();const auto calls=f.processed;CHECK(candidate&&f.shown==candidate);f.click(IDOK);CHECK(f.dialog->result()&&f.dialog->result()->image==candidate&&f.processed==calls&&!f.shown);
+    Fixture off;off.open({{},false});off.set(id::Black,L"20");off.set(id::Gamma,L"1.250");off.settle();CHECK(off.processed==0&&!off.shown);off.click(IDOK);CHECK(off.processed==1&&off.dialog->result()&&!off.dialog->result()->choice.preview);
+}
+TEST(levels_invalid_failure_cancel_and_stale_context_keep_original_image){
+    Fixture f;f.open();const auto before=f.source.frames[0].pixels;f.set(id::Gamma,L"10.001");CHECK(!f.dialog->valid()&&!IsWindowEnabled(f.dialog->control(IDOK))&&!f.shown);f.click(id::Individual);CHECK(!f.dialog->options().adjustment.individual&&f.text(id::Gamma)==L"10.001");f.click(id::Automatic);CHECK(f.dialog->valid()&&f.text(id::Gamma)==L"1.000");f.set(id::White,L"10");CHECK(!f.dialog->valid());f.set(id::White,L"200");f.settle();CHECK(f.dialog->valid());f.fail=true;f.set(id::Gamma,L"1.250");f.settle();CHECK(!f.dialog->valid()&&!f.shown);f.fail=false;f.set(id::Gamma,L"1.300");f.settle();CHECK(f.dialog->valid()&&f.shown);f.current=false;f.until([&]{return !f.dialog->valid()&&!f.shown;});CHECK(!f.shown);SendMessageW(f.dialog->window(),WM_COMMAND,IDOK,0);CHECK(IsWindow(f.dialog->window())&&!f.dialog->result());f.click(IDCANCEL);CHECK(!f.dialog->result()&&f.source.frames[0].pixels==before);
+    Fixture cancel;cancel.open();cancel.set(id::Black,L"20");cancel.settle();CHECK(cancel.shown);cancel.click(IDCANCEL);CHECK(!cancel.shown&&!cancel.dialog->result());
+}
+TEST(levels_preview_preference_roundtrips_and_legacy_defaults_on){
+    const auto directory=std::filesystem::temp_directory_path()/(L"gvn-levels-"+std::to_wstring(GetCurrentProcessId()));std::filesystem::create_directories(directory);const auto path=directory/L"viewer.ini";Settings initial;CHECK(initial.levels_preview);initial.levels_preview=false;initial.save(path);Settings restored;restored.load(path);CHECK(!restored.levels_preview);std::ofstream(path)<<"[Viewer]\n";Settings legacy;legacy.load(path);CHECK(legacy.levels_preview);std::filesystem::remove_all(directory);
+}
+int main(int argc,char **argv){gvn_test::ClipboardLock lock;if(!lock)return 2;const auto station=CreateWindowStationW(nullptr,0,WINSTA_ALL_ACCESS,nullptr);if(!station||!gvn_test::noninteractive(station)||!SetProcessWindowStation(station))return 2;const auto desktop=CreateDesktopW(L"GVN-levels-test",nullptr,nullptr,0,GENERIC_ALL,nullptr);if(!desktop||!SetThreadDesktop(desktop))return 3;SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);if(FAILED(OleInitialize(nullptr))||!initialize_controls())return 4;try{if(argc>2&&std::string(argv[1])=="--case"){auto &cases=all_tests();const auto found=std::find_if(cases.begin(),cases.end(),[&](const auto &v){return std::string(v.name)==argv[2];});if(found==cases.end())throw std::invalid_argument("Unknown levels test case");const auto chosen=*found;cases={chosen};}else if(argc>1){snapshot(std::filesystem::path(argv[1]));OleUninitialize();return 0;}const auto result=run_tests();OleUninitialize();return result;}catch(const std::exception &error){std::cout<<"FAIL "<<error.what()<<'\n';OleUninitialize();return 1;}}

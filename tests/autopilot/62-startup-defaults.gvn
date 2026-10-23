@@ -1,0 +1,78 @@
+startup
+expect	window.width	480
+expect	window.height	360
+expect	window.maximized	false
+expect	settings.startup_position	1
+expect	settings.restore_maximized	true
+expect	settings.restore_fullscreen	false
+expect	settings.interval	5000
+settings
+tab	Window
+expect_text	WindowX	0
+expect_text	WindowY	0
+expect_text	WindowWidth	480
+expect_text	WindowHeight	360
+expect	enabled.WindowX	false
+expect	enabled.WindowCurrent	false
+expect_checked	RestoreMaximized	true
+expect_checked	RestoreFullscreen	false
+set	StartupPosition	2
+expect	enabled.WindowX	true
+expect	enabled.WindowCurrent	true
+set	WindowX	130
+set	WindowY	90
+set	WindowWidth	640
+set	WindowHeight	480
+set	StartupState	1
+expect	enabled.RestoreMaximized	false
+expect	enabled.RestoreFullscreen	false
+set	StartupState	2
+expect	enabled.RestoreMaximized	false
+set	StartupState	3
+expect	enabled.RestoreFullscreen	false
+set	StartupState	0
+expect	enabled.RestoreMaximized	true
+expect	enabled.RestoreFullscreen	true
+click	ApplyButton
+expect	settings.startup_position	2
+persisted
+click	Cancel
+startup
+expect	window.width	640
+expect	window.height	480
+settings
+tab	Window
+set	WindowX	500
+set	WindowY	400
+click	Cancel
+expect	settings.window_x	130
+expect	settings.window_y	90
+settings
+tab	Window
+click	Reset
+expect_text	WindowX	0
+expect_text	WindowY	0
+expect_text	WindowWidth	480
+expect_text	WindowHeight	360
+expect	enabled.WindowCurrent	false
+snapshot	startup-reference-defaults.png
+click	ApplyButton
+expect	settings.startup_position	1
+expect	settings.restore_maximized	true
+expect	settings.restore_fullscreen	false
+click	Cancel
+remember_window
+startup
+expect	window.width	640
+expect	window.height	480
+settings
+tab	Slideshow
+expect_text	Interval	5.000000
+set	Interval	3
+click	ApplyButton
+expect	settings.interval	3000
+click	Reset
+click	ApplyButton
+expect	settings.interval	5000
+click	Cancel
+persisted

@@ -1,0 +1,158 @@
+settings
+tab	Mouse
+set	Middle	0
+set	IgnoreActivation	false
+set	SlowWheel	false
+tab	MouseCustom
+mouse_assign	LeftClick	0	0	Checker
+mouse_assign	LeftDouble	0	0	Nearest
+mouse_assign	RightClick	0	0	Checker
+mouse_assign	RightDouble	0	0	Nearest
+mouse_assign	MiddleClick	0	0	Checker
+mouse_assign	MiddleDouble	0	0	Nearest
+mouse_assign	X1Click	0	0	Checker
+mouse_assign	X1Double	0	0	Nearest
+mouse_assign	X2Click	0	0	Checker
+mouse_assign	X2Double	0	0	Nearest
+mouse_assign	LeftClick	2	1	Checker
+mouse_assign	LeftClick	2	2	Checker
+mouse_assign	LeftClick	2	3	Checker
+mouse_assign	LeftClick	2	4	Checker
+mouse_assign	LeftClick	2	5	Checker
+mouse_assign	LeftClick	2	6	Checker
+mouse_assign	LeftClick	2	7	Checker
+mouse_assign	X2Drag	0	0	MouseSelect
+mouse_assign	WheelUp	1	0	Checker
+mouse_assign	WheelUp	2	0	Checker
+mouse_assign	WheelUp	4	0	Checker
+mouse_assign	WheelUp	8	0	Checker
+mouse_assign	WheelUp	16	0	Checker
+tab	Mouse
+expect_text	Middle	カスタム
+set	Middle	0
+tab	MouseCustom
+mouse_context	MiddleClick	0	0
+expect_text	MouseActionChoice	何もしない
+mouse_assign	MiddleClick	0	0	Checker
+tab	Mouse
+expect_text	Middle	カスタム
+click	OK
+open	${fixtures}/display-alpha.png
+wait
+pointer	down	Left	100	100	0
+pointer	up	Left	100	100	0
+expect	settings.checker	false
+pointer	double	Left	100	100	0
+pointer	up	Left	100	100	0
+expect	renderer.nearest	true
+expect	settings.checker	false
+pointer	down	Right	100	100	0
+pointer	up	Right	100	100	0
+expect	settings.checker	true
+pointer	double	Right	100	100	0
+pointer	up	Right	100	100	0
+expect	renderer.nearest	false
+expect	settings.checker	true
+pointer	down	Middle	100	100	0
+pointer	up	Middle	100	100	0
+expect	settings.checker	false
+pointer	double	Middle	100	100	0
+pointer	up	Middle	100	100	0
+expect	renderer.nearest	true
+expect	settings.checker	false
+pointer	down	X1	100	100	0
+pointer	up	X1	100	100	0
+expect	settings.checker	true
+pointer	double	X1	100	100	0
+pointer	up	X1	100	100	0
+expect	renderer.nearest	false
+expect	settings.checker	true
+pointer	down	X2	100	100	0
+pointer	up	X2	100	100	0
+expect	settings.checker	false
+pointer	double	X2	100	100	0
+pointer	up	X2	100	100	0
+expect	renderer.nearest	true
+expect	settings.checker	false
+pointer	down	Right	100	100	0
+pointer	down	Left	100	100	1
+pointer	up	Left	100	100	1
+pointer	up	Right	100	100	0
+expect	settings.checker	true
+expect	pointer_buttons	0
+pointer	down	Right	100	100	0
+pointer	down	Left	100	100	2
+pointer	up	Left	100	100	2
+pointer	up	Right	100	100	0
+expect	settings.checker	false
+expect	pointer_buttons	0
+pointer	down	Right	100	100	0
+pointer	down	Left	100	100	3
+pointer	up	Left	100	100	3
+pointer	up	Right	100	100	0
+expect	settings.checker	true
+expect	pointer_buttons	0
+pointer	down	Right	100	100	0
+pointer	down	Left	100	100	4
+pointer	up	Left	100	100	4
+pointer	up	Right	100	100	0
+expect	settings.checker	false
+expect	pointer_buttons	0
+pointer	down	Right	100	100	0
+pointer	down	Left	100	100	5
+pointer	up	Left	100	100	5
+pointer	up	Right	100	100	0
+expect	settings.checker	true
+expect	pointer_buttons	0
+pointer	down	Right	100	100	0
+pointer	down	Left	100	100	6
+pointer	up	Left	100	100	6
+pointer	up	Right	100	100	0
+expect	settings.checker	false
+expect	pointer_buttons	0
+pointer	down	Right	100	100	0
+pointer	down	Left	100	100	7
+pointer	up	Left	100	100	7
+pointer	up	Right	100	100	0
+expect	settings.checker	true
+expect	pointer_buttons	0
+pointer	down	Left	100	100	0
+pointer	wheel	120	100	100	0
+pointer	up	Left	100	100	0
+expect	settings.checker	false
+expect	pointer_buttons	0
+pointer	down	Right	100	100	0
+pointer	wheel	120	100	100	0
+pointer	up	Right	100	100	0
+expect	settings.checker	true
+expect	pointer_buttons	0
+pointer	down	Middle	100	100	0
+pointer	wheel	120	100	100	0
+pointer	up	Middle	100	100	0
+expect	settings.checker	false
+expect	pointer_buttons	0
+pointer	down	X1	100	100	0
+pointer	wheel	120	100	100	0
+pointer	up	X1	100	100	0
+expect	settings.checker	true
+expect	pointer_buttons	0
+pointer	down	X2	100	100	0
+pointer	wheel	120	100	100	0
+pointer	up	X2	100	100	0
+expect	settings.checker	false
+expect	pointer_buttons	0
+pointer	down	X2	400	200	0
+pointer	move	-	500	280	0
+pointer	up	X2	500	280	0
+expect_positive	selection_w
+expect_positive	selection_h
+snapshot	all-buttons.png
+settings
+tab	MouseCustom
+click	Reset
+click	ApplyButton
+expect_mouse	LeftClick	2	1	MouseNone
+expect_mouse	MiddleClick	0	0	Exit
+snapshot	mouse-reset.png
+click	Cancel
+persisted

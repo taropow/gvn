@@ -1,0 +1,34 @@
+open	${fixtures}/metadata/rgba-300x150.png
+wait
+remember	original
+image_info
+expect	info_open	true
+info_expect	ファイル名: rgba-300x150.png
+expect	info.filename_first_visible	0
+info_expect	299.999 × 150.012 DPI
+info_expect	元の色深度: 32 BPP
+info_expect	ICCプロファイル: 埋め込みあり
+info_snapshot	info-png-dpi.png
+info_close
+expect	info_open	false
+expect_same	original	true
+command	RotateRight
+image_info
+info_expect	150.012 × 299.999 DPI
+info_expect	読み込み時: 3 × 2
+info_snapshot	info-rotated.png
+info_close
+command	Undo
+expect_same	original	true
+open	${fixtures}/metadata/rgb-300x150.bmp
+wait
+image_info
+info_expect	元の色深度: 24 BPP
+info_close
+open	${fixtures}/alpha.png
+wait
+image_info
+info_expect	未指定のため72 DPI
+info_expect	ICCプロファイル: なし
+info_close
+expect	error_count	0

@@ -1,0 +1,41 @@
+# Actual empty WM_PRINTCLIENT pixels, with no labels, across layout and image transitions.
+expect_empty_checker
+snapshot	startup-checker.png
+resize	900	700
+expect_empty_checker
+settings
+tab	Background
+set	Checker	false
+set	Light	FF0000
+set	Dark	00FF00
+set	Cell	5
+click	OK
+expect_empty_checker
+open	${fixtures}/display-alpha.png
+wait
+pixel_copy
+command	CloseImage
+expect_empty_checker
+expect	renderer.source_bytes	0
+expect	renderer.sample_bytes	0
+snapshot	closed-image-checker.png
+open	${fixtures}/disposal.gif
+wait
+pixel_copy
+command	CloseImage
+expect_empty_checker
+expect	player.visible	false
+snapshot	closed-animation-checker.png
+resize	340	260
+expect_empty_checker
+snapshot	minimum-checker.png
+command	ToggleToolbar
+command	ToggleStatus
+expect_empty_checker
+command	Fullscreen
+expect_empty_checker
+command	Fullscreen
+expect_empty_checker
+command	ToggleToolbar
+command	ToggleStatus
+expect_empty_checker

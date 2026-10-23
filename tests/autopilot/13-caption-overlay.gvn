@@ -1,0 +1,164 @@
+# Real settings, native ChooseFont, all visibility modes and unchanged RGBA copies.
+resize	900	700
+open	${fixtures}/display-alpha.png
+wait
+remember	still
+settings
+tab	Loading
+set	Autoplay	false
+tab	Fullscreen
+set	OverlayFull	true
+set	OverlayWindow	true
+set	OverlayAnimation	false
+set	OverlayPosition	4
+set	OverlayBackground	1
+set	OverlayForeground	000000
+set	OverlayBackcolor	203060
+click	OverlayFont
+font_set	Arial	18	3
+font_effect	underline	true
+font_effect	strikeout	true
+font_snapshot	native-font-dialog.png
+font_close	OK
+expect_text	OverlayFont	Arial
+click	OverlayForegroundPick
+color_expect	0	0	0
+color_set	255	245	230
+color_close	OK
+click	OverlayBackcolorPick
+color_snapshot	native-color-initial.png
+color_expect	32	48	96
+color_set	64	96	144
+color_snapshot	native-color-dialog.png
+color_close	OK
+click	OverlayBackcolorPick
+color_set	10	20	30
+color_close	Cancel
+expect_text	OverlayBackcolor	406090
+snapshot	overlay-settings.png
+click	ApplyButton
+expect	overlay.family_arial	true
+expect	settings.overlay_points	180
+expect	settings.overlay_weight	700
+expect	settings.overlay_italic	true
+expect	settings.overlay_strikeout	true
+expect	settings.overlay_underline	true
+expect	settings.overlay_foreground	16774630
+expect	settings.overlay_backcolor	4219024
+persisted
+click	OverlayFont
+font_set	Arial	24	0
+font_close	Cancel
+click	OK
+expect	settings.overlay_points	180
+expect	overlay.visible	false
+command	ToggleCaption
+expect	overlay.visible	true
+expect	overlay.caption	true
+snapshot	window-center-filled.png
+expect	overlay.in_canvas	true
+expect_same	still	true
+pixel_copy
+command	SelectMode
+expect	overlay.visible	false
+command	Fullscreen
+expect	overlay.visible	true
+command	Fullscreen
+expect	overlay.visible	false
+command	SelectMode
+expect	overlay.visible	true
+command	Actual
+command	ZoomIn
+command	ZoomIn
+command	ZoomIn
+command	ZoomIn
+pointer	down	Left	100	100	0
+pointer	move	None	140	120	0
+expect	overlay.visible	false
+pointer	up	Left	140	120	0
+expect	overlay.visible	true
+settings
+tab	MouseCustom
+mouse_assign	LeftDrag	0	0	MouseZoom
+click	OK
+pointer	down	Left	100	100	0
+pointer	move	None	100	60	0
+expect	overlay.visible	false
+pointer	up	Left	100	60	0
+expect	overlay.visible	true
+command	ScrollRight
+wait_overlay
+expect	overlay.visible	true
+settings
+tab	Fullscreen
+set	OverlayPosition	8
+set	OverlayBackground	2
+set	OverlayBackcolor	000000
+tab	Bars
+set	TitleMode	1
+click	OK
+command	Fullscreen
+expect	overlay.visible	true
+expect	overlay.caption	true
+snapshot	fullscreen-bottom-shadow.png
+expect	overlay.in_canvas	true
+command	Fullscreen
+open	${fixtures}/canvas/scroll.apng
+wait
+expect	playing	false
+expect	overlay.visible	false
+settings
+tab	Fullscreen
+set	OverlayAnimation	true
+set	OverlayBackground	0
+click	OK
+expect	overlay.visible	true
+remember	frame
+snapshot	animation-transparent-caption.png
+pixel_copy
+expect_same	frame	true
+player	FrameNext
+expect	overlay.visible	true
+pixel_copy
+player	Play
+expect	playing	true
+expect	overlay.visible	true
+player	Play
+settings
+tab	Fullscreen
+set	OverlayFull	false
+set	OverlayWindow	false
+set	OverlayAnimation	false
+click	ApplyButton
+expect	overlay.visible	false
+click	Reset
+click	ApplyButton
+expect	settings.overlay_full	true
+expect	settings.overlay_window	true
+expect	settings.overlay_animation	false
+expect	settings.overlay_position	0
+expect	settings.overlay_background	2
+expect	settings.overlay_points	100
+expect	settings.overlay_weight	400
+expect	settings.overlay_italic	false
+expect	settings.overlay_underline	false
+expect	settings.overlay_strikeout	false
+persisted
+click	Cancel
+open	${fixtures}/disposal.gif
+wait
+expect	full	false
+expect	settings.toolbar	true
+expect	settings.toolbar_auto	false
+expect	toolbar.visible	true
+expect	toolbar.no_clip	true
+expect	playing	false
+expect	overlay.visible	false
+settings
+tab	Fullscreen
+set	OverlayAnimation	true
+click	OK
+expect	overlay.visible	true
+snapshot	gif-caption.png
+expect	overlay.in_canvas	true
+pixel_copy

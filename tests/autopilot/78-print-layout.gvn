@@ -1,0 +1,54 @@
+open	${fixtures}/palette/png-4-alpha.png
+wait
+remember	original
+print_image
+expect	print.valid	true
+expect	print.specified_enabled	false
+expect	print.area_width	190
+expect	print.area_height	277
+print_snapshot	print-contain.png
+print_select	Sizing	1
+expect	print.height	277
+print_select	Sizing	2
+expect	print.width	190
+expect	print.height	277
+print_select	Sizing	3
+expect	print.turns	0
+print_select	Rotation	2
+expect	print.turns	1
+print_select	Rotation	0
+print_select	Sizing	4
+expect	print.specified_enabled	true
+print_click	Aspect
+print_set	Width	6
+print_set	Height	4
+expect	print.width	60
+expect	print.height	40
+print_position	8
+expect	print.x	140
+expect	print.y	247
+print_set	Left	21
+expect	print.valid	false
+expect	print.ok_enabled	false
+print_set	Left	0
+expect	print.area_x	3
+print_select	Unit	1
+print_select	Unit	0
+expect	print.width	60
+print_select	Density	10
+print_set	Copies	3
+print_snapshot	print-specified.png
+print_click	OK
+expect	print.commits	1
+expect	print.result.copies	3
+expect	print.result.density	5
+expect_same	original	true
+expect	modified	false
+print_image
+print_click	Setup
+expect	print.setup_calls	1
+expect	print.area_width	277
+print_click	Cancel
+expect	print.commits	1
+expect_same	original	true
+expect	error_count	0

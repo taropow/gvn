@@ -1,0 +1,72 @@
+# All three visible quality choices; alpha/source identity and live sampled output.
+resize	800	700
+open	${fixtures}/display-alpha.png
+wait
+remember	source
+settings
+tab	Display
+set	DisplayDown	0
+set	DisplayUp	0
+set	FitMax	5000
+tab	Fullscreen
+set	FullDown	0
+set	FullUp	0
+click	OK
+command	FitImage
+expect	renderer.filter	0
+render
+expect	renderer.sample_current	true
+expect	renderer.sample_budget	true
+command	ZoomOut
+expect	renderer.filter	0
+command	SelectRectangle
+expect	renderer.filter	0
+command	ToggleEditor
+expect_same	source	true
+pixel_copy
+persisted
+settings
+tab	Display
+set	DisplayDown	1
+set	DisplayUp	1
+set	FitMax	5000
+tab	Fullscreen
+set	FullDown	1
+set	FullUp	1
+click	OK
+command	FitImage
+expect	renderer.filter	1
+render
+expect	renderer.sample_current	true
+expect	renderer.sample_budget	true
+command	ZoomOut
+expect	renderer.filter	1
+command	SelectRectangle
+expect	renderer.filter	1
+command	ToggleEditor
+expect_same	source	true
+pixel_copy
+persisted
+settings
+tab	Display
+set	DisplayDown	2
+set	DisplayUp	2
+set	FitMax	5000
+tab	Fullscreen
+set	FullDown	2
+set	FullUp	2
+click	OK
+command	FitImage
+expect	renderer.filter	10
+render
+expect	renderer.sample_current	true
+expect	renderer.sample_budget	true
+command	ZoomOut
+expect	renderer.filter	10
+command	SelectRectangle
+expect	renderer.filter	10
+command	ToggleEditor
+expect_same	source	true
+pixel_copy
+persisted
+snapshot	quality-up.png

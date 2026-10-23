@@ -1,0 +1,55 @@
+# Actual native settings and resulting files; generated scenario-owned input only.
+copy_fixture	auto-bmp/rgb565.bmp	source/rgb565.bmp
+copy_fixture	loading/alpha-v5.bmp	source/alpha-v5.bmp
+open	${output}/source/rgb565.bmp
+wait
+expect	settings.bitfield_to24	true
+settings
+tab	Loading
+set	BitfieldTo24	false
+click	OK
+wait
+persisted
+expect	settings.bitfield_to24	false
+save_target	pixels/off-auto.bmp
+command	SaveAs
+save_type	Bmp
+save_set	BmpBits	4
+save_accept
+wait_save
+settings
+tab	Loading
+set	BitfieldTo24	true
+snapshot	bitfield-loading-options.png
+click	OK
+wait
+persisted
+expect	settings.bitfield_to24	true
+save_target	pixels/on-auto.bmp
+command	SaveAs
+save_type	Bmp
+save_set	BmpBits	4
+save_accept
+wait_save
+open	${output}/source/alpha-v5.bmp
+wait
+expect_pixel	1	0	0	255	0	128
+save_target	pixels/alpha-on.png
+command	SaveAs
+save_type	Png
+save_accept
+wait_save
+settings
+tab	Loading
+set	BitfieldTo24	false
+click	OK
+wait
+expect_pixel	1	0	0	255	0	128
+save_target	pixels/alpha-off.png
+command	SaveAs
+save_type	Png
+save_accept
+wait_save
+expect_file	source/rgb565.bmp	auto-bmp/rgb565.bmp
+expect_file	source/alpha-v5.bmp	loading/alpha-v5.bmp
+expect	error_count	0

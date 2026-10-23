@@ -1,0 +1,47 @@
+copy_fixture	alpha.png	source/alpha.png
+open	${output}/source/alpha.png
+wait
+command	Resize
+resize_set	Resample	false
+resize_set	DpiX	254
+resize_set	DpiY	127
+resize_click	OK
+save_target	pixels/dpi.png
+command	SaveAs
+save_type	Png
+save_accept
+wait_save
+expect_saved	pixels/dpi.png
+pixel_copy
+open	${output}/pixels/dpi.png
+wait
+expect_location	image	${output}/pixels/dpi.png
+expect	dpi_x	254
+expect	dpi_y	127
+answer	OK
+save_target	pixels/dpi.bmp
+command	SaveAs
+save_type	Bmp
+save_accept
+wait_save
+open	${output}/pixels/dpi.bmp
+wait
+expect_location	image	${output}/pixels/dpi.bmp
+expect	dpi_x	254
+expect	dpi_y	127
+save_target	pixels/dpi.jpg
+command	SaveAs
+save_type	Jpeg
+save_accept
+wait_save
+open	${output}/pixels/dpi.jpg
+wait
+expect_location	image	${output}/pixels/dpi.jpg
+expect	dpi_x	254
+expect	dpi_y	127
+image_info
+info_expect	254.000 × 127.000 DPI
+info_snapshot	saved-jpeg-resolution.png
+info_close
+expect_file	source/alpha.png	alpha.png
+expect	error_count	0

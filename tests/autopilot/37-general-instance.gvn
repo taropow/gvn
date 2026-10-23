@@ -1,0 +1,178 @@
+open	${fixtures}/alpha.png
+wait
+expect	settings.allow_multiple	true
+expect	settings.activate_reused	true
+expect	settings.activate_dropped	true
+settings
+tab	General
+set	AllowMultiple	false
+expect	enabled.ActivateReused	true
+set	ActivateReused	false
+set	ActivateDropped	false
+set	AllowMultiple	false
+expect	enabled.ActivateReused	true
+snapshot	general-instance-0.png
+click	OK
+expect	settings.allow_multiple	false
+expect	settings.activate_reused	false
+expect	settings.activate_dropped	false
+persisted
+settings
+tab	General
+set	AllowMultiple	false
+expect	enabled.ActivateReused	true
+set	ActivateReused	false
+set	ActivateDropped	false
+set	AllowMultiple	true
+expect	enabled.ActivateReused	false
+click	OK
+expect	settings.allow_multiple	true
+expect	settings.activate_reused	false
+expect	settings.activate_dropped	false
+persisted
+settings
+tab	General
+set	AllowMultiple	false
+expect	enabled.ActivateReused	true
+set	ActivateReused	true
+set	ActivateDropped	false
+set	AllowMultiple	false
+expect	enabled.ActivateReused	true
+click	OK
+expect	settings.allow_multiple	false
+expect	settings.activate_reused	true
+expect	settings.activate_dropped	false
+persisted
+settings
+tab	General
+set	AllowMultiple	false
+expect	enabled.ActivateReused	true
+set	ActivateReused	true
+set	ActivateDropped	false
+set	AllowMultiple	true
+expect	enabled.ActivateReused	false
+click	OK
+expect	settings.allow_multiple	true
+expect	settings.activate_reused	true
+expect	settings.activate_dropped	false
+persisted
+settings
+tab	General
+set	AllowMultiple	false
+expect	enabled.ActivateReused	true
+set	ActivateReused	false
+set	ActivateDropped	true
+set	AllowMultiple	false
+expect	enabled.ActivateReused	true
+click	OK
+expect	settings.allow_multiple	false
+expect	settings.activate_reused	false
+expect	settings.activate_dropped	true
+persisted
+settings
+tab	General
+set	AllowMultiple	false
+expect	enabled.ActivateReused	true
+set	ActivateReused	false
+set	ActivateDropped	true
+set	AllowMultiple	true
+expect	enabled.ActivateReused	false
+click	OK
+expect	settings.allow_multiple	true
+expect	settings.activate_reused	false
+expect	settings.activate_dropped	true
+persisted
+settings
+tab	General
+set	AllowMultiple	false
+expect	enabled.ActivateReused	true
+set	ActivateReused	true
+set	ActivateDropped	true
+set	AllowMultiple	false
+expect	enabled.ActivateReused	true
+click	OK
+expect	settings.allow_multiple	false
+expect	settings.activate_reused	true
+expect	settings.activate_dropped	true
+persisted
+settings
+tab	General
+set	AllowMultiple	false
+expect	enabled.ActivateReused	true
+set	ActivateReused	true
+set	ActivateDropped	true
+set	AllowMultiple	true
+expect	enabled.ActivateReused	false
+snapshot	general-instance-7.png
+click	OK
+expect	settings.allow_multiple	true
+expect	settings.activate_reused	true
+expect	settings.activate_dropped	true
+persisted
+settings
+tab	General
+set	AllowMultiple	false
+set	ActivateReused	false
+set	ActivateDropped	false
+click	Cancel
+expect	settings.allow_multiple	true
+expect	settings.activate_reused	true
+expect	settings.activate_dropped	true
+settings
+tab	General
+set	AllowMultiple	false
+set	ActivateReused	false
+set	ActivateDropped	false
+click	OK
+persisted
+settings
+tab	Background
+click	OK
+persisted
+expect	settings.allow_multiple	false
+expect	settings.activate_reused	false
+expect	settings.activate_dropped	false
+settings
+tab	General
+incoming_launch	${fixtures}/rgb.bmp
+incoming_launch	empty
+expect	incoming.pending	true
+expect_image	${fixtures}/alpha.png	0
+snapshot	general-pending-launch.png
+click	Cancel
+wait
+expect	incoming.pending	false
+expect_image	${fixtures}/rgb.bmp	0
+command	DisplayWindowImage
+command	WindowMinimize
+expect	window.minimized	true
+incoming_file	${fixtures}/alpha.png
+wait
+expect	window.minimized	true
+expect_image	${fixtures}/alpha.png	0
+pixel_copy
+command	WindowRestore
+settings
+tab	General
+set	ActivateDropped	true
+click	OK
+command	WindowMinimize
+incoming_file	${fixtures}/rgb.bmp
+wait
+expect	window.minimized	false
+expect_image	${fixtures}/rgb.bmp	0
+settings
+tab	General
+click	Reset
+expect	enabled.ActivateReused	false
+click	Cancel
+expect	settings.allow_multiple	false
+settings
+tab	General
+click	Reset
+snapshot	general-defaults.png
+click	OK
+persisted
+expect	settings.allow_multiple	true
+expect	settings.activate_reused	true
+expect	settings.activate_dropped	true

@@ -1,0 +1,77 @@
+open	${fixtures}/selection-units.png
+wait
+remember	source
+command	Actual
+menu	Grid2
+expect	grid.start_x	2
+menu	Grid4
+expect	grid.size_y	4
+menu	Grid8
+expect	grid.start_y	8
+menu	Grid16
+expect	grid.size_x	16
+menu	Grid32
+expect	grid.size_y	32
+menu	GridFree
+expect	grid.custom	false
+expect	grid.start_x	1
+grid_dialog
+grid_set	StartX	8
+grid_set	StartY	4
+grid_set	SizeX	6
+grid_set	SizeY	5
+grid_snapshot	selection-units-custom.png
+grid_set	StartX	0
+expect	grid.ok_enabled	false
+grid_quick	StartX	8
+grid_expect	StartX	8
+grid_set	SizeY	1000
+expect	grid.ok_enabled	false
+grid_set	SizeY	5
+expect	grid.ok_enabled	true
+grid_click	Cancel
+expect	grid.custom	false
+grid_dialog
+grid_expect	StartX	1
+grid_set	StartX	8
+grid_set	StartY	4
+grid_set	SizeX	6
+grid_set	SizeY	5
+grid_click	OK
+expect	grid.custom	true
+expect	grid.start_x	8
+expect	grid.start_y	4
+expect	grid.size_x	6
+expect	grid.size_y	5
+expect_grid_saved
+expect_same	source	true
+command	SelectMode
+select_pixels	13	11	30	27
+expect_selection_rect	8	8	24	20
+pixel_copy
+select_pixels	30	27	13	11
+expect_selection_rect	8	8	24	20
+snapshot	selection-reverse-alpha.png
+command	Crop
+expect	width	24
+expect	height	20
+command	Undo
+expect_same	source	true
+select_pixels	90	74	110	100
+expect_selection_rect	88	72	6	5
+select_pixels	95	79	96	80
+expect_selection_rect	0	0	0	0
+menu	GridFree
+select_pixels	13	11	13	11
+expect_selection_rect	13	11	1	1
+pixel_copy
+grid_dialog
+grid_expect	StartX	8
+grid_expect	StartY	4
+grid_expect	SizeX	6
+grid_expect	SizeY	5
+grid_click	OK
+expect_grid_saved
+expect	grid.custom	true
+expect_same	source	true
+expect	error_count	0

@@ -1,0 +1,70 @@
+# Native font chooser -> apply/render/persist/cancel/reset, unchanged alpha.
+resize	900	650
+open	${fixtures}/display-alpha.png
+wait
+remember	still
+settings
+tab	Fullscreen
+set	OverlayWindow	true
+set	OverlayPosition	4
+set	OverlayBackground	2
+click	OverlayFont
+font_set	System	12	0
+font_close	OK
+expect_text	OverlayFont	System
+click	ApplyButton
+expect	overlay.family_system	true
+persisted
+click	OK
+command	ToggleCaption
+expect	overlay.visible	true
+snapshot	raster-font.png
+expect	overlay.native_font	true
+expect	overlay.in_canvas	true
+pixel_copy
+expect_same	still	true
+settings
+tab	Fullscreen
+click	OverlayFont
+font_set	@ＭＳ ゴシック	24	0
+font_script_available
+font_effect	underline	true
+font_close	OK
+click	ApplyButton
+expect	overlay.family_vertical	true
+expect	settings.overlay_points	240
+expect	settings.overlay_underline	true
+persisted
+click	OK
+snapshot	vertical-font.png
+expect	overlay.native_font	true
+expect	overlay.in_canvas	true
+pixel_copy
+settings
+tab	Fullscreen
+click	OverlayFont
+font_set	Arial	1639	0
+font_close	OK
+click	ApplyButton
+expect	settings.overlay_points	16390
+persisted
+click	OK
+snapshot	large-font.png
+expect	overlay.native_font	false
+expect	overlay.in_canvas	true
+pixel_copy
+settings
+tab	Fullscreen
+click	OverlayFont
+font_set	Arial	20	0
+font_close	Cancel
+expect_text	OverlayFont	1639
+expect	settings.overlay_points	16390
+click	Reset
+click	OK
+expect	settings.overlay_points	100
+expect	settings.overlay_charset	1
+expect	settings.overlay_underline	false
+persisted
+expect_same	still	true
+pixel_copy

@@ -1,0 +1,409 @@
+[
+  {
+    "name": "png-filter-0.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "filter": 0,
+    "level": 6,
+    "transparency": 0,
+    "interlaced": false
+  },
+  {
+    "name": "png-filter-1.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "filter": 1,
+    "level": 6,
+    "transparency": 0,
+    "interlaced": false
+  },
+  {
+    "name": "png-filter-2.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "filter": 2,
+    "level": 6,
+    "transparency": 0,
+    "interlaced": false
+  },
+  {
+    "name": "png-filter-3.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "filter": 3,
+    "level": 6,
+    "transparency": 0,
+    "interlaced": false
+  },
+  {
+    "name": "png-filter-4.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "filter": 4,
+    "level": 6,
+    "transparency": 0,
+    "interlaced": false
+  },
+  {
+    "name": "png-filter-5.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "filter": 5,
+    "level": 6,
+    "transparency": 0,
+    "interlaced": false
+  },
+  {
+    "name": "png-filter-6.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "filter": 6,
+    "level": 6,
+    "transparency": 0,
+    "interlaced": false
+  },
+  {
+    "name": "png-level-0.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "level": 0,
+    "transparency": 0,
+    "interlaced": false,
+    "filter": 6
+  },
+  {
+    "name": "png-level-1.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "level": 1,
+    "transparency": 0,
+    "interlaced": false,
+    "filter": 6
+  },
+  {
+    "name": "png-level-2.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "level": 2,
+    "transparency": 0,
+    "interlaced": false,
+    "filter": 6
+  },
+  {
+    "name": "png-level-3.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "level": 3,
+    "transparency": 0,
+    "interlaced": false,
+    "filter": 6
+  },
+  {
+    "name": "png-level-4.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "level": 4,
+    "transparency": 0,
+    "interlaced": false,
+    "filter": 6
+  },
+  {
+    "name": "png-level-5.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "level": 5,
+    "transparency": 0,
+    "interlaced": false,
+    "filter": 6
+  },
+  {
+    "name": "png-level-6.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "level": 6,
+    "transparency": 0,
+    "interlaced": false,
+    "filter": 6
+  },
+  {
+    "name": "png-level-7.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "level": 7,
+    "transparency": 0,
+    "interlaced": false,
+    "filter": 6
+  },
+  {
+    "name": "png-level-8.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "level": 8,
+    "transparency": 0,
+    "interlaced": false,
+    "filter": 6
+  },
+  {
+    "name": "png-level-9.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "level": 9,
+    "transparency": 0,
+    "interlaced": false,
+    "filter": 6
+  },
+  {
+    "name": "png-trans-0.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "level": 6,
+    "transparency": 0,
+    "matte": 1193046,
+    "key": 16711680,
+    "interlaced": true,
+    "filter": 6
+  },
+  {
+    "name": "png-trans-1.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "level": 6,
+    "transparency": 1,
+    "matte": 1193046,
+    "key": 16711680,
+    "interlaced": true,
+    "filter": 6
+  },
+  {
+    "name": "png-trans-2.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "level": 6,
+    "transparency": 2,
+    "matte": 1193046,
+    "key": 16711680,
+    "interlaced": true,
+    "filter": 6
+  },
+  {
+    "name": "png-trans-3.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "level": 6,
+    "transparency": 3,
+    "matte": 1193046,
+    "key": 16711680,
+    "interlaced": true,
+    "filter": 6
+  },
+  {
+    "name": "png-trans-4.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "level": 6,
+    "transparency": 4,
+    "matte": 1193046,
+    "key": 16711680,
+    "interlaced": true,
+    "filter": 6
+  },
+  {
+    "name": "png-trans-5.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "level": 6,
+    "transparency": 5,
+    "matte": 1193046,
+    "key": 16711680,
+    "interlaced": true,
+    "filter": 6
+  },
+  {
+    "name": "png-trans-6.png",
+    "format": "Png",
+    "source": "rgba.png",
+    "level": 6,
+    "transparency": 6,
+    "matte": 1193046,
+    "key": 16711680,
+    "interlaced": true,
+    "filter": 6
+  },
+  {
+    "name": "jpeg-0.jpg",
+    "format": "Jpeg",
+    "source": "rgba.png",
+    "quality": 0,
+    "progressive": false,
+    "matte": 1193046
+  },
+  {
+    "name": "jpeg-90.jpg",
+    "format": "Jpeg",
+    "source": "rgba.png",
+    "quality": 90,
+    "progressive": true,
+    "matte": 1193046
+  },
+  {
+    "name": "jpeg-100.jpg",
+    "format": "Jpeg",
+    "source": "rgba.png",
+    "quality": 100,
+    "progressive": false,
+    "matte": 1193046
+  },
+  {
+    "name": "bmp-24.bmp",
+    "format": "Bmp",
+    "source": "runs.png",
+    "bits": 24,
+    "top": true,
+    "rle": false,
+    "matte": 1193046
+  },
+  {
+    "name": "bmp-8.bmp",
+    "format": "Bmp",
+    "source": "runs.png",
+    "bits": 8,
+    "top": true,
+    "rle": true,
+    "matte": 1193046
+  },
+  {
+    "name": "bmp-4.bmp",
+    "format": "Bmp",
+    "source": "runs.png",
+    "bits": 4,
+    "top": true,
+    "rle": true,
+    "matte": 1193046
+  },
+  {
+    "name": "bmp-1.bmp",
+    "format": "Bmp",
+    "source": "runs.png",
+    "bits": 1,
+    "top": true,
+    "rle": false,
+    "matte": 1193046
+  },
+  {
+    "name": "gif-trans-0.gif",
+    "format": "Gif",
+    "source": "runs.png",
+    "transparency": 0,
+    "index": 5,
+    "interlaced": false,
+    "uncompressed": false
+  },
+  {
+    "name": "gif-trans-1.gif",
+    "format": "Gif",
+    "source": "runs.png",
+    "transparency": 1,
+    "index": 5,
+    "interlaced": true,
+    "uncompressed": true
+  },
+  {
+    "name": "gif-trans-2.gif",
+    "format": "Gif",
+    "source": "runs.png",
+    "transparency": 2,
+    "index": 5,
+    "interlaced": false,
+    "uncompressed": false
+  },
+  {
+    "name": "gif-trans-3.gif",
+    "format": "Gif",
+    "source": "runs.png",
+    "transparency": 3,
+    "index": 5,
+    "interlaced": true,
+    "uncompressed": true
+  },
+  {
+    "name": "gif-trans-4.gif",
+    "format": "Gif",
+    "source": "runs.png",
+    "transparency": 4,
+    "index": 5,
+    "interlaced": false,
+    "uncompressed": false
+  },
+  {
+    "name": "gif-trans-5.gif",
+    "format": "Gif",
+    "source": "runs.png",
+    "transparency": 5,
+    "index": 5,
+    "interlaced": true,
+    "uncompressed": true
+  },
+  {
+    "name": "jpeg-corrected.jpg",
+    "format": "Jpeg",
+    "source": "runs.png",
+    "quality": 50,
+    "progressive": false,
+    "matte": 1193046
+  },
+  {
+    "name": "typed.jpeg",
+    "format": "Jpeg",
+    "source": "runs.png",
+    "quality": 75,
+    "progressive": true,
+    "matte": 1193046
+  },
+  {
+    "name": "gif-unused.gif",
+    "format": "Gif",
+    "source": "runs.png",
+    "transparency": 1,
+    "index": 255,
+    "interlaced": true,
+    "uncompressed": true
+  },
+  {
+    "name": "bmp-1-plain.bmp",
+    "format": "Bmp",
+    "source": "rgba.png",
+    "bits": 1,
+    "top": true,
+    "rle": false,
+    "matte": 1193046
+  },
+  {
+    "name": "bmp-1-dither.bmp",
+    "format": "Bmp",
+    "source": "rgba.png",
+    "bits": 1,
+    "top": true,
+    "rle": false,
+    "matte": 1193046,
+    "dither": true
+  },
+  {
+    "name": "auto.PNG",
+    "format": "Png",
+    "source": "rgba.png",
+    "transparency": 0,
+    "interlaced": true,
+    "filter": 6,
+    "level": 6,
+    "keep_times": true
+  },
+  {
+    "name": "mixed.pNg",
+    "format": "Png",
+    "source": "rgba.png",
+    "transparency": 0,
+    "interlaced": true,
+    "filter": 6,
+    "level": 6
+  }
+]

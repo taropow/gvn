@@ -1,0 +1,55 @@
+{
+  "reference_version": "0.45",
+  "created_at": "2026-10-18T04:28:40.150074+00:00",
+  "archive_sha256": "76f28cf65e900778ae0f67d41ea324d35d0ec162624dcf50ada3e44ce831ca25",
+  "executable_sha256": "c23b73887a3a98833f9318e7e3321a6a5b9825ad442b88e8bd3b0333ba28a3e5",
+  "probe": "tools/probe_massigra_resampling.py",
+  "probe_sha256": "8b1524e549a041ba9c3562ce802821f6320a1a4a459d0832acb2758d38e9cba9",
+  "arguments": [
+    "7",
+    "0,1,2,3,4,5,6,7,8,9,10",
+    "3",
+    "3",
+    "impulse",
+    "17"
+  ],
+  "station_visible": false,
+  "clipboard_serialized": true,
+  "controlled_pid_created_by_probe": 79936,
+  "source_size": [
+    17,
+    3
+  ],
+  "target_size": [
+    7,
+    3
+  ],
+  "pattern": "impulse",
+  "methods": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "source_png_sha256": "74324334e096fac061d783a6c2ce3478a2336370484d039d990070b38918477a",
+  "outputs": {
+    "result-0.png": "8d941c3abefe2c4abfd95d5a5d53b7bd718d52f10ee1a61e60653004ac4da027",
+    "result-1.png": "8d941c3abefe2c4abfd95d5a5d53b7bd718d52f10ee1a61e60653004ac4da027",
+    "result-2.png": "e9334d67e562654184dffb0b8ec19b78e0980d78021b92c1cf699faa64f5bad5",
+    "result-3.png": "e9334d67e562654184dffb0b8ec19b78e0980d78021b92c1cf699faa64f5bad5",
+    "result-4.png": "eb1fd470ce0cfb4117b82cc51e61ec57c8a90ad616499d2b5846382e044bae24",
+    "result-5.png": "7796f9877ddeff915e4d250a9355ab8cc80cbf804f2cc9e9b2edc8238baccc6d",
+    "result-6.png": "431f96efedeabc10fedb4f65e671e57068321eaf26403b8b8bb04f5f91ccb5b5",
+    "result-7.png": "e9334d67e562654184dffb0b8ec19b78e0980d78021b92c1cf699faa64f5bad5",
+    "result-8.png": "e9334d67e562654184dffb0b8ec19b78e0980d78021b92c1cf699faa64f5bad5",
+    "result-9.png": "e9334d67e562654184dffb0b8ec19b78e0980d78021b92c1cf699faa64f5bad5",
+    "result-10.png": "e9334d67e562654184dffb0b8ec19b78e0980d78021b92c1cf699faa64f5bad5"
+  }
+}

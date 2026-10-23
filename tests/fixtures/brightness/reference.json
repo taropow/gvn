@@ -1,0 +1,205 @@
+{
+  "reference_version": "0.45",
+  "cases": [
+    {
+      "label": "identity",
+      "parameters": [
+        0,
+        0,
+        1000
+      ],
+      "tolerance": 0,
+      "stage": 2,
+      "sha256": "ed575cf6f3f952ed37b1c9acccee7b65d03a2db18db89c0f7ba3a0375f0900f1"
+    },
+    {
+      "label": "bright25",
+      "parameters": [
+        25,
+        0,
+        1000
+      ],
+      "tolerance": 0,
+      "stage": 2,
+      "sha256": "cf7040d2dc77df16abe1c38c3561d3287dcd9bff02e1cfc65e1b56dfa157f1b1"
+    },
+    {
+      "label": "bright-minus25",
+      "parameters": [
+        -25,
+        0,
+        1000
+      ],
+      "tolerance": 0,
+      "stage": 2,
+      "sha256": "d08a29b8f5ef693bff4c84d633164cc7eaf07e8178fba1223488bcfb43007663"
+    },
+    {
+      "label": "contrast25",
+      "parameters": [
+        0,
+        25,
+        1000
+      ],
+      "tolerance": 1,
+      "stage": 2,
+      "sha256": "5f0e207a71498fa3aed052faf6ea6babeec4594c2ea8eca16b40b8bc00467857"
+    },
+    {
+      "label": "contrast-minus25",
+      "parameters": [
+        0,
+        -25,
+        1000
+      ],
+      "tolerance": 1,
+      "stage": 2,
+      "sha256": "5f643a41b4c553d1cc52d79c9df4c4d1c24e6e0e41bfecf8fabec0ee07e9ab08"
+    },
+    {
+      "label": "gamma04",
+      "parameters": [
+        0,
+        0,
+        400
+      ],
+      "tolerance": 0,
+      "stage": 2,
+      "sha256": "39e2d3e47956b89f0f88798162e559c8fe6d78168c7f4416d64e8e39ae1168fe"
+    },
+    {
+      "label": "gamma13",
+      "parameters": [
+        0,
+        0,
+        1300
+      ],
+      "tolerance": 0,
+      "stage": 2,
+      "sha256": "991929c9b4e216ff4b2b5f5273503c3a1fa765872c788b8e6e51bfbe9900336d"
+    },
+    {
+      "label": "gamma25",
+      "parameters": [
+        0,
+        0,
+        2500
+      ],
+      "tolerance": 0,
+      "stage": 2,
+      "sha256": "0e105e94f68c34c3e4f6a700c5628d27283d077e9235e11271f5cf1ca70c6d94"
+    },
+    {
+      "label": "combined",
+      "parameters": [
+        20,
+        35,
+        1250
+      ],
+      "tolerance": 2,
+      "stage": 2,
+      "sha256": "a5c02e00e5fa679c5dae01de4d9cc95a592f068831cd3bc2b1aa1c04b9cbfef8"
+    },
+    {
+      "label": "combined-negative",
+      "parameters": [
+        -20,
+        -30,
+        750
+      ],
+      "tolerance": 2,
+      "stage": 2,
+      "sha256": "29286a2f1c0d42efb590745d7458f495aedb6a59cd8bc0fd50e854eceece6808"
+    },
+    {
+      "label": "bright100",
+      "parameters": [
+        100,
+        0,
+        1000
+      ],
+      "tolerance": 0,
+      "stage": 2,
+      "sha256": "7cbe57856c8129ce3d5c2fe24e275b20fd6525423e59fe24b8bee847477965be"
+    },
+    {
+      "label": "contrast100",
+      "parameters": [
+        0,
+        100,
+        1000
+      ],
+      "tolerance": 1,
+      "stage": 2,
+      "sha256": "d9cfe76e7e4801ba5eb5775091b97d132a31fdfb92896ab8f806df7c89236a1e"
+    },
+    {
+      "label": "reset-buttons",
+      "parameters": [
+        0,
+        0,
+        1000
+      ],
+      "tolerance": 0,
+      "stage": 2,
+      "sha256": "ed575cf6f3f952ed37b1c9acccee7b65d03a2db18db89c0f7ba3a0375f0900f1"
+    },
+    {
+      "label": "gamma001",
+      "parameters": [
+        0,
+        0,
+        400
+      ],
+      "tolerance": 0,
+      "stage": 3,
+      "sha256": "39e2d3e47956b89f0f88798162e559c8fe6d78168c7f4416d64e8e39ae1168fe"
+    },
+    {
+      "label": "gamma1000",
+      "parameters": [
+        0,
+        0,
+        2500
+      ],
+      "tolerance": 0,
+      "stage": 3,
+      "sha256": "0e105e94f68c34c3e4f6a700c5628d27283d077e9235e11271f5cf1ca70c6d94"
+    },
+    {
+      "label": "contrast255",
+      "parameters": [
+        0,
+        255,
+        1000
+      ],
+      "tolerance": 1,
+      "stage": 3,
+      "sha256": "2b9de7084c88c78e019f6c59179438648c13a231f88e02ba3ade22159bb6e6eb"
+    },
+    {
+      "label": "contrast-minus255",
+      "parameters": [
+        0,
+        -255,
+        1000
+      ],
+      "tolerance": 1,
+      "stage": 3,
+      "sha256": "9b95bc1817353f6256eeee2627c68c496c4f43f0fd7a39a66eb16277ae06c789"
+    },
+    {
+      "label": "preview-off",
+      "parameters": [
+        25,
+        0,
+        1000
+      ],
+      "tolerance": 0,
+      "stage": 3,
+      "sha256": "cf7040d2dc77df16abe1c38c3561d3287dcd9bff02e1cfc65e1b56dfa157f1b1"
+    }
+  ],
+  "source_sha256": "ed575cf6f3f952ed37b1c9acccee7b65d03a2db18db89c0f7ba3a0375f0900f1",
+  "provenance": "13 completed copy/undo samples from stage2 before its numeric-bound assertion;5 remaining samples from successful stage3. Raw source/output hashes verified. Stage2 is preserved as a failed probe, not a full pass."
+}

@@ -1,0 +1,65 @@
+open	${fixtures}/disposal.gif
+wait
+player	StopAnimation
+expect	frame	0
+expect	playing	false
+expect	player.buttons	11
+expect	player.visible	true
+expect	player.bottom	true
+expect	player.no_overlap	true
+expect	player.pause_icon	false
+expect_text	player.play	再生
+player	FrameNext
+expect	frame	1
+pixel_copy
+player	LastFrame
+expect	frame	3
+player	FrameNext
+expect	frame	0
+player	FramePrevious
+expect	frame	3
+player	FirstFrame
+expect	frame	0
+player	Play
+expect	playing	true
+expect	player.pause_icon	true
+expect_text	player.play	一時停止
+player	Play
+expect	playing	false
+expect	player.pause_icon	false
+player	Loop
+expect	loop	false
+expect	player.loop_checked	false
+expect_text	player.loop	オフ
+seek	2
+expect	frame	2
+expect	playing	false
+focus	PlayerToolbar
+key	]
+expect	frame	3
+focus	Slider
+key	Left
+expect	frame	2
+snapshot	gif-wide.png
+resize	380	420
+expect	toolbar.no_clip	true
+expect	player.bottom	true
+expect	player.no_overlap	true
+snapshot	gif-narrow.png
+command	Fullscreen
+expect	full	true
+expect	player.bottom	true
+expect	player.no_overlap	true
+snapshot	gif-fullscreen.png
+command	Fullscreen
+open	${fixtures}/blend.apng
+wait
+player	StopAnimation
+player	FrameNext
+expect	frame	1
+pixel_copy
+snapshot	apng.png
+open	${fixtures}/alpha.png
+wait
+expect	player.visible	false
+snapshot	static.png
