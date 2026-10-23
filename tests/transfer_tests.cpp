@@ -64,6 +64,60 @@ TEST(dib_csp_v5_duplicate_masks_preserve_all_rgba_and_row_positions) {
     canonical.frames.push_back({{{255, 0, 0, 0}, {0, 255, 0, 0}, {0, 0, 255, 0}}, 0});
     CHECK(read_dib(make_dibv5(canonical, 0)).frames[0].pixels == canonical.frames[0].pixels);
 }
+TEST(dib_standard32_all_alpha_values_and_opaque_legacy_rows) {
+    Image image; image.width = 257; image.height = 7; image.frames.resize(1);
+    auto &pixels = image.frames[0].pixels; pixels.resize(image.width * image.height);
+    for (size_t n = 0; n < pixels.size(); ++n)
+        pixels[n] = {uint8_t(n * 19), uint8_t(n * 71 + 3), uint8_t(n * 131 + 5), uint8_t(n)};
+    const auto original = make_dibv5(image, 0);
+    for (bool bottom_up : {false, true}) for (bool csp : {false, true}) {
+        auto data = original;
+        if (bottom_up) {
+            reinterpret_cast<BITMAPV5HEADER *>(data.data())->bV5Height = image.height;
+            const size_t stride = image.width * 4;
+            for (size_t y = 0; y < image.height / 2; ++y)
+                for (size_t x = 0; x < stride; ++x)
+                    std::swap(data[124 + y * stride + x],data[124 + (image.height - 1 - y) * stride + x]);
+        }
+        if (csp) {
+            const std::vector<uint8_t> masks(data.begin() + 40,data.begin() + 52);
+            data.insert(data.begin() + 124,masks.begin(),masks.end());
+        }
+        const auto result = read_dib(data);
+        CHECK(result.width == image.width && result.height == image.height && result.frames[0].pixels == pixels);
+        auto opaque = data;
+        reinterpret_cast<BITMAPV5HEADER *>(opaque.data())->bV5AlphaMask = 0;
+        auto expected = pixels; for (auto &p : expected) p.a = 255;
+        CHECK(read_dib(opaque).frames[0].pixels == expected);
+        // The CSP prefix has no marker: a one-byte-short CSP payload can also
+        // be a canonical V5 with trailing padding. Test unambiguous truncation.
+        THROWS(read_dib(std::span(data).first(original.size() - 1)));
+    }
+}
+TEST(dib_nonstandard32_masks_keep_generic_scaling) {
+    for (bool bottom_up : {false, true}) for (bool ten_bit : {false, true}) {
+        BITMAPV5HEADER header{}; header.bV5Size = sizeof(header); header.bV5Width = 7;
+        header.bV5Height = bottom_up ? 3 : -3; header.bV5Planes = 1; header.bV5BitCount = 32;
+        header.bV5Compression = BI_BITFIELDS;
+        header.bV5RedMask = ten_bit ? 0x3ff00000 : 0xff;
+        header.bV5GreenMask = ten_bit ? 0x000ffc00 : 0xff00;
+        header.bV5BlueMask = ten_bit ? 0x000003ff : 0xff0000;
+        header.bV5AlphaMask = ten_bit ? 0xc0000000 : 0xff000000;
+        std::vector<uint8_t> data(sizeof(header) + 7 * 3 * 4); memcpy(data.data(),&header,sizeof(header));
+        std::vector<Pixel> expected(21);
+        for (unsigned y = 0; y < 3; ++y) for (unsigned x = 0; x < 7; ++x) {
+            const unsigned n = y * 7 + x;
+            const unsigned maximum = ten_bit ? 1023 : 255;
+            const unsigned r = n * 47 % (maximum + 1), g = n * 197 % (maximum + 1), b = n * 23 % (maximum + 1);
+            const unsigned a = n % (ten_bit ? 4 : 256);
+            const uint32_t value = ten_bit ? (r << 20) | (g << 10) | b | (a << 30) : r | (g << 8) | (b << 16) | (a << 24);
+            memcpy(data.data() + sizeof(header) + ((bottom_up ? 2 - y : y) * 7 + x) * 4,&value,4);
+            const auto channel = [maximum](unsigned v) { return uint8_t((v * 255 + maximum / 2) / maximum); };
+            expected[n] = {channel(r),channel(g),channel(b),uint8_t(ten_bit ? a * 85 : a)};
+        }
+        CHECK(read_dib(data).frames[0].pixels == expected);
+    }
+}
 TEST(shell_file_and_export) {
     auto image = load_image(fixtures / L"alpha.png");
     CHECK(std::filesystem::equivalent(drag_path(image, 0, false), image.path));
@@ -146,6 +200,18 @@ void clipboard_encoded_formats_and_file_references(HWND owner) {
     copy_image(owner, source, 0);
     publish(CF_HDROP, drop_bytes, false);
     CHECK(std::get<Image>(paste_clipboard(owner)).frames[0].pixels == source.frames[0].pixels);
+    // Borrowed clipboard spans must unlock on both a failed preferred decoder
+    // and a successful DIB fallback. Clipboard memory remains owned by Windows.
+    publish(CF_DIBV5,make_dibv5(source,0));
+    const auto png_format=RegisterClipboardFormatW(L"PNG");
+    publish(png_format,std::vector<uint8_t>{1,2,3},false);
+    CHECK(paste_image(owner).frames[0].pixels==source.frames[0].pixels);
+    CHECK(OpenClipboard(owner));
+    const auto png_locks=GlobalFlags(GetClipboardData(png_format));
+    const auto dib_locks=GlobalFlags(GetClipboardData(CF_DIBV5));
+    CHECK(CloseClipboard());
+    CHECK(png_locks!=GMEM_INVALID_HANDLE&&dib_locks!=GMEM_INVALID_HANDLE);
+    CHECK((png_locks&GMEM_LOCKCOUNT)==0&&(dib_locks&GMEM_LOCKCOUNT)==0);
     // Reject malformed text without reading beyond HGLOBAL bounds.
     for (const auto &bytes : {std::vector<uint8_t>{'C', 0, ':', 0}, std::vector<uint8_t>{0, 0, 1}}) {
         publish(CF_UNICODETEXT, bytes);

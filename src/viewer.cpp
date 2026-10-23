@@ -1308,7 +1308,7 @@ class App {
         }
         layout();
         apply_display_policy(no_activate);
-        refresh_menu();
+        refresh_menu(false);
         update();
         prefetch_neighbors();complete_load_feedback(result->sequence);
         if (slideshow)SetTimer(hwnd,2,settings.interval,nullptr);
@@ -3436,7 +3436,7 @@ class App {
         }
         }
         if (!((id >= ScrollUp && id <= ReadScrollRight) || id == ZoomIn || id == ZoomOut))
-            refresh_menu();
+            refresh_menu(false);
         update();
     }
     void refresh_overlay() {
@@ -4210,7 +4210,9 @@ class App {
             break;
         }
         case WM_INITMENUPOPUP:
-            update_wallpaper_menu(reinterpret_cast<HMENU>(w));ui_theme_menu(reinterpret_cast<HMENU>(w));
+            // The system menu owns SC_CLOSE/SC_MAXIMIZE availability itself.
+            if (!HIWORD(l)) refresh_menu_state(reinterpret_cast<HMENU>(w),command_context());
+            ui_theme_menu(reinterpret_cast<HMENU>(w));
             return 0;
         case WM_SETTINGCHANGE:
         case WM_THEMECHANGED:sync_ui_theme(true);layout();return 0;

@@ -6970,6 +6970,7 @@ void background_changes_preserve_image_animation_copy_save_and_ole() {
 #include "modern_app_cases.inc"
 #include "responsive_app_cases.inc"
 #include "feedback_app_cases.inc"
+#include "daily_hotpath_app_cases.inc"
 };
 } // namespace gvn
 
@@ -7342,6 +7343,9 @@ APP_TEST(modern_details_state_and_command_shortcuts_preserve_edits)
 APP_TEST(responsive_native_update_and_layout_benchmark)
 APP_TEST(responsive_native_updates_preserve_status_theme_and_document)
 APP_TEST(responsive_animation_controls_only_write_changed_values)
+
+APP_TEST(daily_hotpaths_benchmark)
+APP_TEST(daily_reused_menu_matches_rebuilt_state_and_navigation)
 
 APP_TEST(feedback_copy_paste_alpha_shortcuts_and_timer)
 APP_TEST(feedback_silent_paste_failures_keep_document_and_pending_edit)

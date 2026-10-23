@@ -95,37 +95,27 @@
             source_folder = std::filesystem::current_path();
         return id == CopyFolderName ? source_folder.filename().wstring() : source_folder.wstring();
     }
+    bool menu_command_enabled(UINT id, const CommandContext &context) const {
+        return common_command_enabled(id,context) &&
+            !(id == ToggleOuterFrame && settings.caption) &&
+            !(id >= WallpaperCenter && id <= WallpaperHeight && !image) &&
+            !(id == PaletteEdit && (!image || image->frames.size()!=1 || !image->frames[0].indexed)) &&
+            !(id == ConvertColorDepth && !image) && !(id == ColorAdjust && !image) &&
+            !(id == WallpaperDelete && !has_wallpaper_files(config));
+    }
     void add(HMENU menu, UINT id, const std::wstring &text) {
         auto label = text.substr(0, text.find(L'\t'));
         if (id == SkipBack || id == SkipNext)
             label = std::to_wstring(settings.skip_count) + (id == SkipBack ? L"枚戻る" : L"枚進む");
         label=command_caption(settings,id,label,true);
-        AppendMenuW(menu,
-                    MF_STRING | (!common_command_enabled(id,command_context())?MF_GRAYED:0) | (checked(id) ? MF_CHECKED : 0) |
-                        ((id == ToggleOuterFrame && settings.caption) ||
-                         (id >= WallpaperCenter && id <= WallpaperHeight && !image) ||
-                         (id == PaletteEdit && (!image || image->frames.size()!=1 || !image->frames[0].indexed)) ||
-                         (id == ConvertColorDepth && !image) ||
-                         (id == ColorAdjust && !image) ||
-                         (id == WallpaperDelete && !has_wallpaper_files(config)) ? MF_GRAYED : 0),
-                    id, label.c_str());
+        AppendMenuW(menu, MF_STRING | (menu_command_enabled(id,command_context()) ? 0 : MF_GRAYED) |
+                    (checked(id) ? MF_CHECKED : 0), id, label.c_str());
     }
     static void separator(HMENU menu) {
         AppendMenuW(menu, MF_SEPARATOR, 0, nullptr);
     }
     static void submenu(HMENU root, HMENU child, const wchar_t *label) {
         AppendMenuW(root, MF_POPUP, reinterpret_cast<UINT_PTR>(child), label);
-    }
-    void update_wallpaper_menu(HMENU target) {
-        // Refresh only this popup's entries; other instances may have changed the files.
-        // Never rebuild a menu while Windows is tracking it, or query the desktop here.
-        for (int i = 0; i < GetMenuItemCount(target); ++i) {
-            const auto id = GetMenuItemID(target, i);
-            if (id >= WallpaperCenter && id <= WallpaperDelete) {
-                const bool enabled = id == WallpaperDelete ? has_wallpaper_files(config) : bool(image);
-                EnableMenuItem(target, static_cast<UINT>(i), MF_BYPOSITION | (enabled ? MF_ENABLED : MF_GRAYED));
-            }
-        }
     }
     HMENU menu(bool popup = false) {
         HMENU root = popup ? CreatePopupMenu() : CreateMenu(), m = CreatePopupMenu();
@@ -395,13 +385,48 @@
         submenu(root, m, L"その他");
         ui_theme_menu(root,!popup);return root;
     }
-    void refresh_menu() {
-        auto next = menu();
-        SetMenu(hwnd, (full ? settings.full_menu : settings.menu) ? next : nullptr);
-        if (main_menu)
-            ui_destroy_menu(main_menu);
-        main_menu = next;
-        for (auto bar : {toolbar.hwnd, playback.toolbar.hwnd,editor_tools.hwnd})
+    std::vector<std::wstring> menu_history;
+    bool menu_floating{};
+    void refresh_menu_state(HMENU target, const CommandContext &context) {
+        const int count = GetMenuItemCount(target);
+        for (int n = 0; n < count; ++n) {
+            MENUITEMINFOW item{sizeof(item)};
+            item.fMask = MIIM_ID | MIIM_SUBMENU | MIIM_STATE | MIIM_FTYPE;
+            if (!GetMenuItemInfoW(target,n,TRUE,&item)) continue;
+            if (item.hSubMenu) refresh_menu_state(item.hSubMenu,context);
+            else if (!(item.fType & MFT_SEPARATOR)) {
+                const UINT state = (item.fState & ~(MFS_DISABLED | MFS_CHECKED)) |
+                    (menu_command_enabled(item.wID,context) ? MF_ENABLED : MF_GRAYED) |
+                    (checked(item.wID) ? MFS_CHECKED : 0);
+                const bool radio = item.wID == Grid || (item.wID >= GridFree && item.wID <= Grid32) ||
+                    (item.wID >= ViewRotateNone && item.wID <= ViewRotateHalf);
+                const UINT type = radio ? (item.fType & ~MFT_RADIOCHECK) |
+                    (checked(item.wID) ? MFT_RADIOCHECK : 0) : item.fType;
+                if (state != item.fState || type != item.fType) {
+                    item.fMask = MIIM_STATE | MIIM_FTYPE; item.fState = state; item.fType = type;
+                    SetMenuItemInfoW(target,n,TRUE,&item);
+                }
+            }
+        }
+    }
+    // Settings changes request a full rebuild. Navigation and ordinary commands
+    // reuse handles/owner-draw metadata unless history or floating items changed.
+    void refresh_menu(bool rebuild = true) {
+        rebuild = rebuild || !main_menu || menu_history != settings.history || menu_floating != floating.has_value();
+        if (rebuild) {
+            auto next = menu();
+            const auto previous = main_menu;
+            main_menu = next;
+            menu_history = settings.history;
+            menu_floating = floating.has_value();
+            SetMenu(hwnd, (full ? settings.full_menu : settings.menu) ? next : nullptr);
+            if (previous) ui_destroy_menu(previous);
+        } else {
+            refresh_menu_state(main_menu,command_context());
+            const auto attached = (full ? settings.full_menu : settings.menu) ? main_menu : nullptr;
+            if (GetMenu(hwnd) != attached) { SetMenu(hwnd,attached); DrawMenuBar(hwnd); }
+        }
+        if (rebuild) for (auto bar : {toolbar.hwnd, playback.toolbar.hwnd,editor_tools.hwnd})
             for (int i = 0; i < SendMessageW(bar, TB_BUTTONCOUNT, 0, 0); ++i) {
                 TBBUTTON button{};
                 SendMessageW(bar, TB_GETBUTTON, i, reinterpret_cast<LPARAM>(&button));
@@ -410,5 +435,5 @@
                     (bar == toolbar.hwnd ? toolbar : bar==editor_tools.hwnd?editor_tools:playback.toolbar).text(button.idCommand, label.c_str());
                 }
             }
-        DrawMenuBar(hwnd);
+        if (rebuild && GetMenu(hwnd)) DrawMenuBar(hwnd);
     }

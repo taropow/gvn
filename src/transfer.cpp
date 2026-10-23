@@ -48,19 +48,26 @@ struct Global {
         value = nullptr;
     }
 };
-std::vector<uint8_t> clipboard_bytes(UINT format) {
-    auto handle = GetClipboardData(format);
-    if (!handle)
-        return {};
-    const SIZE_T length = GlobalSize(handle);
-    require(length <= 512ull * 1024 * 1024, "Clipboard image exceeds limit");
-    const auto *data = static_cast<const uint8_t *>(GlobalLock(handle));
-    if (!data)
-        return {};
-    std::vector<uint8_t> result(data, data + length);
-    GlobalUnlock(handle);
-    return result;
-}
+// The caller holds Clipboard open for this entire lifetime. Decoders consume
+// borrowed spans synchronously, so a second full encoded-image allocation is unnecessary.
+class ClipboardData {
+    HGLOBAL handle{};
+    const uint8_t *data{};
+    size_t length{};
+public:
+    explicit ClipboardData(UINT format) {
+        handle = GetClipboardData(format);
+        if (!handle) return;
+        length = GlobalSize(handle);
+        require(length <= 512ull * 1024 * 1024, "Clipboard image exceeds limit");
+        data = static_cast<const uint8_t *>(GlobalLock(handle));
+        if (!data) length = 0;
+    }
+    ClipboardData(const ClipboardData &) = delete;
+    ClipboardData &operator=(const ClipboardData &) = delete;
+    ~ClipboardData() { if (data) GlobalUnlock(handle); }
+    std::span<const uint8_t> bytes() const { return {data, length}; }
+};
 std::filesystem::path clipboard_file() {
     auto valid = [](const std::filesystem::path &path) { return path.is_absolute() && supported(path); };
     if (IsClipboardFormatAvailable(CF_HDROP)) {
@@ -83,7 +90,8 @@ std::filesystem::path clipboard_file() {
         const auto length = GlobalSize(handle);
         if (!length || length > 128 * 1024 || length % sizeof(wchar_t))
             return {};
-        const auto data = clipboard_bytes(CF_UNICODETEXT);
+        const ClipboardData memory(CF_UNICODETEXT);
+        const auto data = memory.bytes();
         std::wstring text(data.size() / sizeof(wchar_t), L'\0');
         memcpy(text.data(), data.data(), data.size());
         const auto end = text.find(L'\0');
@@ -206,6 +214,20 @@ Image read_dib(std::span<const uint8_t> data) {
     image.frames.resize(1);
     auto &pixels = image.frames[0].pixels;
     pixels.resize(count);
+    // Common Windows/CSP BGRA/BGRX: header, masks, palette and full byte range
+    // have already been validated. Keep straight alpha and transparent RGB intact.
+    if (bits == 32 && masks[0] == 0xff0000 && masks[1] == 0xff00 && masks[2] == 0xff &&
+        (masks[3] == 0 || masks[3] == 0xff000000)) {
+        const bool alpha = masks[3] != 0;
+        for (size_t y = 0; y < height; ++y) {
+            const auto *source = data.data() + offset + (h > 0 ? height - 1 - y : y) * stride;
+            auto *target = pixels.data() + y * w;
+            for (size_t x = 0; x < static_cast<size_t>(w); ++x)
+                target[x] = {source[x * 4 + 2], source[x * 4 + 1], source[x * 4],
+                             alpha ? source[x * 4 + 3] : uint8_t(255)};
+        }
+        return image;
+    }
     for (size_t y = 0; y < height; ++y) {
         const auto row = data.subspan(offset + (h > 0 ? height - 1 - y : y) * stride, stride);
         for (size_t x = 0; x < static_cast<size_t>(w); ++x) {
@@ -269,7 +291,8 @@ static ClipboardContent read_open_clipboard(const std::function<void()> &decodin
     for (const auto format : formats)
         if (format.id && IsClipboardFormatAvailable(format.id)) {
             try {
-                auto data = clipboard_bytes(format.id);
+                const ClipboardData memory(format.id);
+                const auto data = memory.bytes();
                 if(!data.empty()) {
                     if(decoding)decoding();
                     auto image = format.dib ? read_dib(data) : decode(data, L"");
@@ -329,7 +352,8 @@ SelectionClipboard paste_selection_clipboard(HWND owner,const std::function<void
         Clipboard clipboard(owner);
         const auto format=RegisterClipboardFormatW(selection_clipboard_format);
         if(format&&IsClipboardFormatAvailable(format))try {
-            const auto data=clipboard_bytes(format);
+            const ClipboardData memory(format);
+            const auto data=memory.bytes();
             if(data.size()>=64&&memcmp(data.data(),"GVNSEL1",7)==0&&decoding)decoding();
             return decode_selection_clipboard(data);
         }catch(const std::exception &){invalid=true;}

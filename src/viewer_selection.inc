@@ -11,7 +11,7 @@
         floating=std::move(next);cancel_pointer();selection={};renderer.selection_path.clear();player.playing=false;reset_animation_clock();KillTimer(hwnd,2);
         drag_armed=false;toolbar.floating(true);
         if(!image){view.set_image(canvas->width,canvas->height,false);view.apply_fit(Fit::Contain);}
-        refresh_menu();layout();update();
+        refresh_menu(false);layout();update();
     }
     void cancel_floating() {
         if(!floating)return;
@@ -19,7 +19,7 @@
         toolbar.floating(false);cancel_pointer();
         if(image==old.origin){player=std::move(old.previous_player);selection=old.previous_selection;reset_animation_clock();if(!image)view=old.previous_view;}
         if(old.slideshow&&slideshow)SetTimer(hwnd,2,settings.interval,nullptr);
-        refresh_menu();layout();update();
+        refresh_menu(false);layout();update();
     }
     void commit_floating() {
         if(!floating)return;
@@ -57,7 +57,7 @@
         next.box={selection.x+source->width/2.,selection.y+source->height/2.,double(source->width),double(source->height),0};
         floating=std::move(next);cancel_pointer();selection={};renderer.selection_path.clear();
         player.playing=false;reset_animation_clock();KillTimer(hwnd,2);drag_armed=false;toolbar.floating(true);
-        refresh_menu();layout();update();
+        refresh_menu(false);layout();update();
     }
     static SelectionCombine selection_modifier(WPARAM flags) {
         if(GetKeyState(VK_MENU)&0x8000)return SelectionCombine::Subtract;
@@ -81,13 +81,13 @@
         cancel_pointer();if(floating)cancel_floating();if(cropping)cancel_crop();
         if(!enabled){previous_editor_tool=selection_tool;selection_tool=SelectionTool::Browse;}
         else selection_tool=previous_editor_tool;
-        editor_mode=enabled;drag_armed=false;refresh_menu();layout();update();
+        editor_mode=enabled;drag_armed=false;refresh_menu(false);layout();update();
     }
     void choose_tool(SelectionTool tool) {
         cancel_pointer();if(floating)cancel_floating();if(cropping)cancel_crop();
         set_edit_mode(true);selection_tool=previous_editor_tool=tool;
         if(tool==SelectionTool::Move)move_selection();
-        refresh_menu();layout();update();
+        refresh_menu(false);layout();update();
     }
     POINT canvas_point(POINT p) const {p.x-=left;return p;}
     POINT client_point(POINT p) const {p.x+=left;return p;}
