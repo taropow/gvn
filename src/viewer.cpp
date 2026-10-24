@@ -42,6 +42,7 @@
 #include <commdlg.h>
 #include <pathcch.h>
 #include <shellapi.h>
+#include <dwmapi.h>
 #include <shobjidl.h>
 #include <fstream>
 #include <sstream>
@@ -4079,6 +4080,23 @@ class App {
             ShowWindow(hwnd, SW_HIDE);
             return;
         }
+        // Placement restoration can itself show the window. Keep all initial
+        // placement/painting composed but hidden until the first frame is ready.
+        const bool first_show=!IsWindowVisible(hwnd);
+        const BOOL cloak=TRUE;
+        struct Reveal {
+            HWND window;bool transitions{},cloaked{};
+            ~Reveal(){
+                const BOOL disabled=FALSE;
+                if(cloaked)DwmSetWindowAttribute(window,DWMWA_CLOAK,&disabled,sizeof(disabled));
+                if(transitions)DwmSetWindowAttribute(window,DWMWA_TRANSITIONS_FORCEDISABLED,&disabled,sizeof(disabled));
+            }
+        } reveal{hwnd};
+        if(first_show){
+            // Do not wait for a hidden show animation; later transitions retain OS defaults.
+            reveal.transitions=SUCCEEDED(DwmSetWindowAttribute(hwnd,DWMWA_TRANSITIONS_FORCEDISABLED,&cloak,sizeof(cloak)));
+            reveal.cloaked=SUCCEEDED(DwmSetWindowAttribute(hwnd,DWMWA_CLOAK,&cloak,sizeof(cloak)));
+        }
         if (full)
             fullscreen();
         if (settings.startup_position == 1 && settings.last_window_valid) {
@@ -4118,6 +4136,14 @@ class App {
             fullscreen();
         layout();
         update();
+        if(first_show&&!IsIconic(hwnd)){
+            // Prepare the cheap GDI background/chrome. Initialize Direct2D in
+            // the ordinary first paint, after reveal, instead of waiting hidden.
+            RedrawWindow(hwnd,nullptr,nullptr,RDW_INVALIDATE|RDW_ERASE|RDW_FRAME|RDW_ALLCHILDREN|RDW_ERASENOW);
+            for(auto child=GetWindow(hwnd,GW_CHILD);child;child=GetWindow(child,GW_HWNDNEXT))
+                if(IsWindowVisible(child))RedrawWindow(child,nullptr,nullptr,RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN|RDW_UPDATENOW);
+            if(reveal.cloaked)GdiFlush();
+        }
     }
     bool route_key(const MSG &message) {
         if(editor_chrome.owns(message.hwnd)){
