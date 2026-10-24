@@ -1,0 +1,25 @@
+# Empty startup appearance, then opening/pasting and resizing on the private desktop.
+resize	1000	720
+paint_main
+snapshot	startup-empty.png
+settings
+tab	General
+set	UiTheme	2
+click	OK
+paint_main
+snapshot	startup-empty-dark.png
+open	${fixtures}/display-alpha.png
+wait
+remember	original
+command	Copy
+command	CloseImage
+command	Paste
+expect_same	original	true
+sizing	begin
+resize	1100	780
+paint_main
+sizing	end
+paint_main
+expect_same	original	true
+snapshot	startup-paste-resize.png
+expect	error_count	0

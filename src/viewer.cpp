@@ -1608,6 +1608,29 @@ class App {
     const Image *presented_image() const {return floating?floating->canvas.get():previewing_mask()?mask_preview_image.get():image.get();}
     size_t presented_frame() const {return previewing_mask()?0:player.frame;}
 #include "viewer_async_display.inc"
+    void erase_startup_background(HDC dc) const {
+        // Cover the first visible frame without initializing Direct2D or image buffers.
+        // Subsequent erasures retain the rendered surface, including during live resize.
+        if(paints||!dc)return;
+        const auto color=[](uint32_t rgb){return RGB((rgb>>16)&255,(rgb>>8)&255,rgb&255);};
+        RECT client{};GetClientRect(hwnd,&client);
+        FillRect(dc,&client,ui_brush(color(renderer.background)));
+        RECT viewport{renderer.viewport_left,top,renderer.viewport_left+LONG(view.width),top+LONG(view.height)};
+        FillRect(dc,&viewport,ui_brush(color(renderer.background_first)));
+        if(!renderer.background_tiled)return;
+        const int cell=8<<std::clamp(renderer.background_pattern,0,4),side=cell*2;
+        constexpr size_t header_words=sizeof(BITMAPINFOHEADER)/sizeof(uint32_t);
+        std::vector<uint32_t> dib(header_words+side*side);
+        const BITMAPINFOHEADER header{sizeof(BITMAPINFOHEADER),side,-side,1,32,BI_RGB};
+        memcpy(dib.data(),&header,sizeof(header));
+        for(int y=0;y<side;++y)for(int x=0;x<side;++x)
+            dib[header_words+y*side+x]=((x/cell+y/cell)%2)?renderer.background_second:renderer.background_first;
+        if(auto brush=CreateDIBPatternBrushPt(dib.data(),DIB_RGB_COLORS)){
+            POINT origin{};SetBrushOrgEx(dc,viewport.left,viewport.top,&origin);
+            FillRect(dc,&viewport,brush);
+            SetBrushOrgEx(dc,origin.x,origin.y,nullptr);DeleteObject(brush);
+        }
+    }
     HRESULT render_scene(HDC dc=nullptr, std::span<const RECT> damage={}) {
         flush_resize_layout();
         renderer.selection_region=&selection;
@@ -4242,6 +4265,7 @@ class App {
             InvalidateRect(hwnd, nullptr, FALSE);
             return 0;
         case WM_ERASEBKGND:
+            erase_startup_background(reinterpret_cast<HDC>(w));
             return 1;
         case WM_PAINT: {
             flush_resize_layout();

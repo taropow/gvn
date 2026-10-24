@@ -8,6 +8,7 @@
 #include "fl_reference.h"
 #include "cp_reference.h"
 #include "test_desktop.h"
+#include "background_test_support.h"
 #include <deque>
 #include <future>
 #include <mutex>
@@ -6975,6 +6976,7 @@ void background_changes_preserve_image_animation_copy_save_and_ole() {
 #include "everyday_app_cases.inc"
 #include "resize_app_cases.inc"
 #include "status_app_cases.inc"
+#include "startup_app_cases.inc"
 #include "context_app_cases.inc"
 };
 } // namespace gvn
@@ -7376,3 +7378,4 @@ APP_TEST(resize_coalesces_geometry_keeps_alpha_and_restores_selected_quality)
 APP_TEST(resize_toolbar_cached_geometry_matches_forced_native_relayout)
 
 APP_TEST(paste_status_erase_stays_themed_during_document_updates)
+APP_TEST(startup_background_is_initialized_before_first_renderer_frame)
