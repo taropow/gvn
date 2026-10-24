@@ -86,7 +86,7 @@ LRESULT CALLBACK theme_proc(HWND h,UINT m,WPARAM w,LPARAM l,UINT_PTR,DWORD_PTR){
   if(candidate){if(named(kind,L"Button")&&((GetWindowLongPtrW(h,GWL_STYLE)&BS_TYPEMASK)==BS_OWNERDRAW||(GetWindowLongPtrW(h,GWL_STYLE)&BS_TYPEMASK)==BS_GROUPBOX))return DefSubclassProc(h,m,w,l);
    PAINTSTRUCT paint{};const auto dc=m==WM_PAINT?BeginPaint(h,&paint):reinterpret_cast<HDC>(w);const bool done=paint_control(h,dc,kind);if(m==WM_PAINT)EndPaint(h,&paint);if(done)return 0;}
  }
- if(m==WM_ERASEBKGND){const auto kind=class_name(h);if(named(kind,L"#32770")||named(kind,L"Static")||kind.starts_with(L"GVN.Toolbar")||kind==L"GVN.ToolsHost"||kind==L"GVN.EditorChrome"||kind==L"GVN.AnimationBar"){RECT r{};GetClientRect(h,&r);fill(reinterpret_cast<HDC>(w),r,colors.surface);return 1;}}
+ if(m==WM_ERASEBKGND){const auto kind=class_name(h);if(named(kind,STATUSCLASSNAMEW)||named(kind,L"#32770")||named(kind,L"Static")||kind.starts_with(L"GVN.Toolbar")||kind==L"GVN.ToolsHost"||kind==L"GVN.EditorChrome"||kind==L"GVN.AnimationBar"){RECT r{};GetClientRect(h,&r);fill(reinterpret_cast<HDC>(w),r,colors.surface);return 1;}}
  return DefSubclassProc(h,m,w,l);
 }
 }

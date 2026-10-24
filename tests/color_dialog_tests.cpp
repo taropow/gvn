@@ -85,3 +85,25 @@ int main(){
     SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);if(FAILED(OleInitialize(nullptr))||!initialize_controls())return 4;
     const auto result=run_tests();OleUninitialize();return result;
 }
+
+TEST(status_erase_uses_theme_surface_before_paint_and_respects_dc_clip){
+    for(int theme:{2,1}){
+        set_ui_theme(theme);Fixture fixture;
+        const auto status=CreateWindowExW(0,STATUSCLASSNAMEW,L"",WS_CHILD|WS_VISIBLE,0,0,400,30,fixture.owner,nullptr,GetModuleHandleW(nullptr),nullptr);
+        CHECK(status);apply_ui_theme(status,false);SendMessageW(status,WM_SIZE,0,0);
+        RECT bounds{};GetClientRect(status,&bounds);CHECK(bounds.right>100&&bounds.bottom>4);
+        Surface surface(bounds.right,bounds.bottom);
+        const auto sentinel=RGB(255,0,255);FillRect(surface.dc,&bounds,ui_brush(sentinel));
+        const auto result=SendMessageW(status,WM_ERASEBKGND,reinterpret_cast<WPARAM>(surface.dc),0);
+        const auto pixel=GetPixel(surface.dc,10,bounds.bottom/2);
+        std::cout<<"STATUS_ERASE theme="<<theme<<" handled="<<result<<" actual="<<pixel<<" expected="<<ui_palette().surface<<"\n";
+        CHECK(result!=0&&pixel==ui_palette().surface);
+        FillRect(surface.dc,&bounds,ui_brush(sentinel));const auto saved=SaveDC(surface.dc);
+        IntersectClipRect(surface.dc,0,0,30,bounds.bottom);
+        CHECK(SendMessageW(status,WM_ERASEBKGND,reinterpret_cast<WPARAM>(surface.dc),0));RestoreDC(surface.dc,saved);
+        CHECK(GetPixel(surface.dc,10,bounds.bottom/2)==ui_palette().surface);
+        CHECK(GetPixel(surface.dc,60,bounds.bottom/2)==sentinel);
+        DestroyWindow(status);
+    }
+    set_ui_theme(1);
+}

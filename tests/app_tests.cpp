@@ -6974,6 +6974,7 @@ void background_changes_preserve_image_animation_copy_save_and_ole() {
 #include "prompt_app_cases.inc"
 #include "everyday_app_cases.inc"
 #include "resize_app_cases.inc"
+#include "status_app_cases.inc"
 #include "context_app_cases.inc"
 };
 } // namespace gvn
@@ -7373,3 +7374,5 @@ APP_TEST(feedback_minimum_deadline_survives_pending_timer_and_canvas_repaint)
 APP_TEST(resize_interaction_benchmark)
 APP_TEST(resize_coalesces_geometry_keeps_alpha_and_restores_selected_quality)
 APP_TEST(resize_toolbar_cached_geometry_matches_forced_native_relayout)
+
+APP_TEST(paste_status_erase_stays_themed_during_document_updates)
