@@ -14,6 +14,7 @@ if($DocsOnly){
     if((Get-FileHash -LiteralPath $exe).Hash -ne (Get-FileHash -LiteralPath $destinationExe).Hash){throw 'Distribution binary differs from build; run without DocsOnly'}
 }else{Copy-Item -LiteralPath $exe -Destination $destinationExe}
 Copy-Item -LiteralPath (Join-Path $taskRoot 'README.md') -Destination $output
+Copy-Item -LiteralPath (Join-Path $taskRoot 'docs\gvn-manual.md') -Destination (Join-Path $output 'gvn-manual.md')
 Copy-Item -LiteralPath (Join-Path $taskRoot 'src\assets\gvn.ico') -Destination (Join-Path $output 'app.ico')
 Copy-Item -LiteralPath (Join-Path $taskRoot 'docs') -Destination $output -Recurse -Force
 $licenses=Join-Path $output 'licenses'

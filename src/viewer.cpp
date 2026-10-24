@@ -52,6 +52,7 @@
 #include <cmath>
 #include <psapi.h>
 #include <utility>
+#include <system_error>
 
 namespace gvn {
 constexpr UINT kLoaded = WM_APP + 1;
@@ -2432,6 +2433,24 @@ class App {
         if(automatic!=settings.info_auto_colors){settings.info_auto_colors=automatic;settings.save(config);}
     }
 #include "viewer_editor.inc"
+    void show_help(const std::filesystem::path &manual) {
+        if(!std::filesystem::is_regular_file(manual)){
+            dialogs.ask(hwnd,(L"操作説明ファイルが見つかりません。EXEと同じフォルダーに配置してください。\n\n"+manual.wstring()).c_str(),L"GVN 操作説明",MB_OK|MB_ICONERROR);
+            return;
+        }
+        ExternalLaunch request;request.file=manual.wstring();request.verb=L"open";
+        request.directory=manual.parent_path();request.show=SW_SHOWNORMAL;
+        try {if(dialogs.external_launch(hwnd,request))return;}
+        catch(const std::system_error &error){
+            if(error.code().value()!=ERROR_NO_ASSOCIATION&&error.code().value()!=SE_ERR_NOASSOC)throw;
+        }
+        wchar_t system[MAX_PATH]{};
+        const auto length=GetSystemDirectoryW(system,MAX_PATH);
+        if(!length||length>=MAX_PATH)throw std::runtime_error("Cannot locate the text editor");
+        request.file=(std::filesystem::path(system)/L"notepad.exe").wstring();
+        request.parameters=quote_external_argument(manual.wstring());
+        dialogs.external_launch(hwnd,request);
+    }
     void command(UINT id,bool keyboard=false) {
         if(id==PopupContext){context_popup(cursor_screen());return;}
         if(id==ConfigureContextMenu){preferences(PreferencePage::ContextMenu);return;}
@@ -3493,23 +3512,7 @@ class App {
             break;
         }
         case Help: {
-            std::wstring text = L"設定 → キーで割り当てを変更できます。現在の主な割り当て:\n\n";
-            for (const UINT help_command : {Open, Previous, Next, Copy, Paste, Save, Undo, Redo, ArmDrag,
-                                            Fullscreen, Play, FramePrevious, FrameNext}) {
-                text += command_name(help_command);
-                text += L": ";
-                const auto keys = settings.keys_for(help_command);
-                if (keys.empty())
-                    text += L"割り当てなし";
-                for (size_t i = 0; i < keys.size(); ++i)
-                    text += (i ? L" / " : L"") + keys[i];
-                text += L"\n";
-            }
-            text += L"\n左ドラッグ: 移動 / Shift+左ドラッグ: 範囲選択\nAlt+左ドラッグ: "
-                    L"ファイルを渡す\n右クリック: 全メニュー\nEsc: "
-                    L"選択解除・スライド停止・全画面解除\n\nPSDは保存済み合成画像を表示します。\nGIF/"
-                    L"APNGの加工・コピー・ドラッグは現在フレームです。";
-            dialogs.ask(hwnd, text.c_str(), L"GVN 操作説明", MB_OK);
+            show_help(viewer_executable().parent_path()/L"gvn-manual.md");
             break;
         }
         }

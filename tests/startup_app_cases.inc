@@ -1,3 +1,37 @@
+    void help_opens_markdown_with_association_fallback_without_changing_image() {
+        open(fixture(L"alpha.png"));const auto original=app.image;const auto pixels=app.image->frames[0].pixels;
+        const auto manual=viewer_executable().parent_path()/L"gvn-manual.md";
+        CHECK(std::filesystem::is_regular_file(manual));
+        const auto before=external_launches.size(),messages=notices.size();
+        command(Help);app.message(WM_KEYDOWN,VK_F1,0);
+        CHECK(external_launches.size()==before+2&&notices.size()==messages);
+        for(size_t i=before;i<external_launches.size();++i){
+            const auto &launch=external_launches[i];CHECK(launch.file==manual.wstring()&&launch.verb==L"open");
+            CHECK(launch.parameters.empty()&&launch.directory==manual.parent_path()&&launch.show==SW_SHOWNORMAL);
+        }
+        const auto special=temporary/L"日本語 & % 操作説明.md";
+        std::filesystem::copy_file(manual,special);
+        for(int error:{int(ERROR_NO_ASSOCIATION),int(SE_ERR_NOASSOC)}){
+            external_launches.clear();
+            app.dialogs.external_launch=[&](HWND owner,const ExternalLaunch &request){
+                CHECK(owner==app.hwnd);external_launches.push_back(request);
+                if(external_launches.size()==1)throw std::system_error(error,std::system_category());
+                return true;
+            };
+            app.show_help(special);CHECK(external_launches.size()==2);
+            const auto &fallback=external_launches.back();
+            CHECK(std::filesystem::path(fallback.file).filename()==L"notepad.exe");
+            CHECK(std::filesystem::path(fallback.file).is_absolute());
+            CHECK(fallback.parameters==quote_external_argument(special.wstring())&&fallback.directory==temporary);
+        }
+        external_launches.clear();app.show_help(temporary/L"missing.md");
+        CHECK(external_launches.empty()&&notices.back().find(L"操作説明ファイルが見つかりません")!=std::wstring::npos);
+        app.dialogs.external_launch=[&](HWND,const ExternalLaunch &request)->bool{
+            external_launches.push_back(request);throw std::system_error(ERROR_ACCESS_DENIED,std::system_category());
+        };
+        THROWS(app.show_help(special));CHECK(external_launches.size()==1);
+        CHECK(app.image==original&&app.image->frames[0].pixels==pixels&&!app.modified);
+    }
     void startup_background_is_initialized_before_first_renderer_frame() {
         CHECK(app.paints==0&&!app.image);
         RECT client{};GetClientRect(app.hwnd,&client);

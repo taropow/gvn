@@ -4131,7 +4131,7 @@ struct AppAudit {
         CHECK(notices.back().find(L"更新日時:") != std::wstring::npos);
         CHECK(notices.back().find(L"3 × 2") != std::wstring::npos);
         command(Help);
-        CHECK(notices.back().find(L"Ctrl+O") != std::wstring::npos);
+        CHECK(external_launches.back().file==(viewer_executable().parent_path()/L"gvn-manual.md").wstring());
         auto destination = temporary / L"dest";
         std::filesystem::create_directory(destination);
         app.dialogs.preferences_ui = [&](HWND, const Settings &initial, const PreferencesDialog::Apply &apply,
@@ -7379,3 +7379,4 @@ APP_TEST(resize_toolbar_cached_geometry_matches_forced_native_relayout)
 
 APP_TEST(paste_status_erase_stays_themed_during_document_updates)
 APP_TEST(startup_background_is_initialized_before_first_renderer_frame)
+APP_TEST(help_opens_markdown_with_association_fallback_without_changing_image)

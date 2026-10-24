@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(GVN VERSION 0.76.3 LANGUAGES C CXX RC)
+project(GVN VERSION 0.76.4 LANGUAGES C CXX RC)
 configure_file(include/gvn/version.h.in generated/gvn/version.h @ONLY)
 configure_file(src/gvn_version.rc.in gvn_version.rc @ONLY)
 set(CMAKE_CXX_STANDARD 20)
@@ -458,6 +458,8 @@ target_compile_definitions(gvn_render_tests PRIVATE GVN_FIXTURES=L"${CMAKE_CURRE
 add_test(NAME rendering COMMAND gvn_render_tests)
 set_tests_properties(rendering PROPERTIES TIMEOUT 30)
 add_executable(GVN WIN32 src/viewer.cpp "${CMAKE_CURRENT_BINARY_DIR}/gvn_version.rc")
+file(GENERATE OUTPUT "$<TARGET_FILE_DIR:GVN>/gvn-manual.md"
+     INPUT "${CMAKE_CURRENT_SOURCE_DIR}/docs/gvn-manual.md" NEWLINE_STYLE LF)
 add_executable(gvn_external_receiver WIN32 tools/external_receiver.cpp)
 target_compile_definitions(gvn_external_receiver PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
 target_compile_options(gvn_external_receiver PRIVATE /W4 /utf-8 /permissive-)
