@@ -19,6 +19,7 @@ try {
 $sourceExe = Join-Path $source 'GVN.exe'
 $sourceChecksum = Join-Path $source 'SHA256.txt'
 $sourceLicenses = Join-Path $source 'licenses'
+$sourceManual = Join-Path $source 'gvn-manual.md'
 if (-not (Test-Path -LiteralPath $sourceExe -PathType Leaf) -or
     -not (Test-Path -LiteralPath $sourceChecksum -PathType Leaf) -or
     -not (Test-Path -LiteralPath $sourceLicenses -PathType Container)) {
@@ -33,6 +34,9 @@ if ((Get-FileHash -LiteralPath $sourceExe -Algorithm SHA256).Hash.ToLowerInvaria
 $version = (Get-Item -LiteralPath $sourceExe).VersionInfo
 if ($version.ProductName -ne 'GVN Image Viewer' -or $version.FileVersion -notmatch '^\d+\.\d+\.\d+$') {
     throw 'Not a versioned GVN executable'
+}
+if ([version]$version.FileVersion -ge [version]'0.76.4' -and -not (Test-Path -LiteralPath $sourceManual -PathType Leaf)) {
+    throw 'gvn-manual.md is required for this version; daily installation untouched'
 }
 $licenseFiles = @(Get-ChildItem -LiteralPath $sourceLicenses -File -Recurse)
 if ($licenseFiles.Count -eq 0) { throw 'Distribution licenses are empty' }
@@ -55,6 +59,21 @@ try {
         throw 'Staged executable checksum mismatch'
     }
     $stagedLicenses = Join-Path $stage 'licenses'
+    if (Test-Path -LiteralPath $sourceManual -PathType Leaf) {
+        $manualHash = (Get-FileHash -LiteralPath $sourceManual -Algorithm SHA256).Hash
+        $stagedManual = Join-Path $stage 'gvn-manual.md'
+        Copy-Item -LiteralPath $sourceManual -Destination $stagedManual
+        if ((Get-FileHash -LiteralPath $stagedManual -Algorithm SHA256).Hash -ne $manualHash) { throw 'Staged manual checksum mismatch' }
+        $installedManual = Join-Path $install 'gvn-manual.md'
+        if ((Test-Path -LiteralPath $installedManual -PathType Leaf) -and
+            (Get-FileHash -LiteralPath $installedManual -Algorithm SHA256).Hash -ne $manualHash) {
+            $manualBackup = Join-Path $install '.previous'
+            New-Item -ItemType Directory -Path $manualBackup -Force | Out-Null
+            Copy-Item -LiteralPath $installedManual -Destination (Join-Path $manualBackup 'gvn-manual.md') -Force
+        }
+        Copy-Item -LiteralPath $stagedManual -Destination $installedManual -Force
+        if ((Get-FileHash -LiteralPath $installedManual -Algorithm SHA256).Hash -ne $manualHash) { throw 'Installed manual checksum mismatch' }
+    }
     New-Item -ItemType Directory -Path $stagedLicenses | Out-Null
     foreach ($file in $licenseFiles) {
         if ($file.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Linked license files are not supported' }
@@ -119,9 +138,11 @@ gvd.exeを起動してください。ショートカットや関連付けには�
 使用中のため保留した更新は、gvd.exeを閉じてから開発側の更新手順を再実行します。
 前の実行ファイルは、更新後に .previous\gvd.exe に残ります。
 ライセンスはlicensesフォルダにあります。
+操作説明はF1または「その他 → 操作説明」で開きます。同じフォルダーのgvn-manual.mdです。
 '@ | Set-Content -LiteralPath (Join-Path $install 'はじめに.txt') -Encoding utf8
     $receipt = [ordered]@{status=$(if($sameExe){'AlreadyCurrent'}else{'Updated'});path=$targetExe;version=$version.FileVersion;sha256=$expectedHash;source=$source;updated_at_utc=[DateTime]::UtcNow.ToString('o');settings_path='%LOCALAPPDATA%\GVN\settings.ini'}
     if ($pinRefresh) { $receipt['icon_refresh'] = $pinRefresh }
+    if ($manualHash) { $receipt['manual'] = @{path=$installedManual;sha256=$manualHash.ToLowerInvariant()} }
     if ($runningBackup) { $receipt['running_backup'] = $runningBackup; $receipt['preserved_running_pids'] = @($running.Id) }
     $receipt | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $install 'installed.json') -Encoding utf8
     $receipt | ConvertTo-Json -Compress
