@@ -1,4 +1,4 @@
-"""Draw the application's vector-style identity and emit optically sized Windows icons.
+"""Draw a bold white V and viewfinder on a blue panel for Windows icons.
 
 Only Pillow is needed at development time; the application loads its embedded ICO.
 Toolbar command icons remain independent from this application identity.
@@ -15,31 +15,19 @@ def draw_icon(size):
     n=size*scale
     factor=n/256
     def box(values):return tuple(round(v*factor) for v in values)
-    def layer_round(bounds,radius,color):
-        layer=Image.new('RGBA',(n,n));ImageDraw.Draw(layer).rounded_rectangle(box(bounds),round(radius*factor),fill=color)
-        return layer
     image=Image.new('RGBA',(n,n))
-    # A dark frame stays readable on both light and dark taskbars.
-    image.alpha_composite(layer_round((14,14,242,242),52,'#102D43'))
-    rim=layer_round((18,18,238,238),48,'#164058');image.alpha_composite(rim)
-    if size>=24:
-        image.alpha_composite(layer_round((69,39,221,202),20,'#78DCD8'))
-    image.alpha_composite(layer_round((34,53,211,219),23,'#F3FCFF'))
-    viewport=Image.new('RGBA',(n,n));pixels=ImageDraw.Draw(viewport)
-    top,bottom=(112,215,247),(45,125,213)
-    for y in range(round(65*factor),round(193*factor)+1):
-        t=(y/factor-65)/128
-        rgb=tuple(round(a+(b-a)*t) for a,b in zip(top,bottom))
-        pixels.line((round(46*factor),y,round(199*factor),y),fill=(*rgb,255))
-    pixels.ellipse(box((148,80,178,110)),fill='#FFD36B')
-    pixels.polygon([box(p) for p in [(46,172),(99,111),(153,177),(175,150),(199,174),(199,198),(46,198)]],fill='#286BAE')
-    pixels.polygon([box(p) for p in [(46,185),(88,146),(119,172),(152,129),(199,184),(199,199),(46,199)]],fill='#20B7A4')
-    mask=Image.new('L',(n,n));ImageDraw.Draw(mask).rounded_rectangle(box((46,65,199,192)),round(13*factor),fill=255)
-    viewport.putalpha(mask);image.alpha_composite(viewport)
-    # The small footer suggests image/alpha pixels without relying on tiny letters.
-    d=ImageDraw.Draw(image)
-    d.rounded_rectangle(box((48,201,72,208)),round(3*factor),fill='#9DBBC8')
-    d.rounded_rectangle(box((80,201,104,208)),round(3*factor),fill='#CEE0E7')
+    ImageDraw.Draw(image).rounded_rectangle(box((4,4,252,252)),round(38*factor),fill='#1677E8')
+    # Font-independent geometry keeps the chosen V + frame design identical
+    # across machines and legible at small window-icon resolutions.
+    glyph=ImageDraw.Draw(image)
+    for points in [
+        [(37,87),(37,37),(87,37),(87,55),(55,55),(55,87)],
+        [(169,37),(219,37),(219,87),(201,87),(201,55),(169,55)],
+        [(37,169),(55,169),(55,201),(87,201),(87,219),(37,219)],
+        [(201,169),(219,169),(219,219),(169,219),(169,201),(201,201)],
+        [(68,79),(105,79),(128,151),(151,79),(188,79),(148,183),(108,183)],
+    ]:
+        glyph.polygon([box(point) for point in points],fill='white')
     return image.resize((size,size),Image.Resampling.LANCZOS)
 
 def main():
