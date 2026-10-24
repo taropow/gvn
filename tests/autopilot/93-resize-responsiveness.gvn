@@ -1,0 +1,67 @@
+# Native WM_SIZE + WM_PAINT path. Print snapshots are taken after sizing ends.
+resize	980	720
+open	${fixtures}/display-alpha.png
+wait
+remember	original
+settings
+tab	Display
+set	DisplayDown	2
+set	DisplayUp	2
+click	OK
+command	FitImage
+paint_main
+expect	renderer.source_bytes	0
+expect	renderer.sample_current	true
+sizing	begin
+resize	981	721
+resize	990	730
+resize	1020	750
+paint_main
+expect	renderer.resizing	true
+expect	renderer.source_bytes	0
+expect	renderer.filter	1
+expect_same	original	true
+sizing	end
+paint_main
+expect	renderer.resizing	false
+expect	renderer.filter	10
+expect	renderer.sample_current	true
+snapshot	resize-viewer-settled.png
+command	ToolPen
+sizing	begin
+resize	520	680
+paint_main
+resize	1000	780
+paint_main
+sizing	end
+paint_main
+expect_same	original	true
+snapshot	resize-editor-settled.png
+command	ToggleEditor
+sizing	begin
+resize	1100	800
+sizing	cancel
+paint_main
+expect	renderer.resizing	false
+expect	renderer.filter	10
+expect	renderer.sample_current	true
+expect_same	original	true
+pixel_copy
+open	${fixtures}/disposal.gif
+wait
+player	FirstFrame
+command	StopAnimation
+sizing	begin
+resize	620	520
+paint_main
+sizing	end
+paint_main
+snapshot	resize-animation-settled.png
+command	CloseImage
+sizing	begin
+resize	800	600
+paint_main
+sizing	end
+expect_empty_checker
+snapshot	resize-empty-settled.png
+expect	error_count	0

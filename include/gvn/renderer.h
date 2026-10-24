@@ -143,10 +143,7 @@ class Renderer {
     }
     HRESULT draw(HWND hwnd, const Image *image, size_t frame, const View &view, int top, int bottom,
                  const Rect *selection = nullptr, std::span<const RECT> damage = {});
-    bool can_draw_cached(const Image *image,size_t frame) const {
-        return image&&((sampled==image&&sampled_frame==frame&&!tile.bgra.empty()) ||
-            (uploaded==image&&uploaded_frame==frame&&bitmap));
-    }
+    bool can_draw_cached(const Image *image,size_t frame,const View &view) const;
     void adopt_sample(const Image *,size_t,const View &,int,DisplayTile);
     HRESULT draw_cached(HWND,const Image *,size_t,const View &,int,int,const Rect * = nullptr,std::span<const RECT> = {});
     void resize(UINT width, UINT height);

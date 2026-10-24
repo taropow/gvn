@@ -115,8 +115,12 @@ void Renderer::ensure(HWND hwnd) {
     if (target) {
         // Keep an existing system target when shrinking. During live sizing, defer a costly upgrade.
         if (backend == applied_backend &&
-            !(backend == RenderBackend::Automatic && software_target() && large && !resizing))
-            return;
+            !(backend == RenderBackend::Automatic && software_target() && large && !resizing)) {
+            // WM_SIZE only changes layout. Coalesce native surface allocations
+            // until a draw actually needs the newest client dimensions.
+            resize(std::max(1L, client.right), std::max(1L, client.bottom));
+            if (target) return;
+        }
         reset_background();
     }
     if (!factory) {
@@ -292,6 +296,22 @@ void Renderer::adopt_sample(const Image *image,size_t frame,const View &view,int
     tile=std::move(value);sampled=image;sampled_frame=frame;sampled_view=view;sampled_method=method;++sample_builds;
     sampled_bitmap.Reset();bitmap.Reset();uploaded=prepared=nullptr;uploaded_frame=prepared_frame=SIZE_MAX;
     std::vector<uint8_t>().swap(premultiplied);surface_valid=false;
+}
+bool Renderer::can_draw_cached(const Image *image,size_t frame,const View &view) const {
+    if (!image) return false;
+    if (sampled != image || sampled_frame != frame || tile.bgra.empty())
+        return uploaded == image && uploaded_frame == frame && bitmap;
+    const double ratio = view.scale / sampled_view.scale;
+    const double left = view.left() + (tile.left - sampled_view.left()) * ratio;
+    const double top = view.top() + (tile.top - sampled_view.top()) * ratio;
+    const double right = view.left() + (tile.right - sampled_view.left()) * ratio;
+    const double bottom = view.top() + (tile.bottom - sampled_view.top()) * ratio;
+    const double x = std::max(0.0, view.left()), y = std::max(0.0, view.top());
+    const double end_x = std::min(view.width, view.left() + image->width * view.scale);
+    const double end_y = std::min(view.height, view.top() + image->height * view.scale);
+    // A previously clipped tile must not leave newly exposed image edges empty.
+    return end_x <= x || end_y <= y ||
+        (left <= x + 1e-6 && top <= y + 1e-6 && right >= end_x - 1e-6 && bottom >= end_y - 1e-6);
 }
 HRESULT Renderer::draw_cached(HWND hwnd,const Image *image,size_t frame,const View &view,int top,int bottom,
                               const Rect *selection,std::span<const RECT> damage) {
