@@ -890,6 +890,12 @@ class App {
         result.cy = std::min(result.cy, work.bottom - work.top);
         return result;
     }
+    bool resize_layout_pending{};
+    void flush_resize_layout() {
+        if (!std::exchange(resize_layout_pending, false)) return;
+        layout();
+        if (status) update(true);
+    }
     void layout() {
         if (!toolbar.hwnd)
             return;
@@ -934,9 +940,11 @@ class App {
         renderer.viewport_left=left;
         layout_status_parts();
         sync_canvas_scrollbars();
-        renderer.resize(rc.right,rc.bottom);
+        // The render target adopts the latest size when the next paint begins.
         if(toast.window()&&(GetWindowLongPtrW(toast.window(),GWL_STYLE)&WS_VISIBLE))toast.layout(toast_area());
-        ime.apply(hwnd, settings.disable_ime);
+        // Creation, focus and language messages still enforce IME policy.
+        // A live size gesture does not need to enumerate the same controls.
+        if (!renderer.resizing) ime.apply(hwnd, settings.disable_ime);
         InvalidateRect(hwnd, nullptr, FALSE);
     }
     std::array<std::optional<std::wstring>,5> status_texts;
@@ -981,16 +989,25 @@ class App {
             canvas_left=left;
             canvas_thickness = thickness;
             canvas_bars = bars;
-            SetWindowPos(canvas_horizontal, nullptr, left, top + static_cast<int>(view.height),
-                         static_cast<int>(view.width), thickness, SWP_NOZORDER | SWP_NOACTIVATE);
-            SetWindowPos(canvas_vertical, nullptr, left+static_cast<int>(view.width), top, thickness,
-                         static_cast<int>(view.height), SWP_NOZORDER | SWP_NOACTIVATE);
-            SetWindowPos(canvas_corner, nullptr, left+static_cast<int>(view.width),
-                         top + static_cast<int>(view.height), thickness, thickness,
-                         SWP_NOZORDER | SWP_NOACTIVATE);
-            ShowWindow(canvas_horizontal, bars.horizontal ? SW_SHOWNA : SW_HIDE);
-            ShowWindow(canvas_vertical, bars.vertical ? SW_SHOWNA : SW_HIDE);
-            ShowWindow(canvas_corner, bars.horizontal && bars.vertical ? SW_SHOWNA : SW_HIDE);
+            // Hidden scrollbars have no geometry to present. Move them when
+            // they become visible, using the newest viewport dimensions.
+            if (bars.horizontal)
+                SetWindowPos(canvas_horizontal, nullptr, left, top + static_cast<int>(view.height),
+                             static_cast<int>(view.width), thickness, SWP_NOZORDER | SWP_NOACTIVATE);
+            if (bars.vertical)
+                SetWindowPos(canvas_vertical, nullptr, left+static_cast<int>(view.width), top, thickness,
+                             static_cast<int>(view.height), SWP_NOZORDER | SWP_NOACTIVATE);
+            if (bars.horizontal && bars.vertical)
+                SetWindowPos(canvas_corner, nullptr, left+static_cast<int>(view.width),
+                             top + static_cast<int>(view.height), thickness, thickness,
+                             SWP_NOZORDER | SWP_NOACTIVATE);
+            const auto show = [](HWND child, bool visible) {
+                if (bool(GetWindowLongPtrW(child, GWL_STYLE) & WS_VISIBLE) != visible)
+                    ShowWindow(child, visible ? SW_SHOWNA : SW_HIDE);
+            };
+            show(canvas_horizontal, bars.horizontal);
+            show(canvas_vertical, bars.vertical);
+            show(canvas_corner, bars.horizontal && bars.vertical);
         }
         const auto range = [](HWND control, double content, double page, double offset) {
             SCROLLINFO info{sizeof(info), SIF_RANGE | SIF_PAGE | SIF_POS};
@@ -1592,14 +1609,15 @@ class App {
     size_t presented_frame() const {return previewing_mask()?0:player.frame;}
 #include "viewer_async_display.inc"
     HRESULT render_scene(HDC dc=nullptr, std::span<const RECT> damage={}) {
+        flush_resize_layout();
         renderer.selection_region=&selection;
         renderer.crop_box=cropping?std::optional<FloatingBox>(cropping->box):std::nullopt;
         renderer.set_floating(floating?floating->source:nullptr,floating?floating->box:FloatingBox{});
         const auto previous=renderer.dragging_low;renderer.dragging_low=previous||previewing_mask();
         struct Restore {bool &value;bool previous;~Restore(){value=previous;}} restore{renderer.dragging_low,previous};
         const auto frame=floating?size_t(0):presented_frame();
-        if(!dc&&renderer.resizing&&display_sampler&&renderer.can_draw_cached(presented_image(),frame)){
-            display_sampler->cancel();return renderer.draw_cached(hwnd,presented_image(),frame,view,top,bottom,floating?nullptr:&selection,damage);
+        if(!dc&&renderer.resizing&&renderer.can_draw_cached(presented_image(),frame,view)){
+            if(display_sampler)display_sampler->cancel();return renderer.draw_cached(hwnd,presented_image(),frame,view,top,bottom,floating?nullptr:&selection,damage);
         }
         if(!dc&&request_display_sample())return renderer.draw_cached(hwnd,presented_image(),frame,view,top,bottom,floating?nullptr:&selection,damage);
         if(!dc&&display_sampler&&!asynchronous_display())display_sampler->cancel();
@@ -4193,6 +4211,14 @@ class App {
             if (!full && w != SIZE_MINIMIZED)
                 was_maximized = w == SIZE_MAXIMIZED;
             if(w==SIZE_MINIMIZED){sync_ants_timer();sync_animation_timer();return 0;}
+            if (renderer.resizing) {
+                // Size messages can outpace paints. Arrange once for the latest
+                // dimensions, while continuing to paint during the gesture.
+                resize_layout_pending = true;
+                InvalidateRect(hwnd, nullptr, FALSE);
+                return 0;
+            }
+            resize_layout_pending = false;
             layout();
             if (status)
                 update(true);
@@ -4210,12 +4236,15 @@ class App {
             renderer.resizing = true;
             return 0;
         case WM_EXITSIZEMOVE:
+            flush_resize_layout();
             renderer.resizing = false;
+            ime.apply(hwnd, settings.disable_ime);
             InvalidateRect(hwnd, nullptr, FALSE);
             return 0;
         case WM_ERASEBKGND:
             return 1;
         case WM_PAINT: {
+            flush_resize_layout();
             PAINTSTRUCT ps{};
             // Retain separate edge strips instead of painting their large union box.
             alignas(RGNDATA) std::array<uint8_t,sizeof(RGNDATAHEADER)+64*sizeof(RECT)> storage{};
@@ -4445,7 +4474,9 @@ class App {
             return 0;
         case WM_CANCELMODE:
             space_pan=false;
+            flush_resize_layout();
             renderer.resizing = false;
+            ime.apply(hwnd, settings.disable_ime);
             cancel_pointer();
             return 0;
         case WM_KILLFOCUS:

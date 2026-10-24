@@ -2910,6 +2910,11 @@ struct Autopilot {
             const auto id=command_ids.at(s.at(1));size_t row{};while(row<context_menu_choices().size()&&context_menu_choices()[row].id!=id)++row;
             require(row<context_menu_choices().size(),"Context choice missing");SendMessageW(control("ContextChoice"),CB_SETCURSEL,row,0);return;
         }
+        if(op=="paint_main"){
+            own(app.hwnd);InvalidateRect(app.hwnd,nullptr,FALSE);
+            SendMessageW(app.hwnd,WM_PAINT,0,0);
+            require(app.smoke_error.empty(),"Native main paint failed");return;
+        }
         if(op=="repaint_main"){InvalidateRect(app.hwnd,nullptr,FALSE);UpdateWindow(app.hwnd);return;}
         if(op=="context_native_open"){
             auto previous=std::move(app.dialogs.popup);

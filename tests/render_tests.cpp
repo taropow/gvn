@@ -1081,6 +1081,32 @@ TEST(panning_reuses_bounded_tiles_and_matches_uncached_pixels_with_fractional_zo
 
 namespace gvn {
 struct RendererAudit {
+    static void resize_on_draw() {
+        HWND window = CreateWindowExW(0, L"STATIC", L"Owned resize test", WS_POPUP,
+            0, 0, 420, 320, nullptr, nullptr, nullptr, nullptr);
+        CHECK(window);
+        auto image = new_image(640, 480);
+        for (size_t n = 0; n < image.frames[0].pixels.size(); ++n)
+            image.frames[0].pixels[n] = {uint8_t(n * 7), uint8_t(n * 11), uint8_t(n * 13), uint8_t(n)};
+        const auto pixels = image.frames[0].pixels;
+        Renderer renderer; renderer.down = renderer.up = DisplayLanczos3;
+        View view; view.resize(420, 320); view.set_image(image.width, image.height);
+        CHECK(SUCCEEDED(renderer.draw(window, &image, 0, view, 0, 0)));
+        const auto target = renderer.target.Get();
+        CHECK(target && target->GetPixelSize().width == 420 && renderer.surface_valid);
+        for (int width : {480, 520, 580})
+            CHECK(SetWindowPos(window, nullptr, 0, 0, width, 400, SWP_NOZORDER | SWP_NOACTIVATE));
+        CHECK(target->GetPixelSize().width == 420);
+        view.resize(580, 400);
+        const RECT damage{0, 0, 1, 1};
+        CHECK(SUCCEEDED(renderer.draw(window, &image, 0, view, 0, 0, nullptr, {&damage, 1})));
+        CHECK(renderer.target.Get() == target && target->GetPixelSize().width == 580);
+        CHECK(target->GetPixelSize().height == 400 && renderer.last_damage_pixels == 580 * 400);
+        CHECK(renderer.sample_current(&image, 0, view));
+        CHECK(renderer.tile.bgra == resample_rgba_display(pixels, image.width, image.height, view, DisplayLanczos3).bgra);
+        CHECK(image.frames[0].pixels == pixels);
+        DestroyWindow(window);
+    }
     static void partial_pixels() {
         gvn_test::BackgroundSurface surface(360,260);
         auto image=new_image(300,200);for(size_t n=0;n<image.frames[0].pixels.size();++n)
@@ -1180,4 +1206,8 @@ TEST(display_worker_matches_synchronous_pixels_and_releases_cancelled_sources) {
         closing_source.reset(); // Destruction cancels and joins even with unfinished work.
     }
     CHECK(closing.expired());
+}
+
+TEST(render_target_adopts_latest_window_size_at_draw_and_repaints_full_surface) {
+    RendererAudit::resize_on_draw();
 }

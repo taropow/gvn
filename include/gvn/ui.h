@@ -21,12 +21,12 @@ class IconToolbar {
     bool floating_mode{},built_floating{};
     HWND host{},tools_scroll{};
     int bar_height{};
-    int measured_width{-1},measured_height{},measured_extent{};
+    int measured_width{-1},measured_height{},measured_extent{},measured_rows{};
     std::map<UINT,std::wstring> texts;
     uint64_t palette_generation{};
     bool overflow{true};
     std::vector<UINT> overflow_commands;
-    void arrange_overflow(int);
+    bool arrange_overflow(int);
     int play_bitmap{-1}, pause_bitmap{-1};
     bool playing_bitmap_current{};
     void rebuild();

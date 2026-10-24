@@ -616,7 +616,13 @@ int IconToolbar::measure_height(int width, UINT new_dpi) {
     int height = MulDiv(ui_button_size(large)+2, dpi, 96);
     if (!player) {
         if(measured_width==width)return measured_height+divider;
-        arrange_overflow(width);
+        const bool changed = arrange_overflow(width);
+        // A one-row toolbar keeps its native geometry until visibility changes
+        // or the available width crosses the extent of the current buttons.
+        if (!changed && measured_width >= 0 && measured_rows == 1 && width >= measured_extent) {
+            measured_width = width;
+            return measured_height + divider;
+        }
         const int count = static_cast<int>(SendMessageW(hwnd, TB_BUTTONCOUNT, 0, 0));
         for (int rows = 1; rows <= count; ++rows) {
             RECT rc{};
@@ -624,7 +630,7 @@ int IconToolbar::measure_height(int width, UINT new_dpi) {
             LONG right{},bottom{};
             for(int n=0;n<count;++n){TBBUTTON item{};RECT bounds{};SendMessageW(hwnd,TB_GETBUTTON,n,reinterpret_cast<LPARAM>(&item));
                 if(!(item.fsStyle&BTNS_SEP)&&!(item.fsState&TBSTATE_HIDDEN)&&SendMessageW(hwnd,TB_GETITEMRECT,n,reinterpret_cast<LPARAM>(&bounds))){right=std::max(right,bounds.right);bottom=std::max(bottom,bounds.bottom);}}
-            measured_extent=int(right);measured_height=std::max(height,int(bottom)+MulDiv(2,dpi,96));
+            measured_rows=rows;measured_extent=int(right);measured_height=std::max(height,int(bottom)+MulDiv(2,dpi,96));
             if (right <= width || rows == count)
                 break;
         }
@@ -649,17 +655,20 @@ int IconToolbar::layout(int width, UINT new_dpi, bool visible, int x, int y) {
         if (!(item.fsStyle & BTNS_SEP))
             extent = std::max(extent, static_cast<int>(bounds.right));
     }
-    const int used_width = !player && centered ? std::min(width, extent + MulDiv(2, dpi, 96)) : width;
+    // The host paints empty space. A one-row toolbar needs only its buttons,
+    // so changing the window width does not resize every native button again.
+    const int used_width = !player && (centered || measured_rows == 1)
+        ? std::min(width, extent + MulDiv(2, dpi, 96)) : width;
     if (host) {
         place_control(host,x,y,width,height+divider);
         if(GetWindowLongPtrW(host,GWLP_USERDATA)!=LONG_PTR(line)){SetWindowLongPtrW(host,GWLP_USERDATA,line);InvalidateRect(host,nullptr,TRUE);}
     }
-    place_control(hwnd,host?(width-used_width)/2:x,host?divider:y,std::max(1,used_width),height);
+    place_control(hwnd,host?(centered?(width-used_width)/2:0):x,host?divider:y,std::max(1,used_width),height);
     bar_height = height + divider;
     return visible ? bar_height : 0;
 }
-void IconToolbar::arrange_overflow(int width){
-    if(player||tools)return;overflow_commands.clear();
+bool IconToolbar::arrange_overflow(int width){
+    if(player||tools)return false;overflow_commands.clear();
     struct Item {TBBUTTON button{};int width{};bool hidden{};};std::vector<Item> items;
     const int count=int(SendMessageW(hwnd,TB_BUTTONCOUNT,0,0)),normal=LOWORD(SendMessageW(hwnd,TB_GETBUTTONSIZE,0,0));
     for(int i=0;i<count;++i){Item item;SendMessageW(hwnd,TB_GETBUTTON,i,reinterpret_cast<LPARAM>(&item.button));TBBUTTONINFOW info{sizeof(info)};info.dwMask=TBIF_SIZE|TBIF_BYINDEX;SendMessageW(hwnd,TB_GETBUTTONINFOW,i,reinterpret_cast<LPARAM>(&info));item.width=(item.button.fsStyle&BTNS_SEP)?MulDiv(7,dpi,96):std::max(normal,int(info.cx));item.hidden=item.button.idCommand==MoreCommands;items.push_back(item);}
@@ -674,8 +683,10 @@ void IconToolbar::arrange_overflow(int width){
     extent();
     // A resize changes only the buttons crossing the overflow threshold. No
     // repeated native row layout is needed while choosing which commands fit.
-    for(int i=0;i<count;++i){auto &item=items[i];if(bool(item.button.fsState&TBSTATE_HIDDEN)==item.hidden)continue;
+    bool changed{};
+    for(int i=0;i<count;++i){auto &item=items[i];if(bool(item.button.fsState&TBSTATE_HIDDEN)==item.hidden)continue;changed=true;
         TBBUTTONINFOW info{sizeof(info)};info.dwMask=TBIF_STATE|TBIF_BYINDEX;info.fsState=BYTE(item.hidden?item.button.fsState|TBSTATE_HIDDEN:item.button.fsState&~TBSTATE_HIDDEN);SendMessageW(hwnd,TB_SETBUTTONINFOW,i,reinterpret_cast<LPARAM>(&info));}
+    return changed;
 }
 void IconToolbar::show_more(HWND owner) const{
     if(overflow_commands.empty())return;auto menu=CreatePopupMenu();

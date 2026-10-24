@@ -195,7 +195,7 @@
         app.message(WM_ENTERSIZEMOVE,0,0);
         for(int n=0;n<4;++n){SetWindowPos(app.hwnd,nullptr,0,0,1000+n*20,700+n*15,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE);
             CHECK(SUCCEEDED(app.render_scene())&&app.renderer.resizing&&app.renderer.filter(app.view)==DisplayLinear);
-            CHECK(app.renderer.sample_bytes()==0&&app.renderer.source_bytes()>=original->bytes());}
+            CHECK(app.renderer.sample_bytes()>0&&app.renderer.source_bytes()==0);}
         app.message(WM_EXITSIZEMOVE,0,0);CHECK(SUCCEEDED(app.render_scene()));
         CHECK(!app.renderer.resizing&&app.renderer.filter(app.view)==DisplayLanczos3&&app.renderer.sample_current(original.get(),0,app.view)&&app.renderer.source_bytes()==0);
         command(ToolPen);app.layout();app.update();app.layout();int changes{};
