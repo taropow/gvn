@@ -1,0 +1,23 @@
+# Real clipboard paste in isolated native desktop; erase pixels are checked in app/UI tests.
+resize	1000	720
+open	${fixtures}/display-alpha.png
+wait
+remember	original
+settings
+tab	General
+set	UiTheme	2
+click	OK
+command	Copy
+command	CloseImage
+command	Paste
+expect_same	original	true
+snapshot	paste-status-dark.png
+settings
+tab	General
+set	UiTheme	1
+click	OK
+command	Copy
+command	NewPaste
+expect_same	original	true
+snapshot	paste-status-light.png
+expect	error_count	0
