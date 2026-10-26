@@ -6,3 +6,10 @@
 /.vs/
 *.user
 __pycache__/
+/docs/verification/
+/settings.ini
+/.env
+/.env.*
+!/.env.example
+*.pdb
+*.dmp
