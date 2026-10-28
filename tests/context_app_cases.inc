@@ -70,14 +70,14 @@
     }
     void feedback_minimum_deadline_survives_pending_timer_and_canvas_repaint(){
         app.settings.confirm_unsaved=false;app.replace(selection_fixture(64,48),false,true);app.settings.toast_duration=1;
-        const auto before=GetTickCount64();command(Copy);CHECK(feedback_visible()&&app.toast.deadline()>=before+2000);
+        const auto before=GetTickCount64();command(Copy);CHECK(feedback_visible()&&app.toast.deadline()>=before+100);
         // This private window station has no physical update region: UpdateWindow
         // may not dispatch WM_PAINT here. Check visibility/deadline across parent
         // rendering; saved native captures separately check the toast pixels.
         const auto deadline=app.toast.deadline();app.message(WM_PAINT,0,0);
         CHECK(feedback_visible()&&app.toast.deadline()==deadline&&app.toast.text().starts_with(L"コピーしました"));
         app.feedback_begin(Copy,L"コピー中…");SendMessageW(app.toast.window(),WM_TIMER,1,0);CHECK(feedback_visible()&&app.toast.pending());
-        const auto completed=GetTickCount64();app.feedback_done(Copy,L"コピーしました");CHECK(app.toast.deadline()>=completed+2000);
+        const auto completed=GetTickCount64();app.feedback_done(Copy,L"コピーしました");CHECK(app.toast.deadline()>=completed+100);
         SendMessageW(app.toast.window(),WM_TIMER,1,0);CHECK(feedback_visible()&&!app.toast.pending());
         CHECK(paste_image(app.hwnd).frames[0].pixels==app.image->frames[0].pixels&&notices.empty());
     }

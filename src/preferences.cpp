@@ -335,7 +335,7 @@ std::vector<Field> fields() {
     check(Page::General,cid::ToastEnabled,L"操作のトースト通知を表示する",&Settings::toast_enabled);
     check(Page::General,cid::CommandSound,L"操作完了時に短い確認音を鳴らす",&Settings::command_sound);
     check(Page::General,cid::ToastViewCommands,L"最前面・見開き・ループなどの表示切り替えも通知する",&Settings::toast_view_commands);
-    number(Page::General,cid::ToastDuration,L"トーストの表示時間（ms）",&Settings::toast_duration,2000,10000);
+    number(Page::General,cid::ToastDuration,L"トーストの表示時間（ms、100〜10000）",&Settings::toast_duration,kToastMinDuration,kToastMaxDuration);
     combo(Page::ContextMenu,cid::ContextMode,L"右クリックメニュー",&Settings::context_menu_mode,
           {L"コンパクト（状態に応じた操作）",L"従来の全メニュー",L"カスタム"});
     return out;

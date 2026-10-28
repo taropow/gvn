@@ -1,4 +1,5 @@
 #include "gvn/command_toast.h"
+#include "gvn/toast_duration.h"
 #include "gvn/ui_theme.h"
 #include "gvn/resources.h"
 #include <algorithm>
@@ -28,7 +29,7 @@ void CommandToast::show(HWND owner,RECT area,const std::wstring &value,const std
     // Paint the acceptance before a synchronous encoder/edit begins. Does not
     // dispatch unrelated queued commands or touch the canvas render target.
     UpdateWindow(hwnd);
-    if(!busy){duration=std::clamp(duration,2000u,10000u);expires=GetTickCount64()+duration;timer=SetTimer(hwnd,1,duration,nullptr)!=0;}
+    if(!busy){duration=std::clamp(duration,UINT(kToastMinDuration),UINT(kToastMaxDuration));expires=GetTickCount64()+duration;timer=SetTimer(hwnd,1,duration,nullptr)!=0;}
 }
 void CommandToast::layout(RECT area){
     canvas=area;if(!hwnd)return;
