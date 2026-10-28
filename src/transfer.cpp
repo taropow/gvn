@@ -105,7 +105,7 @@ std::filesystem::path clipboard_file() {
     return {};
 }
 } // namespace
-static void fill_dibv5(std::span<uint8_t> result,const Image &image,size_t frame) {
+static void fill_dibv5(std::span<uint8_t> result,const Image &image,size_t frame,const CancelCheck &cancel={}) {
     const size_t count = checked_image_pixels(image.width, image.height);
     const auto &pixels = image.frames.at(frame).pixels;
     require(pixels.size() == count, "Invalid frame");
@@ -125,7 +125,10 @@ static void fill_dibv5(std::span<uint8_t> result,const Image &image,size_t frame
     header.bV5Intent = LCS_GM_IMAGES;
     require(result.size()==sizeof(header)+count*4,"Invalid DIB output buffer");
     memcpy(result.data(), &header, sizeof(header));
-    detail::swizzle_rgba(reinterpret_cast<const uint8_t *>(pixels.data()),result.data()+sizeof(header),count);
+    for(size_t at=0;at<count;){
+        check_cancelled(cancel);const auto length=std::min<size_t>(65536,count-at);
+        detail::swizzle_rgba(reinterpret_cast<const uint8_t *>(pixels.data()+at),result.data()+sizeof(header)+at*4,length);at+=length;
+    }
 }
 std::vector<uint8_t> make_dibv5(const Image &image,size_t frame) {
     std::vector<uint8_t> result(sizeof(BITMAPV5HEADER)+checked_image_pixels(image.width,image.height)*4);
@@ -242,25 +245,69 @@ Image read_dib(std::span<const uint8_t> data) {
     }
     return image;
 }
-void copy_image(HWND owner, const Image &image, size_t frame,std::optional<SelectionOrigin> origin,const ImageMetadata *metadata) {
-    PngSaveOptions options;options.compression=1; // Lossless interchange, prioritize command latency.
-    const auto png = encode_png(image,frame,options,metadata);
-    Global png_memory(png), dib_memory(sizeof(BITMAPV5HEADER)+checked_image_pixels(image.width,image.height)*4);
-    fill_dibv5(dib_memory.writable(),image,frame);
-    std::unique_ptr<Global> positioned;
-    UINT position_format{};
+struct PreparedClipboardImage::Data {
+    Global png,dib;std::unique_ptr<Global> positioned;
+    Data(std::span<const uint8_t> bytes,size_t dib_size):png(bytes),dib(dib_size){}
+};
+PreparedClipboardImage::PreparedClipboardImage()=default;
+PreparedClipboardImage::~PreparedClipboardImage()=default;
+PreparedClipboardImage::PreparedClipboardImage(PreparedClipboardImage &&) noexcept=default;
+PreparedClipboardImage &PreparedClipboardImage::operator=(PreparedClipboardImage &&) noexcept=default;
+PreparedClipboardImage prepare_clipboard_image(const Image &image,size_t frame,std::optional<SelectionOrigin> origin,
+                                               const ImageMetadata *metadata,const CancelCheck &cancel) {
+    check_cancelled(cancel);PngSaveOptions options;options.compression=1;
+    const auto png=encode_png(image,frame,options,metadata,cancel);check_cancelled(cancel);
+    PreparedClipboardImage result;
+    result.data=std::make_unique<PreparedClipboardImage::Data>(png,sizeof(BITMAPV5HEADER)+checked_image_pixels(image.width,image.height)*4);
+    fill_dibv5(result.data->dib.writable(),image,frame,cancel);
     if(origin){
         const auto header=selection_clipboard_header(png.size(),image.width,image.height,*origin);
-        positioned=std::make_unique<Global>(header.size()+png.size());const auto bytes=positioned->writable();
+        result.data->positioned=std::make_unique<Global>(header.size()+png.size());
+        const auto bytes=result.data->positioned->writable();
         std::copy(header.begin(),header.end(),bytes.begin());std::copy(png.begin(),png.end(),bytes.begin()+header.size());
-        position_format=RegisterClipboardFormatW(selection_clipboard_format);require(position_format!=0,"Cannot register selection format");}
-    const UINT png_format = RegisterClipboardFormatW(L"PNG");
-    require(png_format != 0, "Cannot register PNG clipboard format");
+    }
+    check_cancelled(cancel);return result;
+}
+bool publish_clipboard_image(HWND owner,PreparedClipboardImage &&prepared,std::optional<DWORD> expected_sequence) {
+    require(prepared.data!=nullptr,"Clipboard image is empty");
+    const UINT png_format=RegisterClipboardFormatW(L"PNG");require(png_format!=0,"Cannot register PNG clipboard format");
+    const UINT position_format=prepared.data->positioned?RegisterClipboardFormatW(selection_clipboard_format):0;
+    require(!prepared.data->positioned||position_format!=0,"Cannot register selection format");
     Clipboard clipboard(owner);
-    require(EmptyClipboard() != 0, "Cannot clear clipboard");
-    png_memory.publish(png_format);
-    dib_memory.publish(CF_DIBV5);
-    if(positioned)positioned->publish(position_format);
+    // Check after acquiring the lock; another application may have copied in between.
+    if(expected_sequence&&GetClipboardSequenceNumber()!=*expected_sequence)return false;
+    require(EmptyClipboard()!=0,"Cannot clear clipboard");
+    prepared.data->png.publish(png_format);prepared.data->dib.publish(CF_DIBV5);
+    if(prepared.data->positioned)prepared.data->positioned->publish(position_format);
+    prepared.data.reset();return true;
+}
+void copy_image(HWND owner,const Image &image,size_t frame,std::optional<SelectionOrigin> origin,const ImageMetadata *metadata) {
+    auto prepared=prepare_clipboard_image(image,frame,origin,metadata);
+    (void)publish_clipboard_image(owner,std::move(prepared));
+}
+void announce_clipboard_image(HWND owner,bool positioned){
+    const UINT png=RegisterClipboardFormatW(L"PNG"),position=positioned?RegisterClipboardFormatW(selection_clipboard_format):0;
+    require(png&&(!positioned||position),"Cannot register clipboard image formats");
+    Clipboard clipboard(owner);require(EmptyClipboard()!=0,"Cannot clear clipboard");
+    for(const UINT format:{png,UINT(CF_DIBV5),position})if(format){
+        SetClipboardData(format,nullptr);
+        require(IsClipboardFormatAvailable(format)!=0,"Cannot declare clipboard image format");
+    }
+}
+bool render_clipboard_image(PreparedClipboardImage &prepared,UINT format){
+    if(!prepared.data)return true;
+    const UINT png=RegisterClipboardFormatW(L"PNG"),position=RegisterClipboardFormatW(selection_clipboard_format);
+    if((!format||format==png)&&prepared.data->png.value)prepared.data->png.publish(png);
+    if((!format||format==CF_DIBV5)&&prepared.data->dib.value)prepared.data->dib.publish(CF_DIBV5);
+    if((!format||format==position)&&prepared.data->positioned&&prepared.data->positioned->value)prepared.data->positioned->publish(position);
+    const bool done=!prepared.data->png.value&&!prepared.data->dib.value&&
+        (!prepared.data->positioned||!prepared.data->positioned->value);
+    if(done)prepared.data.reset();return done;
+}
+bool publish_delayed_clipboard_image(HWND owner,PreparedClipboardImage &prepared){
+    Clipboard clipboard(owner);if(GetClipboardOwner()!=owner)return false;
+    // Retain formats already rendered on demand; EmptyClipboard would erase them.
+    return render_clipboard_image(prepared);
 }
 static ClipboardContent read_open_clipboard(const std::function<void()> &decoding={}) {
     // Some producers publish a broken optional format. Continue to the next advertised representation.

@@ -16,9 +16,9 @@ class Archive {
     explicit Archive(std::vector<uint8_t> data) : bytes(std::move(data)) {}
     std::vector<ArchiveEntry> entries(const std::function<bool()> &cancel = {}) const;
     Image read(uint32_t index, const LoadingOptions &options = {}, size_t limit = kDecodeLimit,
-               size_t source_limit = kSourceLimit) const;
+               size_t source_limit = kSourceLimit,const CancelCheck &cancel = {}) const;
 };
 std::filesystem::path source_file(const std::filesystem::path &path);
 Image load_source(const std::filesystem::path &path, const LoadingOptions &options = {},
-                  size_t limit = kDecodeLimit, size_t source_limit = kSourceLimit);
+                  size_t limit = kDecodeLimit, size_t source_limit = kSourceLimit,const CancelCheck &cancel = {});
 } // namespace gvn

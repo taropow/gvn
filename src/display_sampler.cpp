@@ -1,6 +1,18 @@
 #include "gvn/display_sampler.h"
+#include <cmath>
 
 namespace gvn {
+bool background_display_sample(const Image &image,const View &view,int method) {
+    if(method!=DisplayLanczos3||!image.width||!image.height||!std::isfinite(view.scale)||view.scale<=0||
+       std::abs(view.scale-1)<1e-9)return false;
+    const double width=std::max(0.,std::min(view.width,view.left()+image.width*view.scale)-std::max(0.,view.left()));
+    const double height=std::max(0.,std::min(view.height,view.top()+image.height*view.scale)-std::max(0.,view.top()));
+    if(width<=0||height<=0)return false;
+    const double taps=std::ceil(6/std::min(1.,view.scale));
+    const double tx=std::min(double(image.width),taps),ty=std::min(double(image.height),taps);
+    const double rows=std::min(double(image.height),std::ceil(height/view.scale)+ty);
+    return width*(rows*tx+height*ty)>=8.*1024*1024;
+}
 DisplaySampler::DisplaySampler(std::function<void()> callback):notify(std::move(callback)),
     thread([this](std::stop_token stop){run(stop);}) {}
 DisplaySampler::~DisplaySampler(){thread.request_stop();++epoch;ready.notify_all();if(thread.joinable())thread.join();}

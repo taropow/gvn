@@ -89,7 +89,8 @@ struct JpegContext {
     }
 };
 } // namespace
-std::vector<uint8_t> encode_png(const Image &image, size_t frame, const PngSaveOptions &options,const ImageMetadata *metadata) {
+std::vector<uint8_t> encode_png(const Image &image, size_t frame, const PngSaveOptions &options,const ImageMetadata *metadata,const CancelCheck &cancel) {
+    check_cancelled(cancel);
     validate_image(image, frame);
     const auto &resolution=metadata?*metadata:image.metadata;detail::validate_resolution(resolution);
     if (options.compression < 0 || options.compression > 9 ||
@@ -167,6 +168,7 @@ std::vector<uint8_t> encode_png(const Image &image, size_t frame, const PngSaveO
     const int passes = png_set_interlace_handling(context->png);
     for (int pass = 0; pass < passes; ++pass)
         for (uint32_t y = 0; y < image.height; ++y) {
+            check_cancelled(cancel);
             const auto row = image.frames[frame].pixels.data() + static_cast<size_t>(y) * image.width;
             if (indexed)
                 png_write_row(context->png, indexed->packed.data() + size_t(y) * indexed->stride());
@@ -177,6 +179,7 @@ std::vector<uint8_t> encode_png(const Image &image, size_t frame, const PngSaveO
                 png_write_row(context->png, context->row.data());
             }
         }
+    check_cancelled(cancel);
     png_write_end(context->png, context->info);
     return std::move(context->output);
 }

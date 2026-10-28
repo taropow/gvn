@@ -94,7 +94,8 @@ std::optional<Pixel> png_background(IWICImagingFactory *wic, IWICBitmapFrameDeco
     return result;
 }
 } // namespace
-std::vector<uint8_t> read_file(const std::filesystem::path &path, size_t source_limit) {
+std::vector<uint8_t> read_file(const std::filesystem::path &path, size_t source_limit,const CancelCheck &cancel) {
+    check_cancelled(cancel);
     std::ifstream stream(path, std::ios::binary | std::ios::ate);
     if (!stream)
         throw std::runtime_error("Cannot open file");
@@ -103,26 +104,33 @@ std::vector<uint8_t> read_file(const std::filesystem::path &path, size_t source_
         throw std::runtime_error("File is empty or exceeds the source byte limit");
     std::vector<uint8_t> bytes(static_cast<size_t>(length));
     stream.seekg(0);
-    if (!stream.read(reinterpret_cast<char *>(bytes.data()), length))
-        throw std::runtime_error("File read failed");
+    for(size_t at=0;at<bytes.size();){
+        check_cancelled(cancel);const auto count=std::min<size_t>(1024*1024,bytes.size()-at);
+        if(!stream.read(reinterpret_cast<char *>(bytes.data()+at),count))throw std::runtime_error("File read failed");
+        at+=count;
+    }
+    check_cancelled(cancel);
     return bytes;
 }
 Image decode(std::span<const uint8_t> bytes, const std::wstring &, size_t limit,
-             const LoadingOptions &options) {
+             const LoadingOptions &options,const CancelCheck &cancel) {
+    check_cancelled(cancel);
     if (bytes.empty() || bytes.size() > 512ull * 1024 * 1024)
         throw std::runtime_error("Invalid source size");
     if (bytes.size() >= 4 && std::memcmp(bytes.data(), "8BPS", 4) == 0)
-        return decode_psd(bytes, limit);
+        return decode_psd(bytes, limit,cancel);
     if (bytes.size() >= 54 && bytes[0] == 'B' && bytes[1] == 'M' && bytes[29] == 0 &&
         ((bytes[28] == 4 && bytes[30] == 2) || (bytes[28] == 8 && bytes[30] == 1)) && bytes[31] == 0 &&
         bytes[32] == 0 && bytes[33] == 0) {
         auto image = read_indexed_rle_bmp(bytes, limit);
+        check_cancelled(cancel);
         read_container_metadata(image,bytes);
         finish_loading(image, options);
         return image;
     }
     if (is_apng(bytes))
-        return decode_animation(bytes, limit, options);
+        return decode_animation(bytes, limit, options,cancel);
+    check_cancelled(cancel);
     ComScope com;
     auto wic = factory();
     ComPtr<IWICStream> stream;
@@ -141,7 +149,7 @@ Image decode(std::span<const uint8_t> bytes, const std::wstring &, size_t limit,
             decoder.Reset();
             stream.Reset();
             wic.Reset();
-            return decode_animation(bytes, limit, options);
+            return decode_animation(bytes, limit, options,cancel);
         }
     }
     ComPtr<IWICBitmapFrameDecode> source;
@@ -180,6 +188,7 @@ Image decode(std::span<const uint8_t> bytes, const std::wstring &, size_t limit,
         }
         PropVariantClear(&value);
     }
+    check_cancelled(cancel);
     Image image;
     image.width = width;
     image.height = height;
@@ -204,9 +213,15 @@ Image decode(std::span<const uint8_t> bytes, const std::wstring &, size_t limit,
         check(converter->Initialize(input.Get(), GUID_WICPixelFormat32bppRGBA, WICBitmapDitherTypeNone,
                                     nullptr, 0, WICBitmapPaletteTypeCustom),
               "Cannot convert image to RGBA");
-        check(converter->CopyPixels(nullptr, width * 4, static_cast<UINT>(image.frames[0].pixels.size() * 4),
-                                    reinterpret_cast<BYTE *>(image.frames[0].pixels.data())),
-              "Image pixel decode failed");
+        if(cancel){
+            for(UINT y=0;y<height;y+=256){
+                check_cancelled(cancel);const UINT rows=std::min(256u,height-y);
+                const WICRect region{0,static_cast<INT>(y),static_cast<INT>(width),static_cast<INT>(rows)};
+                check(converter->CopyPixels(&region,width*4,width*rows*4,
+                    reinterpret_cast<BYTE *>(image.frames[0].pixels.data()+size_t(y)*width)),"Image pixel decode failed");
+            }
+        }else check(converter->CopyPixels(nullptr,width*4,static_cast<UINT>(image.frames[0].pixels.size()*4),
+                     reinterpret_cast<BYTE *>(image.frames[0].pixels.data())),"Image pixel decode failed");
     }
     image.format = format == GUID_ContainerFormatPng    ? L"PNG"
                    : format == GUID_ContainerFormatJpeg ? L"JPEG"
@@ -255,6 +270,7 @@ Image decode(std::span<const uint8_t> bytes, const std::wstring &, size_t limit,
             image.height = logical_height;
         }
     }
+    check_cancelled(cancel);
     read_container_metadata(image,bytes);
     GUID pixel_format{};
     ComPtr<IWICComponentInfo> component;
@@ -306,10 +322,11 @@ Image decode(std::span<const uint8_t> bytes, const std::wstring &, size_t limit,
     return image;
 }
 Image load_image(const std::filesystem::path &path, size_t limit, const LoadingOptions &options,
-                 size_t source_limit) {
+                 size_t source_limit,const CancelCheck &cancel) {
     const auto start = std::chrono::steady_clock::now();
-    auto bytes = read_file(path, source_limit);
-    auto image = decode(bytes, path.extension().wstring(), limit, options);
+    auto bytes = read_file(path, source_limit,cancel);
+    auto image = decode(bytes, path.extension().wstring(), limit, options,cancel);
+    check_cancelled(cancel);
     image.path = std::filesystem::absolute(path);
     image.file_bytes = bytes.size();
     image.load_ms = static_cast<uint64_t>(

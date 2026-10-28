@@ -1,4 +1,5 @@
     SIZE copy_current_selection() {
+        cancel_async_copy();
         const auto metadata=current_metadata();
         if(selection.empty()){
             // The document is immutable for this synchronous command; no full

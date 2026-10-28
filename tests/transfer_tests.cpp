@@ -1,10 +1,29 @@
 #include "gvn/transfer.h"
+#include "gvn/clipboard_worker.h"
 #include "test.h"
 #include "test_desktop.h"
 #include <shellapi.h>
 #include <cstring>
 using namespace gvn;
 const auto fixtures = std::filesystem::path(GVN_FIXTURES);
+TEST(clipboard_worker_cancels_obsolete_payloads_and_releases_source_snapshots) {
+    auto old=std::make_shared<Image>(load_image(fixtures/L"alpha.png"));std::weak_ptr<const Image> retired=old;
+    const auto next=std::make_shared<Image>(*old);std::atomic<bool> started{};
+    ClipboardCopyWorker worker({},[&](const ClipboardCopyRequest &request,const CancelCheck &cancel){
+        if(request.image!=next){started=true;while(!cancel())std::this_thread::yield();check_cancelled(cancel);}
+        return prepare_clipboard_copy(request,cancel);
+    });
+    worker.request({old,0,{},old->metadata});old.reset();
+    const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(3);
+    while(!started&&std::chrono::steady_clock::now()<deadline)std::this_thread::yield();CHECK(started);
+    const auto id=worker.request({next,0,{},next->metadata});
+    CHECK(worker.wait_idle(std::chrono::seconds(3)));auto value=worker.take();
+    CHECK(value&&value->sequence==id&&value->error.empty()&&retired.expired());
+    worker.request({next,0,{},next->metadata});worker.cancel();CHECK(worker.wait_idle(std::chrono::seconds(3))&&!worker.take());
+    unsigned checks{};bool stopped{};
+    try{prepare_clipboard_image(*next,0,{},nullptr,[&]{return ++checks>=3;});}catch(const OperationCancelled &){stopped=true;}
+    CHECK(stopped&&checks==3);
+}
 TEST(dib_alpha_roundtrip) {
     const auto image = load_image(fixtures / L"alpha.png");
     const auto data = make_dibv5(image, 0);

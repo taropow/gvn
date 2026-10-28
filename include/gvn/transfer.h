@@ -7,8 +7,27 @@
 #include <wrl/client.h>
 #include <variant>
 #include <functional>
+#include <memory>
 
 namespace gvn {
+// Owns prepared HGLOBAL payloads until the UI transfers them to the clipboard.
+class PreparedClipboardImage {
+    struct Data;
+    std::unique_ptr<Data> data;
+    friend PreparedClipboardImage prepare_clipboard_image(const Image &,size_t,std::optional<SelectionOrigin>,const ImageMetadata *,const CancelCheck &);
+    friend bool publish_clipboard_image(HWND,PreparedClipboardImage &&,std::optional<DWORD>);
+    friend bool render_clipboard_image(PreparedClipboardImage &,UINT);
+public:
+    PreparedClipboardImage();~PreparedClipboardImage();
+    PreparedClipboardImage(PreparedClipboardImage &&) noexcept;
+    PreparedClipboardImage &operator=(PreparedClipboardImage &&) noexcept;
+};
+PreparedClipboardImage prepare_clipboard_image(const Image &,size_t,std::optional<SelectionOrigin> origin={},const ImageMetadata *metadata=nullptr,const CancelCheck &cancel={});
+bool publish_clipboard_image(HWND,PreparedClipboardImage &&,std::optional<DWORD> expected_sequence={});
+void announce_clipboard_image(HWND,bool positioned);
+// WM_RENDERFORMAT already has the receiver's clipboard lock; do not reopen it.
+bool render_clipboard_image(PreparedClipboardImage &,UINT format=0);
+bool publish_delayed_clipboard_image(HWND,PreparedClipboardImage &);
 // Packed DIB payloads use straight alpha. PNG remains the preferred interchange.
 std::vector<uint8_t> make_dibv5(const Image &image, size_t frame);
 Image read_dib(std::span<const uint8_t> data);

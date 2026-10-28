@@ -6974,6 +6974,7 @@ void background_changes_preserve_image_animation_copy_save_and_ole() {
 #include "daily_hotpath_app_cases.inc"
 #include "prompt_app_cases.inc"
 #include "everyday_app_cases.inc"
+#include "interactive_app_cases.inc"
 #include "resize_app_cases.inc"
 #include "status_app_cases.inc"
 #include "startup_app_cases.inc"
@@ -7367,6 +7368,8 @@ APP_TEST(everyday_damage_timer_and_minimized_updates)
 
 APP_TEST(everyday_copy_and_export_reuse_preserve_pixels_alpha_origin_and_metadata)
 APP_TEST(everyday_async_display_accepts_commands_preserves_quality_and_discards_stale_jobs)
+APP_TEST(interactive_display_and_copy_benchmark)
+APP_TEST(interactive_copy_ordering_and_external_clipboard_guard)
 
 APP_TEST(context_compact_empty_selected_animation_and_lazy_full_menu)
 APP_TEST(context_keeps_floating_and_crop_until_explicit_apply_or_cancel)

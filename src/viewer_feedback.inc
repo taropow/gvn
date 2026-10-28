@@ -74,7 +74,9 @@
                         else if((id==Play||id==StopAnimation)&&app.image&&(playing!=app.player.playing||frame!=app.player.frame))app.feedback_done(id,app.player.playing?L"再生しました":L"一時停止しました");
                     }
                 }
-                if(completed==app.feedback_completed&&epoch!=app.feedback_epoch&&(!app.load_feedback||app.load_feedback->epoch!=app.feedback_epoch))app.feedback_cancel();
+                if(completed==app.feedback_completed&&epoch!=app.feedback_epoch&&
+                   (!app.load_feedback||app.load_feedback->epoch!=app.feedback_epoch)&&
+                   (!app.copy_feedback||app.copy_feedback->epoch!=app.feedback_epoch))app.feedback_cancel();
             }catch(...){app.feedback_cancel();} // Notification failure never changes a command result.
             app.feedback_command=previous_id;app.feedback_key=std::move(previous_key);
         }
