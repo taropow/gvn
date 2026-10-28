@@ -124,7 +124,8 @@ void validate_rle(std::span<const uint8_t> row, size_t expected) {
         throw std::runtime_error("Incomplete PSD RLE row");
 }
 } // namespace
-Image decode_psd(std::span<const uint8_t> bytes, size_t limit) {
+Image decode_psd(std::span<const uint8_t> bytes, size_t limit,const CancelCheck &cancel) {
+    check_cancelled(cancel);
     if (bytes.size() < 40 || be16(bytes, 4) != 1)
         throw std::runtime_error("PSD version unsupported (PSB is not PSD)");
     const auto channels = be16(bytes, 12), bits = be16(bytes, 22), mode = be16(bytes, 24);
@@ -159,6 +160,7 @@ Image decode_psd(std::span<const uint8_t> bytes, size_t limit) {
             throw std::runtime_error("Truncated PSD RLE table");
         size_t at = start + rows * 2;
         for (size_t c = 0; c < channels; ++c) {
+            check_cancelled(cancel);
             const size_t first = at;
             for (size_t y = 0; y < h; ++y) {
                 const auto length = be16(bytes, start + (c * h + y) * 2);
@@ -186,6 +188,7 @@ Image decode_psd(std::span<const uint8_t> bytes, size_t limit) {
     const auto apply = [&](size_t channel, const void *data, bool big_endian) {
         const auto *raw = static_cast<const uint8_t *>(data);
         for (size_t i = 0; i < pixels; ++i) {
+            if((i&65535)==0)check_cancelled(cancel);
             const auto value = bits == 8 ? raw[i]
                 : big_endian ? uint16_t((uint16_t(raw[i * 2]) << 8) | raw[i * 2 + 1])
                              : static_cast<const uint16_t *>(data)[i];
@@ -211,6 +214,7 @@ Image decode_psd(std::span<const uint8_t> bytes, size_t limit) {
         single.imageDataSection.offset = 0;
         const auto prefix = bytes.subspan(offset, 2);
         for (size_t c = 0; c < needed; ++c) {
+            check_cancelled(cancel);
             const auto [at, size] = channel_ranges[c];
             const auto table = compression == 1 ? bytes.subspan(start + c * h * 2, h * 2)
                                                  : std::span<const uint8_t>{};
@@ -238,9 +242,11 @@ Image decode_psd(std::span<const uint8_t> bytes, size_t limit) {
         std::vector<uint8_t> plane(plane_size);
         int status = MZ_OK;
         for (size_t c = 0; c < channels; ++c) {
+            check_cancelled(cancel);
             z.next_out = plane.data();
             z.avail_out = static_cast<unsigned>(plane.size());
             while (z.avail_out) {
+                check_cancelled(cancel);
                 if (status == MZ_STREAM_END)
                     throw std::runtime_error("Incomplete PSD ZIP channel");
                 const auto old_in = z.avail_in, old_out = z.avail_out;

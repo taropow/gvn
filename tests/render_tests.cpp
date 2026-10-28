@@ -1207,6 +1207,17 @@ TEST(display_worker_matches_synchronous_pixels_and_releases_cancelled_sources) {
     }
     CHECK(closing.expired());
 }
+TEST(display_work_policy_covers_small_source_enlargement_and_strong_shrink_without_idle_work) {
+    auto image=new_image(1024,768);View view;view.resize(1800,1350);view.set_image(1024,768);
+    CHECK(background_display_sample(image,view,DisplayLanczos3));
+    CHECK(!background_display_sample(image,view,DisplayLinear));
+    view.scale=1;CHECK(!background_display_sample(image,view,DisplayLanczos3));
+    view.resize(128,96);view.set_image(1024,768);CHECK(!background_display_sample(image,view,DisplayLanczos3));
+    image.width=8192;image.height=4096;view.resize(64,32);view.set_image(image.width,image.height);
+    CHECK(background_display_sample(image,view,DisplayLanczos3));
+    view.centered=false;view.pan_x=10000;view.pan_y=10000;
+    CHECK(!background_display_sample(image,view,DisplayLanczos3));
+}
 
 TEST(render_target_adopts_latest_window_size_at_draw_and_repaints_full_surface) {
     RendererAudit::resize_on_draw();

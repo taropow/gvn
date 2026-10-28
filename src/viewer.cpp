@@ -5,6 +5,7 @@
 #include "gvn/archive.h"
 #include "gvn/renderer.h"
 #include "gvn/display_sampler.h"
+#include "gvn/clipboard_worker.h"
 #include "gvn/transfer.h"
 #include "gvn/edit.h"
 #include "gvn/settings.h"
@@ -58,6 +59,8 @@ namespace gvn {
 constexpr UINT kLoaded = WM_APP + 1;
 constexpr UINT kForwarded = WM_APP + 2;
 constexpr UINT kDisplayReady = WM_APP + 3;
+constexpr UINT kCopyReady = WM_APP + 4;
+constexpr UINT_PTR kCopyRetryTimer=40; // 39 belongs to the animated selection outline.
 constexpr UINT_PTR kPreviewCleanupTimer = 37;
 constexpr UINT_PTR kForwardRetryTimer = 38;
 constexpr UINT kKeyBase = 2000;
@@ -1080,6 +1083,7 @@ class App {
     }
 #include "viewer_presentation.inc"
 #include "viewer_feedback.inc"
+#include "viewer_async_clipboard.inc"
     void update(bool layout_synced=false) {
         sync_ants_timer();
         if(!layout_synced)sync_canvas_scrollbars();
@@ -2452,6 +2456,7 @@ class App {
         dialogs.external_launch(hwnd,request);
     }
     void command(UINT id,bool keyboard=false) {
+        if(defer_copy_paste(id,keyboard))return;
         if(id==PopupContext){context_popup(cursor_screen());return;}
         if(id==ConfigureContextMenu){preferences(PreferencePage::ContextMenu);return;}
         if(id>=PopupAll&&id<=PopupExternal){popup_menu(id,cursor_screen());return;}
@@ -2926,8 +2931,11 @@ class App {
             break;
         case Copy:
             if (image) {
-                feedback_begin(id,L"コピー中…");const auto copied=copy_current_selection();
-                feedback_done(id,L"コピーしました · "+std::to_wstring(copied.cx)+L"×"+std::to_wstring(copied.cy));
+                cancel_async_copy();feedback_begin(id,L"コピー中…");
+                if(!start_async_copy()){
+                    const auto copied=copy_current_selection();
+                    feedback_done(id,L"コピーしました · "+std::to_wstring(copied.cx)+L"×"+std::to_wstring(copied.cy));
+                }
             }
             break;
         case Paste:
@@ -4368,6 +4376,14 @@ class App {
         }
         case kDisplayReady:
             accept_display_sample();return 0;
+        case kCopyReady:
+            accept_clipboard_copy();return 0;
+        case WM_RENDERFORMAT:
+            render_pending_copy(static_cast<UINT>(w));return 0;
+        case WM_RENDERALLFORMATS:
+            render_pending_copy(0);return 0;
+        case WM_DESTROYCLIPBOARD:
+            cancel_async_copy();return 0;
         case kLoaded:
             accept(std::unique_ptr<Loaded>(reinterpret_cast<Loaded *>(l)));
             return 0;
@@ -4399,6 +4415,7 @@ class App {
             return 0;
         }
         case WM_TIMER:
+            if(w==kCopyRetryTimer){accept_clipboard_copy();return 0;}
             if(w==39){
                 sync_ants_timer();
                 if(ants_timer){renderer.ants_phase=(renderer.ants_phase+1)%8;
@@ -4625,6 +4642,8 @@ class App {
             DestroyWindow(hwnd);
             return 0;
         case WM_DESTROY:
+            render_pending_copy(0);
+            cancel_async_copy();clipboard_worker.reset();
             display_sampler.reset();
             toast.dismiss();
             ime.restore();

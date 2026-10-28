@@ -114,9 +114,10 @@ static std::wstring file_key(const std::filesystem::path &path) {
            L"|" + std::to_wstring(time.time_since_epoch().count());
 }
 Loader::Loader(std::function<void(Loaded)> receive, size_t limit,
-               std::function<Image(const std::filesystem::path &)> decode_image, FolderFinder find)
+               std::function<Image(const std::filesystem::path &)> decode_image, FolderFinder find,
+               InterruptibleDecoder controlled)
     : requested_limit(limit), cache(limit), callback(std::move(receive)), decoder(std::move(decode_image)),
-      folder_finder(std::move(find)) {
+      interruptible_decoder(std::move(controlled)),folder_finder(std::move(find)) {
     observed.cache_limit = limit;
     thread = std::jthread([this](std::stop_token stop) { run(stop); });
 }
@@ -257,6 +258,17 @@ void Loader::run(std::stop_token stop) {
                                                         : find_folder(*request.folder_query, cancelled);
                     result.path = result.folder_match->directory;
                 } else {
+                    const CancelCheck cancelled=[&] {
+                        if(stop.stop_requested())return true;
+                        if(request.sequence==latest.load())return false;
+                        if(!preloading)return true;
+                        std::lock_guard guard(mutex);
+                        // A foreground request for this very image promotes the work.
+                        return !(pending&&!pending->folder_query&&!pending->open_query&&!pending->force&&
+                            pending->second.empty()&&pending->path==request.path&&
+                            pending->options.flags()==request.options.flags()&&pending->options.background==request.options.background);
+                    };
+                    check_cancelled(cancelled);
                     const auto first_key = file_key(request.path),
                                second_key = request.second.empty() ? L"" : file_key(request.second);
                     // Single images have the same cache identity during prefetch and display.
@@ -272,12 +284,13 @@ void Loader::run(std::stop_token stop) {
                         auto options = request.options;
                         if (!request.second.empty() && !request.comic.rotate_before)
                             options.view_rotation = 0;
-                        if (decoder) {
-                            auto image = decoder(path);
+                        if (interruptible_decoder||decoder) {
+                            auto image = interruptible_decoder?interruptible_decoder(path,cancelled):decoder(path);
+                            check_cancelled(cancelled);
                             apply_view_rotation(image, options.view_rotation);
                             return image;
                         }
-                        return load_source(path, options, budget, preloading ? budget : kSourceLimit);
+                        return load_source(path, options, budget, preloading ? budget : kSourceLimit,cancelled);
                     };
                     if (!request.force)
                         result.image = cache.get(key);
@@ -331,6 +344,8 @@ void Loader::run(std::stop_token stop) {
                     } else
                         ++tally.discarded;
                 }
+            } catch (const OperationCancelled &) {
+                ++tally.cancelled;++tally.discarded;result.image.reset();
             } catch (const std::exception &error) {
                 result.error = error.what();
                 result.image.reset();

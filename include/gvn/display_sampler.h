@@ -8,6 +8,8 @@
 #include <thread>
 
 namespace gvn {
+// Estimate separable Lanczos work in the visible area, including source rows.
+bool background_display_sample(const Image &, const View &, int method);
 struct DisplayRequest {
     std::shared_ptr<const Image> image;
     size_t frame{};View view;int method{DisplayLanczos3};

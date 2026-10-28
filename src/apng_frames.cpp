@@ -164,7 +164,8 @@ Decoded decode_frame(const Container &c, const ApngFrame &frame, size_t limit) {
 }
 } // namespace
 std::optional<Image> decode_apng_framewise(std::span<const uint8_t> bytes, size_t limit,
-                                          const LoadingOptions &options) {
+                                          const LoadingOptions &options,const CancelCheck &cancel) {
+    check_cancelled(cancel);
     Container c;
     try {
         c = inspect(bytes, limit);
@@ -192,6 +193,7 @@ std::optional<Image> decode_apng_framewise(std::span<const uint8_t> bytes, size_
     image.frames.reserve(c.frames.size());
     std::vector<Pixel> canvas(static_cast<size_t>(c.width) * c.height), previous;
     for (size_t i = 0; i < c.frames.size(); ++i) {
+        check_cancelled(cancel);
         const auto &control = c.frames[i];
         const auto frame = decode_frame(c, control, limit);
         if (!i)
@@ -202,6 +204,7 @@ std::optional<Image> decode_apng_framewise(std::span<const uint8_t> bytes, size_
                 std::copy_n(canvas.begin() + (control.y + y) * c.width + control.x, control.width,
                             previous.begin() + y * control.width);
         }
+        check_cancelled(cancel);
         const auto *pixels = reinterpret_cast<const Pixel *>(frame->data32);
         const bool replace = (!i && control.idat) || !control.blend;
         for (size_t y = 0; y < control.height; ++y)

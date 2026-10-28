@@ -49,7 +49,7 @@ class ImageCache {
 constexpr size_t kDefaultCacheLimit = 64ull * 1024 * 1024;
 struct LoaderStats {
     size_t cache_bytes{}, cache_limit{}, foreground_bytes{};
-    uint64_t foreground_loads{}, prefetch_loads{}, cache_hits{}, prefetch_skips{}, discarded{};
+    uint64_t foreground_loads{}, prefetch_loads{}, cache_hits{}, prefetch_skips{}, discarded{},cancelled{};
     bool idle{};
 };
 struct Loaded {
@@ -63,6 +63,7 @@ struct Loaded {
 class Loader {
   public:
     using FolderFinder = std::function<FolderMatch(const FolderQuery &, const std::function<bool()> &)>;
+    using InterruptibleDecoder = std::function<Image(const std::filesystem::path &,const CancelCheck &)>;
 
   private:
     struct Request {
@@ -91,6 +92,7 @@ class Loader {
     ImageCache cache;
     std::function<void(Loaded)> callback;
     std::function<Image(const std::filesystem::path &)> decoder;
+    InterruptibleDecoder interruptible_decoder;
     FolderFinder folder_finder;
     std::jthread thread;
     void run(std::stop_token stop);
@@ -98,7 +100,7 @@ class Loader {
   public:
     explicit Loader(std::function<void(Loaded)> callback, size_t cache_limit = kDefaultCacheLimit,
                     std::function<Image(const std::filesystem::path &)> decoder = {},
-                    FolderFinder folder_finder = {});
+                    FolderFinder folder_finder = {},InterruptibleDecoder interruptible_decoder = {});
     ~Loader();
     uint64_t request(std::filesystem::path path, bool force = false, std::filesystem::path second = {},
                      bool rtl = false, bool match_height = false, LoadingOptions options = {});

@@ -3,9 +3,7 @@
     DisplayRequest display_request() const {return {image,player.frame,view,renderer.filter(view)};}
     bool asynchronous_display() const {
         return image&&!floating&&!cropping&&!previewing_mask()&&(!image->animated()||!player.playing)&&
-            uint64_t(image->width)*image->height>=4ull*1024*1024&&view.scale<1&&renderer.filter(view)==DisplayLanczos3&&
-            !renderer.resizing&&!renderer.dragging_low&&view.left()<view.width&&view.top()<view.height&&
-            view.left()+image->width*view.scale>0&&view.top()+image->height*view.scale>0;
+            !renderer.resizing&&!renderer.dragging_low&&background_display_sample(*image,view,renderer.filter(view));
     }
     void cancel_invalid_sampling() {
         const auto current=display_request();

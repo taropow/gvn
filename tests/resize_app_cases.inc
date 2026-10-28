@@ -52,7 +52,11 @@
         command(FitImage);
         const auto image = app.image;
         const auto pixels = image->frames[0].pixels;
-        CHECK(SUCCEEDED(app.render_scene()) && app.renderer.sample_current(image.get(), 0, app.view));
+        const auto settle=[&]{const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(5);
+            do{CHECK(SUCCEEDED(app.render_scene()));if(app.renderer.sample_current(image.get(),0,app.view))return;pump();Sleep(1);}
+            while(std::chrono::steady_clock::now()<deadline);
+            CHECK(app.renderer.sample_current(image.get(),0,app.view));};
+        settle();
         const auto sample_count = app.renderer.sample_builds;
         app.message(WM_ENTERSIZEMOVE, 0, 0);
         for (int n = 0; n < 12; ++n)
@@ -67,7 +71,7 @@
         app.message(WM_EXITSIZEMOVE, 0, 0);
         CHECK(SUCCEEDED(app.render_scene()));
         CHECK(app.renderer.filter(app.view) == DisplayLanczos3);
-        CHECK(app.renderer.sample_current(image.get(), 0, app.view));
+        settle();
         command(Copy);
         CHECK(paste_image(app.hwnd).frames[0].pixels == pixels);
 
@@ -76,13 +80,13 @@
         command(Actual);
         app.view.scale = 1.3; app.view.manual = true; app.view.centered = false;
         app.view.pan_x = app.view.pan_y = 0; app.update();
-        CHECK(SUCCEEDED(app.render_scene()));
+        settle();
         app.message(WM_ENTERSIZEMOVE, 0, 0);
         CHECK(SetWindowPos(app.hwnd, nullptr, 0, 0, 1300, 900, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE));
         CHECK(SUCCEEDED(app.render_scene()) && app.renderer.source_bytes() == image->bytes());
         app.message(WM_CANCELMODE, 0, 0);
         CHECK(!app.renderer.resizing && !app.resize_layout_pending && SUCCEEDED(app.render_scene()));
-        CHECK(app.renderer.sample_current(image.get(), 0, app.view));
+        settle();
         CHECK(app.image == image && image->frames[0].pixels == pixels && !app.modified && notices.empty());
     }
 

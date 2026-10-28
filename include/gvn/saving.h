@@ -1,5 +1,6 @@
 #pragma once
 #include "core.h"
+#include "cancellation.h"
 #include <cstdint>
 #include <vector>
 
@@ -73,6 +74,6 @@ std::vector<uint8_t> encode_gif(const Image &image, size_t frame, const GifSaveO
                                 bool dither = true);
 std::vector<uint8_t> encode_gif(const IndexedRaster &image, const GifSaveOptions &options = {});
 // Saving is independent of the display decoder. Default PNG keeps every RGBA byte.
-std::vector<uint8_t> encode_png(const Image &image, size_t frame, const PngSaveOptions &options = {},const ImageMetadata *metadata=nullptr);
+std::vector<uint8_t> encode_png(const Image &image, size_t frame, const PngSaveOptions &options = {},const ImageMetadata *metadata=nullptr,const CancelCheck &cancel={});
 std::vector<uint8_t> encode_jpeg(const Image &image, size_t frame, const JpegSaveOptions &options = {},const ImageMetadata *metadata=nullptr);
 } // namespace gvn

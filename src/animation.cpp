@@ -123,7 +123,8 @@ bool is_apng(std::span<const uint8_t> bytes) {
     return false;
 }
 namespace {
-Image decode_gif_framewise(std::span<const uint8_t> bytes, size_t limit, const LoadingOptions &options) {
+Image decode_gif_framewise(std::span<const uint8_t> bytes, size_t limit, const LoadingOptions &options,const CancelCheck &cancel) {
+    check_cancelled(cancel);
     if (bytes.size() < 13)
         throw std::runtime_error("Truncated GIF header");
     const uint32_t width = bytes[6] | (uint32_t(bytes[7]) << 8),
@@ -150,6 +151,7 @@ Image decode_gif_framewise(std::span<const uint8_t> bytes, size_t limit, const L
     Rect old_area{};
     uint8_t old_disposal = 0;
     for (size_t frame = 0; frame < extensions.frames.size(); ++frame) {
+        check_cancelled(cancel);
         const auto [start, length] = extensions.frames[frame];
         std::vector<uint8_t> encoded;
         encoded.reserve(extensions.header_end + length + 1);
@@ -167,7 +169,7 @@ Image decode_gif_framewise(std::span<const uint8_t> bytes, size_t limit, const L
         if (extensions.frames.size() == 1 && !options.gif_transparency) {
             auto first = options;
             first.gif_animation = false;
-            return decode(bytes, L"", limit, first);
+            return decode(bytes, L"", limit, first,cancel);
         }
         const auto *background = plum_find_metadata(source.get(), PLUM_METADATA_BACKGROUND);
         if (!frame) {
@@ -223,6 +225,7 @@ Image decode_gif_framewise(std::span<const uint8_t> bytes, size_t limit, const L
         old_area = area;
         old_disposal = method;
     }
+    check_cancelled(cancel);
     read_container_metadata(image,bytes);
     finish_loading(image, options, file_background);
     if(image.animated()) {
@@ -232,15 +235,16 @@ Image decode_gif_framewise(std::span<const uint8_t> bytes, size_t limit, const L
     return image;
 }
 } // namespace
-Image decode_animation(std::span<const uint8_t> bytes, size_t limit, const LoadingOptions &options) {
+Image decode_animation(std::span<const uint8_t> bytes, size_t limit, const LoadingOptions &options,const CancelCheck &cancel) {
+    check_cancelled(cancel);
     if (bytes.empty() || bytes.size() > kSourceLimit)
         throw std::runtime_error("Invalid animation source size");
     const bool gif = bytes.size() >= 6 &&
                      (!std::memcmp(bytes.data(), "GIF87a", 6) || !std::memcmp(bytes.data(), "GIF89a", 6));
     if (gif)
-        return decode_gif_framewise(bytes, limit, options);
+        return decode_gif_framewise(bytes, limit, options,cancel);
     if (is_apng(bytes))
-        if (auto image = decode_apng_framewise(bytes, limit, options))
+        if (auto image = decode_apng_framewise(bytes, limit, options,cancel))
             return std::move(*image);
     if (gif && bytes.size() >= 13)
         checked_pixels(bytes[6] | (uint32_t(bytes[7]) << 8), bytes[8] | (uint32_t(bytes[9]) << 8), 1, limit);
@@ -259,7 +263,7 @@ Image decode_animation(std::span<const uint8_t> bytes, size_t limit, const Loadi
         // WIC retains the original palette color when transparency is disabled.
         auto first = options;
         first.gif_animation = false;
-        return decode(bytes, L"", limit, first);
+        return decode(bytes, L"", limit, first,cancel);
     }
     const size_t count = checked_pixels(source->width, source->height, source->frames, limit),
                  stride = static_cast<size_t>(source->width) * source->height;
@@ -296,6 +300,7 @@ Image decode_animation(std::span<const uint8_t> bytes, size_t limit, const Loadi
     Rect old_area{};
     uint8_t old_disposal = 0;
     for (size_t frame = 0; frame < source->frames; ++frame) {
+        check_cancelled(cancel);
         if (frame) {
             const auto method = old_disposal % PLUM_DISPOSAL_REPLACE;
             if (method == PLUM_DISPOSAL_PREVIOUS && !previous.empty())
@@ -347,6 +352,7 @@ Image decode_animation(std::span<const uint8_t> bytes, size_t limit, const Loadi
         color.a = 255;
         file_background = color;
     }
+    check_cancelled(cancel);
     read_container_metadata(image,bytes);
     finish_loading(image, options, file_background);
     return image;

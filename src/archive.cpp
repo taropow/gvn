@@ -2,6 +2,7 @@
 #include "gvn/view_rotation.h"
 #include "miniz.h"
 #include <windows.h>
+#include <cstring>
 namespace gvn {
 namespace {
 struct Zip {
@@ -51,7 +52,8 @@ std::vector<ArchiveEntry> Archive::entries(const std::function<bool()> &cancel) 
     }
     return out;
 }
-Image Archive::read(uint32_t index, const LoadingOptions &options, size_t limit, size_t source_limit) const {
+Image Archive::read(uint32_t index, const LoadingOptions &options, size_t limit, size_t source_limit,const CancelCheck &cancel) const {
+    check_cancelled(cancel);
     Zip reader(bytes);
     mz_zip_archive_file_stat stat{};
     if (!mz_zip_reader_file_stat(&reader.zip, index, &stat))
@@ -61,9 +63,22 @@ Image Archive::read(uint32_t index, const LoadingOptions &options, size_t limit,
     if (stat.m_uncomp_size > std::min(kDecodeLimit, source_limit) || stat.m_uncomp_size == 0)
         throw std::runtime_error("ZIP entry exceeds image limit");
     std::vector<uint8_t> data(static_cast<size_t>(stat.m_uncomp_size));
-    if (!mz_zip_reader_extract_to_mem(&reader.zip, index, data.data(), data.size(), 0))
+    if(cancel){
+        struct Output {std::vector<uint8_t> &data;const CancelCheck &cancel;bool stopped{};};
+        Output output{data,cancel};
+        const auto write=[](void *opaque,mz_uint64 offset,const void *bytes,size_t count)->size_t {
+            auto &out=*static_cast<Output *>(opaque);
+            try{if(out.cancel()){out.stopped=true;return 0;}}catch(...){out.stopped=true;return 0;}
+            if(offset>out.data.size()||count>out.data.size()-size_t(offset))return 0;
+            std::memcpy(out.data.data()+size_t(offset),bytes,count);return count;
+        };
+        const bool valid=mz_zip_reader_extract_to_callback(&reader.zip,index,write,&output,0)!=0;
+        if(output.stopped)throw OperationCancelled();
+        if(!valid)throw std::runtime_error("ZIP decompression or CRC check failed");
+    }else if(!mz_zip_reader_extract_to_mem(&reader.zip,index,data.data(),data.size(),0))
         throw std::runtime_error("ZIP decompression or CRC check failed");
-    auto image = decode(data, filename(reader.zip, index, (stat.m_bit_flag & 0x800) != 0), limit, options);
+    check_cancelled(cancel);
+    auto image = decode(data, filename(reader.zip, index, (stat.m_bit_flag & 0x800) != 0), limit, options,cancel);
     image.file_bytes = stat.m_uncomp_size;
     return image;
 }
@@ -73,12 +88,13 @@ std::filesystem::path source_file(const std::filesystem::path &path) {
     return separator == std::wstring::npos ? path : std::filesystem::path(text.substr(0, separator));
 }
 Image load_source(const std::filesystem::path &path, const LoadingOptions &options, size_t limit,
-                  size_t source_limit) {
+                  size_t source_limit,const CancelCheck &cancel) {
+    check_cancelled(cancel);
     const auto text = path.wstring();
     const auto separator = text.find(L'|');
     (void)view_rotation_quarters(options.view_rotation, 1, 1);
     if (separator == std::wstring::npos) {
-        auto image = load_image(path, limit, options, source_limit);
+        auto image = load_image(path, limit, options, source_limit,cancel);
         apply_view_rotation(image, options.view_rotation);
         return image;
     }
@@ -88,8 +104,8 @@ Image load_source(const std::filesystem::path &path, const LoadingOptions &optio
     const auto index = std::stoul(part, &used);
     if (used != part.size() || index > UINT32_MAX)
         throw std::runtime_error("Invalid ZIP item");
-    Archive zip(read_file(text.substr(0, separator), source_limit));
-    auto image = zip.read(static_cast<uint32_t>(index), options, limit, source_limit);
+    Archive zip(read_file(text.substr(0, separator), source_limit,cancel));
+    auto image = zip.read(static_cast<uint32_t>(index), options, limit, source_limit,cancel);
     apply_view_rotation(image, options.view_rotation);
     image.load_ms =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start)

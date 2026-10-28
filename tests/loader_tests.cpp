@@ -1,5 +1,6 @@
 #include "gvn/loader.h"
 #include "gvn/archive.h"
+#include "gvn/edit.h"
 #include "test.h"
 #include "folder_test_tree.h"
 #include <array>
@@ -836,4 +837,71 @@ TEST(comic_rotation_stage_and_wide_policy_have_independent_cached_results) {
     }
     CHECK(loader.wait_idle(std::chrono::seconds(3)));
     CHECK(loader.stats().foreground_loads == 4 && loader.stats().cache_hits == 4);
+}
+TEST(loader_interrupts_obsolete_prefetch_but_promotes_the_requested_same_image) {
+    const auto root=std::filesystem::path(GVN_FIXTURES),a=root/L"alpha.png",b=root/L"rgb.bmp",c=root/L"disposal.gif";
+    for(bool promote:{false,true}){
+        std::promise<void> started;auto entered=started.get_future();std::atomic<bool> release{};
+        std::atomic<unsigned> callbacks{},slow_decodes{};std::promise<Loaded> first,last;
+        auto initial=first.get_future(),final=last.get_future();
+        Loader loader([&](Loaded value){if(callbacks++==0)first.set_value(std::move(value));else last.set_value(std::move(value));},1024*1024,{}, {},
+            [&](const auto &path,const CancelCheck &cancel){
+                if(path==b){if(slow_decodes++==0)started.set_value();while(!release&&!cancel())Sleep(1);check_cancelled(cancel);}
+                return new_image(4,4);
+            });
+        loader.request(a);CHECK(initial.wait_for(std::chrono::seconds(3))==std::future_status::ready);
+        CHECK(initial.get().image&&loader.wait_idle(std::chrono::seconds(3)));
+        loader.prefetch({b});CHECK(entered.wait_for(std::chrono::seconds(3))==std::future_status::ready);
+        const auto start=std::chrono::steady_clock::now();loader.request(promote?b:c);
+        if(promote)release=true;
+        CHECK(final.wait_for(std::chrono::seconds(3))==std::future_status::ready);
+        const auto value=final.get();CHECK(value.image&&value.error.empty()&&value.path==(promote?b:c));
+        CHECK(loader.wait_idle(std::chrono::seconds(3))&&slow_decodes==1);
+        CHECK(promote?loader.stats().cancelled==0:loader.stats().cancelled==1);
+        std::cout<<"PREFETCH_PRIORITY {\"same_image\":"<<promote<<",\"foreground_ms\":"
+            <<std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count()<<"}\n";
+    }
+}
+TEST(cancellable_decode_preserves_pixels_and_stops_at_safe_read_and_frame_boundaries) {
+    auto source=new_image(1024,768);uint32_t seed=7;
+    for(auto &p:source.frames[0].pixels){seed=seed*1664525u+1013904223u;p={uint8_t(seed>>24),uint8_t(seed>>16),uint8_t(seed>>8),uint8_t(seed)};}
+    for(const auto *extension:{L".png",L".jpg",L".bmp"}){
+        const auto encoded=encode(source,0,extension);const auto start=std::chrono::steady_clock::now();
+        const auto expected=decode(encoded);const auto middle=std::chrono::steady_clock::now();unsigned checks{};
+        const auto result=decode(encoded,L"",kDecodeLimit,{},[&]{++checks;return false;});
+        const auto end=std::chrono::steady_clock::now();CHECK(checks>=6&&result.width==expected.width&&result.height==expected.height);
+        CHECK(result.frames[0].pixels==expected.frames[0].pixels);
+        unsigned calls{};bool stopped{};try{decode(encoded,L"",kDecodeLimit,{},[&]{return ++calls>=6;});}catch(const OperationCancelled &){stopped=true;}
+        CHECK(stopped&&calls==6);
+        std::cout<<"DECODE_CONTROL {\"normal_ms\":"<<std::chrono::duration<double,std::milli>(middle-start).count()
+            <<",\"cancellable_ms\":"<<std::chrono::duration<double,std::milli>(end-middle).count()<<"}\n";
+    }
+    const auto root=std::filesystem::path(GVN_FIXTURES);
+    const auto tiff=read_file(root/L"alpha.tiff");CHECK(decode(tiff).frames[0].pixels==decode(tiff,L"",kDecodeLimit,{},[]{return false;}).frames[0].pixels);
+    for(const auto *name:{L"disposal.gif",L"blend.apng"}){
+        const auto bytes=read_file(root/name);unsigned calls{};bool stopped{};
+        try{decode_animation(bytes,kDecodeLimit,{},[&]{return ++calls>=3;});}catch(const OperationCancelled &){stopped=true;}
+        CHECK(stopped&&calls==3);
+        const auto plain=decode(bytes),controlled=decode(bytes,L"",kDecodeLimit,{},[]{return false;});
+        CHECK(plain.frames.size()==controlled.frames.size());
+        for(size_t n=0;n<plain.frames.size();++n)CHECK(plain.frames[n].pixels==controlled.frames[n].pixels);
+    }
+    bool stopped{};try{read_file(root/L"alpha.png",kSourceLimit,[]{return true;});}catch(const OperationCancelled &){stopped=true;}
+    CHECK(stopped);
+    for(const auto *name:{L"psd-8-1.psd",L"psd-8-2.psd"}){
+        const auto bytes=read_file(root/name);const auto plain=decode_psd(bytes,kDecodeLimit);
+        CHECK(decode_psd(bytes,kDecodeLimit,[]{return false;}).frames[0].pixels==plain.frames[0].pixels);
+        unsigned calls{};bool cancelled{};
+        try{decode_psd(bytes,kDecodeLimit,[&]{return ++calls>=3;});}catch(const OperationCancelled &){cancelled=true;}
+        CHECK(cancelled&&calls==3);
+    }
+    Archive zip(read_file(root/L"images.zip"));
+    for(const auto &entry:zip.entries()){
+        const auto plain=zip.read(entry.index),controlled=zip.read(entry.index,{},kDecodeLimit,kSourceLimit,[]{return false;});
+        CHECK(plain.width==controlled.width&&plain.height==controlled.height&&plain.frames.size()==controlled.frames.size());
+        for(size_t n=0;n<plain.frames.size();++n)CHECK(plain.frames[n].pixels==controlled.frames[n].pixels);
+    }
+    unsigned reads{};stopped=false;
+    try{zip.read(zip.entries().front().index,{},kDecodeLimit,kSourceLimit,[&]{return ++reads>=2;});}catch(const OperationCancelled &){stopped=true;}
+    CHECK(stopped&&reads==2);
 }
