@@ -260,7 +260,7 @@ void Settings::load(const std::filesystem::path &path) {
     toast_enabled=integer(L"toast_enabled",toast_enabled,0,1,L"Feedback")!=0;
     command_sound=integer(L"command_sound",command_sound,0,1,L"Feedback")!=0;
     toast_view_commands=integer(L"toast_view_commands",toast_view_commands,0,1,L"Feedback")!=0;
-    toast_duration=integer(L"toast_duration",toast_duration,2000,10000,L"Feedback");
+    toast_duration=integer(L"toast_duration",toast_duration,kToastMinDuration,kToastMaxDuration,L"Feedback");
     context_menu_mode=integer(L"Mode",context_menu_mode,0,2,L"ContextMenu");
     if(read(L"ContextMenu",L"Version",L"")==L"1"){
         std::vector<unsigned> items;const int count=integer(L"Count",0,0,64,L"ContextMenu");
@@ -778,7 +778,7 @@ void Settings::save(const std::filesystem::path &path) const {
     write(L"Feedback",L"toast_enabled",std::to_wstring(toast_enabled));
     write(L"Feedback",L"command_sound",std::to_wstring(command_sound));
     write(L"Feedback",L"toast_view_commands",std::to_wstring(toast_view_commands));
-    write(L"Feedback",L"toast_duration",std::to_wstring(std::clamp(toast_duration,2000,10000)));
+    write(L"Feedback",L"toast_duration",std::to_wstring(std::clamp(toast_duration,kToastMinDuration,kToastMaxDuration)));
     sections[L"ContextMenu"]={};
     write(L"ContextMenu",L"Version",L"1");write(L"ContextMenu",L"Mode",std::to_wstring(std::clamp(context_menu_mode,0,2)));
     const auto context_items=validated_context_items(context_menu_items);
