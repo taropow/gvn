@@ -12,8 +12,10 @@
         CHECK(paste_image(app.hwnd).frames[0].pixels==pixels);
         app.feedback_sound_known=false;app.command(NewPaste,true);
         CHECK(command_pips==2&&app.toast.text().starts_with(L"貼り付けました")&&app.image->frames[0].pixels==pixels);
-        RECT box{};GetWindowRect(app.toast.window(),&box);MapWindowPoints(nullptr,app.hwnd,reinterpret_cast<POINT *>(&box),2);const auto canvas=app.toast_area();
-        CHECK(box.left>=canvas.left&&box.right<=canvas.right&&box.top>=canvas.top&&box.bottom<=canvas.bottom);
+        RECT box{};GetWindowRect(app.toast.window(),&box);MONITORINFO monitor{sizeof(monitor)};
+        CHECK(GetMonitorInfoW(MonitorFromWindow(app.hwnd,MONITOR_DEFAULTTONEAREST),&monitor));
+        CHECK(box.left>=monitor.rcWork.left&&box.right<=monitor.rcWork.right&&box.top>=monitor.rcWork.top&&box.bottom<=monitor.rcWork.bottom);
+        CHECK((GetWindowLongPtrW(app.toast.window(),GWL_STYLE)&WS_POPUP)&&!(GetWindowLongPtrW(app.toast.window(),GWL_STYLE)&WS_CHILD));
         auto next=app.settings;next.set_keys(Copy,{L"Ctrl+Shift+C"});next.toast_duration=500;app.apply_settings(next);app.command(Copy,true);
         CHECK(app.toast.key()==L"Ctrl+Shift+C");
         SendMessageW(app.toast.window(),WM_TIMER,1,0);CHECK(feedback_visible());

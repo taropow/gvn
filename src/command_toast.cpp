@@ -6,6 +6,21 @@
 #include <bit>
 #include <mmsystem.h>
 namespace gvn {
+RECT toast_popup_bounds(RECT owner,RECT work,int width,int height,int gap,bool screen_bottom){
+    const int available_w=std::max(1L,work.right-work.left),available_h=std::max(1L,work.bottom-work.top);
+    gap=std::max(0,std::min({gap,(available_w-1)/2,(available_h-1)/2}));
+    width=std::clamp(width,1,available_w-2*gap);height=std::clamp(height,1,available_h-2*gap);
+    const auto center=screen_bottom?(int64_t(work.left)+work.right)/2:(int64_t(owner.left)+owner.right)/2;
+    const int x=int(std::clamp<int64_t>(center-width/2,work.left+gap,int64_t(work.right)-gap-width));
+    int64_t y=int64_t(owner.bottom)+gap;
+    if(screen_bottom)y=int64_t(work.bottom)-gap-height;
+    else if(y+height>work.bottom-gap){
+        y=int64_t(owner.top)-gap-height;
+        if(y<work.top+gap)y=int64_t(work.bottom)-gap-height;
+    }
+    y=std::clamp<int64_t>(y,work.top+gap,int64_t(work.bottom)-gap-height);
+    return {x,LONG(y),x+width,LONG(y+height)};
+}
 CommandToast::~CommandToast(){if(IsWindow(hwnd))DestroyWindow(hwnd);if(font)DeleteObject(font);}
 void CommandToast::dismiss(){
     if(!hwnd)return;
@@ -18,9 +33,10 @@ void CommandToast::show(HWND owner,RECT area,const std::wstring &value,const std
     if(!hwnd){
         WNDCLASSW cls{};cls.lpfnWndProc=procedure;cls.hInstance=GetModuleHandleW(nullptr);cls.lpszClassName=L"GVN.CommandToast";
         RegisterClassW(&cls);
-        hwnd=CreateWindowExW(WS_EX_NOACTIVATE|WS_EX_TRANSPARENT,cls.lpszClassName,L"操作通知",WS_CHILD|WS_CLIPSIBLINGS,
+        hwnd=CreateWindowExW(WS_EX_NOACTIVATE|WS_EX_TRANSPARENT|WS_EX_TOOLWINDOW|WS_EX_LAYERED,cls.lpszClassName,L"操作通知",WS_POPUP,
                             0,0,1,1,owner,nullptr,cls.hInstance,this);
         if(!hwnd)return;
+        SetLayeredWindowAttributes(hwnd,0,255,LWA_ALPHA);
     }
     message=value;shortcut=key;busy=pending;
     KillTimer(hwnd,1);timer=false;
@@ -33,13 +49,20 @@ void CommandToast::show(HWND owner,RECT area,const std::wstring &value,const std
 }
 void CommandToast::layout(RECT area){
     canvas=area;if(!hwnd)return;
-    const auto next_dpi=GetDpiForWindow(GetParent(hwnd));
+    const auto owner=GetWindow(hwnd,GW_OWNER);
+    const auto next_dpi=GetDpiForWindow(owner);
     if(dpi!=next_dpi){dpi=next_dpi;if(font)DeleteObject(font);font=CreateFontW(-MulDiv(13,dpi,96),0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,0,0,CLEARTYPE_QUALITY,DEFAULT_PITCH,L"Yu Gothic UI");}
     const auto px=[&](int n){return MulDiv(n,dpi,96);};
-    const int width=std::max(1,std::min(px(360),int(area.right-area.left)-px(24))),height=px(shortcut.empty()?44:64);
-    const RECT next{std::max(area.left,area.right-px(12)-width),area.top+px(12),std::max(area.left,area.right-px(12)-width)+width,area.top+px(12)+height};
-    RECT before{};GetWindowRect(hwnd,&before);MapWindowPoints(nullptr,GetParent(hwnd),reinterpret_cast<POINT *>(&before),2);
-    if(!EqualRect(&before,&next))SetWindowPos(hwnd,HWND_TOP,next.left,next.top,width,height,SWP_NOACTIVATE);
+    RECT bounds{};GetWindowRect(owner,&bounds);
+    MONITORINFO monitor{sizeof(monitor)};
+    if(!GetMonitorInfoW(MonitorFromWindow(owner,MONITOR_DEFAULTTONEAREST),&monitor)){
+        SystemParametersInfoW(SPI_GETWORKAREA,0,&monitor.rcWork,0);monitor.rcMonitor=monitor.rcWork;
+    }
+    const bool fullscreen=bounds.left<=monitor.rcMonitor.left&&bounds.top<=monitor.rcMonitor.top&&
+        bounds.right>=monitor.rcMonitor.right&&bounds.bottom>=monitor.rcMonitor.bottom;
+    const auto next=toast_popup_bounds(bounds,monitor.rcWork,px(360),px(shortcut.empty()?44:64),px(8),IsZoomed(owner)||fullscreen);
+    RECT before{};GetWindowRect(hwnd,&before);
+    if(!EqualRect(&before,&next))SetWindowPos(hwnd,HWND_TOP,next.left,next.top,next.right-next.left,next.bottom-next.top,SWP_NOACTIVATE);
     InvalidateRect(hwnd,nullptr,FALSE);
 }
 void CommandToast::paint(HDC dc){

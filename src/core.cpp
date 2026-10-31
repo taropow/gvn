@@ -226,10 +226,13 @@ void View::apply_fit(Fit value, bool only_shrink) {
         scale = std::min(scale, 1.0);
     scale = std::clamp(scale, 0.00001, 50.0);
 }
+static double snap_actual_zoom(double current, double target) {
+    return (current < 1 && target > 1) || (current > 1 && target < 1) ? 1.0 : target;
+}
 void View::zoom_at(double factor, double x, double y) {
     if (!std::isfinite(factor) || factor <= 0)
         return;
-    zoom_to(std::clamp(scale * factor, .00001, 50.0), x, y);
+    zoom_to(snap_actual_zoom(scale, std::clamp(scale * factor, .00001, 50.0)), x, y);
 }
 void View::zoom_to(double target, double x, double y) {
     if (!std::isfinite(target) || target <= 0)
@@ -259,7 +262,7 @@ std::pair<double, double> View::y_range() const {
 double stepped_zoom(double scale, bool enlarge, int mode, int relative, int below, int above) {
     if (mode != 1 && mode != 2) {
         const double factor = 1 + relative / 100.0;
-        return std::clamp(scale * (enlarge ? factor : 1 / factor), .00001, 50.0);
+        return snap_actual_zoom(scale, std::clamp(scale * (enlarge ? factor : 1 / factor), .00001, 50.0));
     }
     // MassiGra rounds the current percentage before finding a strictly adjacent step.
     // Region selection and the 100% crossing limit use the unrounded percentage.

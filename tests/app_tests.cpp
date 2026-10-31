@@ -5111,6 +5111,87 @@ struct AppAudit {
         };
         command(ConfigureMask);
     }
+
+    void zoom_actual_stop_wheel_bursts_commands_and_drag_preserve_alpha() {
+        ShowWindow(app.hwnd,SW_SHOWNOACTIVATE);open(fixture(L"display-alpha.png"));
+        const auto image=app.image;const auto pixels=image->frames[0].pixels;
+        app.settings.mouse.basic_wheel(true);app.settings.mouse.slow_wheel=false;app.settings.zoom_step=25;
+        const auto set=[&](double scale){app.view.zoom_to(scale,100,100);app.update();};
+        const auto wheel=[&](int delta,bool horizontal=false){POINT p{100,app.top+100};ClientToScreen(app.hwnd,&p);
+            app.message(horizontal?WM_MOUSEHWHEEL:WM_MOUSEWHEEL,MAKEWPARAM(0,static_cast<WORD>(delta)),MAKELPARAM(p.x,p.y));};
+        for(const auto mode:{0,1,2}){
+            app.settings.zoom_mode=mode;
+            set(.95);wheel(120);CHECK(app.view.scale==1);wheel(120);CHECK(app.view.scale>1);
+            set(1.05);wheel(-120);CHECK(app.view.scale==1);wheel(-120);CHECK(app.view.scale<1);
+            set(.85);wheel(480);CHECK(app.view.scale==1);wheel(120);CHECK(app.view.scale>1);
+            set(1.3);wheel(-480);CHECK(app.view.scale==1);wheel(-120);CHECK(app.view.scale<1);
+            set(.95);command(ZoomIn);CHECK(app.view.scale==1);command(ZoomIn);CHECK(app.view.scale>1);
+            set(1.05);command(ZoomOut);CHECK(app.view.scale==1);command(ZoomOut);CHECK(app.view.scale<1);
+        }
+        app.settings.zoom_mode=0;
+        set(.95);wheel(60);CHECK(app.view.scale==.95);wheel(60);CHECK(app.view.scale==1);
+        wheel(60);CHECK(app.view.scale==1);wheel(60);CHECK(app.view.scale>1);
+        app.settings.mouse.slow_wheel=true;set(.95);wheel(120);CHECK(app.view.scale==.95);wheel(120);CHECK(app.view.scale==1);
+        wheel(240);CHECK(app.view.scale>1);app.settings.mouse.slow_wheel=false;
+        app.settings.mouse.assign(MouseGesture::WheelRight,0,0,MouseZoomIn);
+        set(.95);wheel(480,true);CHECK(app.view.scale==1);wheel(120,true);CHECK(app.view.scale>1);
+        app.settings.mouse.assign(MouseGesture::RightDrag,0,0,MouseZoom);app.settings.mouse.drag_axis=2;app.settings.mouse.drag_zoom=100;
+        const auto at=[&](int x){return MAKELPARAM(x,app.top+100);};
+        for(const auto enlarge:{true,false}){
+            set(enlarge?.9:1.1);const auto anchor=(100-app.view.left())/app.view.scale;
+            app.message(WM_RBUTTONDOWN,MK_RBUTTON,at(100));app.message(WM_MOUSEMOVE,MK_RBUTTON,at(enlarge?150:50));
+            CHECK(app.view.scale==1&&std::abs((100-app.view.left())/app.view.scale-anchor)<1e-6);
+            app.message(WM_MOUSEMOVE,MK_RBUTTON,at(enlarge?160:40));CHECK(enlarge?app.view.scale>1:app.view.scale<1);
+            app.message(WM_RBUTTONUP,0,at(enlarge?160:40));
+        }
+        CHECK(app.image==image&&!app.modified&&image->frames[0].pixels==pixels&&notices.empty());
+        command(Copy);CHECK(paste_image(app.hwnd).frames[0].pixels==pixels);
+    }
+    void feedback_external_popup_placement_move_resize_maximize_and_fullscreen() {
+        const RECT owner{100,100,700,500},work{0,0,1200,900};
+        auto r=toast_popup_bounds(owner,work,360,64,8,false);
+        CHECK(r.left==220&&r.top==508&&r.right==580&&r.bottom==572);
+        r=toast_popup_bounds({100,500,700,880},work,360,64,8,false);CHECK(r.top==428&&r.bottom==492);
+        r=toast_popup_bounds(owner,work,360,64,8,true);CHECK(r.left==420&&r.bottom==892);
+        r=toast_popup_bounds({-1100,-800,-500,-400},{-1600,-900,0,0},540,96,12,false);
+        CHECK(r.left==-1070&&r.top==-388&&r.right==-530&&r.bottom==-292);
+        r=toast_popup_bounds({0,0,1,1},{0,0,1,1},360,64,8,false);CHECK(r.left==0&&r.top==0&&r.right==1&&r.bottom==1);
+        MONITORINFO monitor{sizeof(monitor)};CHECK(GetMonitorInfoW(MonitorFromWindow(app.hwnd,MONITOR_DEFAULTTONEAREST),&monitor));
+        ShowWindow(app.hwnd,SW_SHOWNOACTIVATE);
+        SetWindowPos(app.hwnd,nullptr,monitor.rcWork.left+70,monitor.rcWork.top+50,480,300,SWP_NOZORDER|SWP_NOACTIVATE);
+        app.replace(selection_fixture(64,48),false,true);app.settings.toast_duration=500;SetFocus(app.hwnd);const auto focus=GetFocus();command(Copy);
+        const auto popup=app.toast.window();CHECK(popup&&GetWindow(popup,GW_OWNER)==app.hwnd&&GetFocus()==focus);
+        RECT client{};GetClientRect(popup,&client);const auto count=size_t(client.right)*client.bottom;
+        HDC memory=CreateCompatibleDC(nullptr);CHECK(memory);BITMAPINFO info{};
+        info.bmiHeader={sizeof(BITMAPINFOHEADER),client.right,-client.bottom,1,32,BI_RGB};void *raw{};
+        const auto bitmap=CreateDIBSection(memory,&info,DIB_RGB_COLORS,&raw,nullptr,0);CHECK(bitmap&&raw);
+        const auto previous=SelectObject(memory,bitmap);std::fill_n(static_cast<uint32_t *>(raw),count,0x12345678u);
+        SendMessageW(popup,WM_PRINTCLIENT,reinterpret_cast<WPARAM>(memory),PRF_CLIENT);GdiFlush();
+        const auto *rgb=static_cast<const uint32_t *>(raw);
+        const bool painted=std::any_of(rgb+1,rgb+count,[&](uint32_t value){return value!=rgb[0];});
+        wchar_t capture[32768]{};
+        if(GetEnvironmentVariableW(L"GVN_TOAST_CAPTURE",capture,32768)>0){
+            auto snapshot=new_image(client.right,client.bottom);
+            for(size_t i=0;i<count;++i)snapshot.frames[0].pixels[i]={uint8_t(rgb[i]>>16),uint8_t(rgb[i]>>8),uint8_t(rgb[i]),255};
+            save_image(snapshot,0,capture);
+        }
+        SelectObject(memory,previous);DeleteObject(bitmap);DeleteDC(memory);CHECK(painted);
+        const auto styles=GetWindowLongPtrW(popup,GWL_EXSTYLE);
+        CHECK((styles&(WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE|WS_EX_TRANSPARENT|WS_EX_LAYERED))==(WS_EX_TOOLWINDOW|WS_EX_NOACTIVATE|WS_EX_TRANSPARENT|WS_EX_LAYERED));
+        const auto deadline=app.toast.deadline();const auto check_bounds=[&]{
+            RECT bounds{},actual{};GetWindowRect(app.hwnd,&bounds);GetWindowRect(popup,&actual);
+            MONITORINFO info{sizeof(info)};CHECK(GetMonitorInfoW(MonitorFromWindow(app.hwnd,MONITOR_DEFAULTTONEAREST),&info));
+            const auto px=[&](int n){return MulDiv(n,GetDpiForWindow(app.hwnd),96);};
+            const auto expected=toast_popup_bounds(bounds,info.rcWork,px(360),px(44),px(8),IsZoomed(app.hwnd)||app.full);
+            CHECK(EqualRect(&actual,&expected)&&app.toast.deadline()==deadline);
+        };
+        check_bounds();SetWindowPos(app.hwnd,nullptr,monitor.rcWork.left+170,monitor.rcWork.top+70,600,350,SWP_NOZORDER|SWP_NOACTIVATE);check_bounds();
+        ShowWindow(app.hwnd,SW_MAXIMIZE);check_bounds();ShowWindow(app.hwnd,SW_RESTORE);check_bounds();
+        command(Fullscreen);check_bounds();command(Fullscreen);check_bounds();
+        CHECK(GetFocus()==focus);ShowWindow(app.hwnd,SW_MINIMIZE);CHECK(!feedback_visible()&&!app.toast.timer_active());
+        ShowWindow(app.hwnd,SW_RESTORE);CHECK(notices.empty());
+    }
+
     void zoom_reference_transitions_through_numeric_input_and_app_commands_preserve_alpha() {
         open(fixture(L"alpha.png"));
         const auto image = app.image;
@@ -7248,6 +7329,8 @@ APP_TEST(rotation_reference_static_copy_save_and_original_file_ole_contract)
 APP_TEST(rotation_reference_animation_current_frame_alpha_copy_save_and_png_ole)
 APP_TEST(rotation_reference_edited_and_clipboard_alpha_ole_uses_displayed_png)
 APP_TEST(background_changes_preserve_image_animation_copy_save_and_ole)
+APP_TEST(zoom_actual_stop_wheel_bursts_commands_and_drag_preserve_alpha)
+APP_TEST(feedback_external_popup_placement_move_resize_maximize_and_fullscreen)
 APP_TEST(zoom_reference_transitions_through_numeric_input_and_app_commands_preserve_alpha)
 APP_TEST(mask_reference_commands_preserve_alpha_undo_copy_save_and_ole)
 APP_TEST(mask_psd_gif_apng_current_frame_and_selected_alpha_restore_with_undo)
