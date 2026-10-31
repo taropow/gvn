@@ -1,0 +1,5 @@
+GIFLIB 6.1.3: SPDX-License-Identifier: MIT
+Copyright (C) Eric S. Raymond <esr@thyrsus.com>
+openbsd-reallocarray.c: SPDX-License-Identifier: MIT
+Copyright (C) 2008 Otto Moerbeek <otto@drijf.net>
+The permission and warranty terms are in giflib.txt.

@@ -271,3 +271,26 @@ TEST(zoom_steps_match_all_official_native_reference_transitions) {
     std::cout<<"ZOOM_REFERENCE cases=474 mismatches="<<mismatches<<'\n';
     CHECK(mismatches==0);
 }
+
+TEST(zoom_actual_stop_in_all_step_modes_and_continuous_drag) {
+    for(const auto mode:{0,1,2}){
+        CHECK(stepped_zoom(.95,true,mode,25,10,25)==1);
+        CHECK(stepped_zoom(1.05,false,mode,25,10,25)==1);
+        CHECK(stepped_zoom(1,true,mode,25,10,25)>1);
+        CHECK(stepped_zoom(1,false,mode,25,10,25)<1);
+    }
+    CHECK(stepped_zoom(.8,true,0,25,10,25)==1);
+    CHECK(stepped_zoom(1.25,false,0,25,10,25)==1);
+    CHECK(stepped_zoom(.5,true,0,25,10,25)==.625);
+    CHECK(stepped_zoom(2,false,0,25,10,25)==1.6);
+    for(const auto before:{.9,1.1}){
+        View view;view.resize(800,600);view.set_image(1600,1200);view.zoom_to(before,210,150);
+        const auto x=(210-view.left())/view.scale,y=(150-view.top())/view.scale;
+        const auto factor=before<1?2.0:.5;
+        view.zoom_at(factor,210,150);CHECK(view.scale==1&&view.manual);
+        CHECK(std::abs((210-view.left())/view.scale-x)<1e-9&&std::abs((150-view.top())/view.scale-y)<1e-9);
+        view.zoom_at(factor,210,150);CHECK(view.scale==factor);
+    }
+    View direct;direct.zoom_to(1.1,0,0);CHECK(direct.scale==1.1);
+    direct.zoom_to(.9,0,0);CHECK(direct.scale==.9); // Explicit numeric zoom remains exact.
+}

@@ -3,7 +3,8 @@
 #include <string>
 #include <cstdint>
 namespace gvn {
-// One input-transparent child, created on the first notification. No idle timer.
+RECT toast_popup_bounds(RECT owner,RECT work,int width,int height,int gap,bool screen_bottom);
+// One input-transparent owned popup, created on the first notification. No idle timer.
 class CommandToast {
     HWND hwnd{};
     RECT canvas{};

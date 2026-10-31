@@ -3967,7 +3967,14 @@ class App {
             const auto action = settings.mouse.action(gesture, held, mods);
             if (action)
                 consume_pointer(held);
+            const auto before = view.scale;
             pointer_action(action, point);
+            const bool zoom = action == MouseZoomIn || action == MouseZoomOut || action == ZoomIn || action == ZoomOut;
+            if (zoom && before != 1 && view.scale == 1) {
+                // A coalesced wheel message must visibly stop at actual size too.
+                accumulator = 0;
+                break;
+            }
         }
     }
     POINT image_point(POINT point) const {
@@ -4267,10 +4274,14 @@ class App {
         case kForwarded:
             process_forwarded_file();
             return 0;
+        case WM_MOVE:
+        case WM_DISPLAYCHANGE:
+            if(toast.window()&&(GetWindowLongPtrW(toast.window(),GWL_STYLE)&WS_VISIBLE))toast.layout(toast_area());
+            break;
         case WM_SIZE:
             if (!full && w != SIZE_MINIMIZED)
                 was_maximized = w == SIZE_MAXIMIZED;
-            if(w==SIZE_MINIMIZED){sync_ants_timer();sync_animation_timer();return 0;}
+            if(w==SIZE_MINIMIZED){toast.dismiss();sync_ants_timer();sync_animation_timer();return 0;}
             if (renderer.resizing) {
                 // Size messages can outpace paints. Arrange once for the latest
                 // dimensions, while continuing to paint during the gesture.
@@ -4329,7 +4340,6 @@ class App {
                 smoke_error = e.what();
             }
             EndPaint(hwnd, &ps);
-            toast.repaint();
             return 0;
         }
         case WM_PRINTCLIENT:
