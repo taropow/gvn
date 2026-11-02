@@ -409,7 +409,7 @@ static HBITMAP icon_bitmap(UINT id, int size) {
 static constexpr UINT buttons[]{
     Open, Save,         FileDelete,  0, Copy,      Paste, ArmDrag, Undo,    0,        Info, ShowPrompt,  Previous,
     Next, ParentFolder, ChildFolder, 0, Slideshow, 0,     ZoomIn,  ZoomOut, FitImage, Actual, Fullscreen,
-    0,    ToggleEditor, Preferences,  Help,MoreCommands};
+    0,    ToolCrop,ToggleEditor, Preferences,  Help,MoreCommands};
 static constexpr UINT tool_buttons[]{ToolPan,ToolPen,ToolText,SelectMove,SelectRectangle,SelectFreehand,SelectPolygon,0,
     PasteSelection,ToolCrop,Resize,Canvas,0,RotateRight,FlipH,FlipV,0,Brightness,ColorAdjust,Levels,0,
     SelectAll,InvertSelection,ClearSelection,DeleteSelection};
@@ -552,7 +552,7 @@ void IconToolbar::rebuild() {
             DeleteObject(bitmap);
             item.idCommand = id;
             item.fsState = saved.contains(id) ? saved[id].state : TBSTATE_ENABLED;
-            item.fsStyle = (id == Loop || id == Slideshow || id==ToggleEditor || (tools&&(id==ToolPan||id==ToolPen||id==ToolText||id==ToolCrop||(id>=SelectRectangle&&id<=SelectMove)))) ? BTNS_CHECK : BTNS_BUTTON;
+            item.fsStyle = (id == Loop || id == Slideshow || id==ToggleEditor || id==ToolCrop || (tools&&(id==ToolPan||id==ToolPen||id==ToolText||id==ToolCrop||(id>=SelectRectangle&&id<=SelectMove)))) ? BTNS_CHECK : BTNS_BUTTON;
             if(id==CommitSelection||id==CancelSelection||id==TransformSelection)item.fsStyle|=BTNS_AUTOSIZE|BTNS_SHOWTEXT;
             item.iString =
                 reinterpret_cast<INT_PTR>(saved.contains(id) ? saved[id].text.c_str() : command_label(id));
@@ -677,7 +677,7 @@ bool IconToolbar::arrange_overflow(int width){
             if(previous&&separator>=0){items[separator].hidden=false;total+=items[separator].width;}separator=-1;previous=true;total+=item.width;}
         return total;};
     if(overflow&&extent()>width){for(auto &item:items)if(item.button.idCommand==MoreCommands)item.hidden=false;
-        for(UINT id:{Help,ChildFolder,ParentFolder,Slideshow,Info,ShowPrompt,ArmDrag,FileDelete,Save,Fullscreen,ZoomOut,ZoomIn,Undo,Actual,Preferences,FitImage,Paste,Copy,Previous,Next,ToggleEditor}){
+        for(UINT id:{Help,ChildFolder,ParentFolder,Slideshow,Info,ShowPrompt,ArmDrag,FileDelete,Save,Fullscreen,ZoomOut,ZoomIn,Undo,Actual,Preferences,FitImage,Paste,Copy,Previous,Next,ToggleEditor,ToolCrop}){
             if(extent()<=width)break;for(auto &item:items)if(item.button.idCommand==id){item.hidden=true;overflow_commands.push_back(id);break;}}
     }
     extent();

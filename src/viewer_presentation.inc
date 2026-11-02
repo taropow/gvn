@@ -64,6 +64,9 @@
         toolbar.text(Next,command_caption(settings,Next,reversed?L"前の画像":L"次の画像").c_str());
         toolbar.check(Slideshow, slideshow);
         toolbar.check(ToggleEditor,editor_mode);
+        toolbar.check(ToolCrop,cropping.has_value());
+        toolbar.enable(ToolCrop,image&&!floating&&!loading);
+        toolbar.text(ToolCrop,command_caption(settings,ToolCrop).c_str());
         toolbar.text(ToggleEditor,command_caption(settings,ToggleEditor,editor_mode?L"画像編集モードを終了":L"画像編集モードに切り替え").c_str());
         if(editor_mode){
             for(UINT id:{SelectRectangle,SelectFreehand,SelectPolygon,SelectMove,ToolPan,ToolPen,ToolText,ToolCrop})editor_tools.check(id,checked(id));

@@ -28,7 +28,9 @@
         if(!box.valid())throw std::invalid_argument("文字のサイズが大きすぎます。");floating->source=std::move(stamp);floating->box=box;update();
     }
     void begin_crop() {
-        if(!image||loading)return;choose_tool(SelectionTool::Crop);
+        if(!image||loading)return;
+        if(editor_mode)choose_tool(SelectionTool::Crop);
+        else {cancel_pointer();if(floating)cancel_floating();if(cropping)cancel_crop();}
         const Rect bounds=selection.empty()?Rect{0,0,int(image->width),int(image->height)}:Rect{selection.x,selection.y,selection.w,selection.h};
         CropPreview next{image,{bounds.x+bounds.w/2.,bounds.y+bounds.h/2.,double(bounds.w),double(bounds.h),0},selection,player,1};
         cropping=std::move(next);selection={};player.playing=false;KillTimer(hwnd,2);layout();update();

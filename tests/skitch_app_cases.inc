@@ -1,3 +1,43 @@
+
+    void crop_main_toolbar_starts_visual_bounds_and_preserves_cancel_apply_undo() {
+        ShowWindow(app.hwnd,SW_SHOWNOACTIVATE);app.settings.confirm_unsaved=false;
+        CHECK(SendMessageW(app.toolbar.hwnd,TB_COMMANDTOINDEX,ToolCrop,0)>=0);
+        CHECK(!SendMessageW(app.toolbar.hwnd,TB_ISBUTTONENABLED,ToolCrop,0));
+        app.replace(selection_fixture(320,200),false,true);const auto original=app.image;
+        app.set_edit_mode(false);CHECK(!app.editor_mode&&!app.cropping);
+        CHECK(SendMessageW(app.toolbar.hwnd,TB_ISBUTTONENABLED,ToolCrop,0));
+        for(int width:{800,400,220}){
+            SetWindowPos(app.hwnd,nullptr,0,0,width,520,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE);app.layout();
+            CHECK(!SendMessageW(app.toolbar.hwnd,TB_ISBUTTONHIDDEN,ToolCrop,0));
+        }
+        SetWindowPos(app.hwnd,nullptr,0,0,800,600,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE);
+        SendMessageW(app.hwnd,WM_COMMAND,MAKEWPARAM(ToolCrop,0),reinterpret_cast<LPARAM>(app.toolbar.hwnd));
+        CHECK(!app.editor_mode&&app.left==0&&!IsWindowVisible(app.editor_tools.bar_window()));
+        CHECK(app.cropping&&app.cropping->box.width==320);
+        CHECK(SUCCEEDED(app.render_scene())&&app.renderer.crop_box);
+        CHECK(SendMessageW(app.toolbar.hwnd,TB_ISBUTTONCHECKED,ToolCrop,0));
+        CHECK(app.image==original&&!app.modified&&!app.undo_image);
+        const auto center=app.cropping->box;
+        selection_mouse(WM_LBUTTONDOWN,80,60,MK_LBUTTON);selection_mouse(WM_MOUSEMOVE,90,68,MK_LBUTTON);selection_mouse(WM_LBUTTONUP,90,68);
+        CHECK(app.cropping->box.cx>center.cx&&app.cropping->box.cy>center.cy&&!app.editor_mode);
+        const auto before=app.cropping->box;const auto corner=before.point(before.width/2,before.height/2);
+        selection_mouse(WM_LBUTTONDOWN,corner.x,corner.y,MK_LBUTTON);selection_mouse(WM_MOUSEMOVE,corner.x-20,corner.y-15,MK_LBUTTON);selection_mouse(WM_LBUTTONUP,corner.x-20,corner.y-15);
+        CHECK(app.cropping->box.width<before.width&&app.cropping->box.height<before.height&&app.image==original&&!app.modified);
+        SendMessageW(app.editor_chrome.control(editor_id::Cancel),BM_CLICK,0,0);
+        CHECK(!app.cropping&&app.image==original&&!app.modified);
+        CHECK(!SendMessageW(app.toolbar.hwnd,TB_ISBUTTONCHECKED,ToolCrop,0));
+        app.selection={20,30,120,90};
+        SendMessageW(app.hwnd,WM_COMMAND,MAKEWPARAM(ToolCrop,0),reinterpret_cast<LPARAM>(app.toolbar.hwnd));
+        CHECK(app.cropping&&app.cropping->box.width==120&&app.cropping->box.height==90);
+        SendMessageW(app.editor_chrome.control(editor_id::Apply),BM_CLICK,0,0);
+        CHECK(!app.cropping&&app.image->width==120&&app.image->height==90&&app.modified&&app.undo_image==original);
+        CHECK(app.image->frames[0].pixels[0]==original->frames[0].pixels[30*320+20]);
+        command(Undo);CHECK(app.image==original&&!app.modified);
+        CHECK(!app.editor_mode&&app.left==0&&!IsWindowVisible(app.editor_tools.bar_window()));
+        app.set_edit_mode(true);command(ToolCrop);CHECK(app.editor_mode&&app.left>0&&app.cropping);command(CancelSelection);CHECK(app.editor_mode);
+        app.set_edit_mode(false);command(CloseImage);CHECK(!SendMessageW(app.toolbar.hwnd,TB_ISBUTTONENABLED,ToolCrop,0));
+        CHECK(notices.empty());
+    }
     bool skitch_visible(HWND child){if(!child)return false;for(;;){if(!(GetWindowLongPtrW(child,GWL_STYLE)&WS_VISIBLE))return false;if(child==app.hwnd)return true;child=GetParent(child);if(!child)return false;}}
     void timestamp_export_name_on_open_new_and_every_successful_paste_keeps_manual_edits() {
         const SYSTEMTIME known{2026,10,5,23,0,4,9,0};CHECK(EditorChrome::timestamp_name(known)==L"image20261023_000409");

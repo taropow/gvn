@@ -3627,8 +3627,9 @@ class App {
     }
     HCURSOR pointer_cursor(POINT point, bool button_down) const {
         if(space_pan||(editor_mode&&selection_tool==SelectionTool::Pan))return LoadCursorW(nullptr,IDC_HAND);
-        if(floating&&point.y>=top&&point.y<top+view.height){
-            const auto hit=floating_hit(floating->box,floating_point(point),7./view.scale);
+        if((cropping||floating)&&point.y>=top&&point.y<top+view.height){
+            const auto &box=cropping?cropping->box:floating->box;
+            const auto hit=floating_hit(box,floating_point(point),8./view.scale);
             return LoadCursorW(nullptr,hit==FloatMove?IDC_SIZEALL:hit==FloatRotate?IDC_CROSS:
                 hit==1||hit==5?IDC_SIZENS:hit==3||hit==7?IDC_SIZEWE:hit==0||hit==4?IDC_SIZENWSE:IDC_SIZENESW);
         }
@@ -3729,7 +3730,7 @@ class App {
     void pointer_down(unsigned button, POINT point, WPARAM flags, bool double_click = false) {
         if (point.y < top || point.y >= top + view.height||point.x<0||point.x>=view.width)
             return;
-        if(!space_pan&&image&&button==0&&editor_mode){
+        if(!space_pan&&image&&button==0&&(editor_mode||cropping)){
             if(cropping){SetFocus(hwnd);const auto p=floating_point(point);crop_drag=FloatingDrag{cropping->box,p,floating_hit(cropping->box,p,8./view.scale)};SetCapture(hwnd);return;}
             if(selection_tool==SelectionTool::Pen&&!floating){start_pen(point);return;}
             if(selection_tool==SelectionTool::Text&&!floating){start_text(point);return;}

@@ -152,3 +152,5 @@ OKで呼び出し元へ反映し、キャンセル／Esc／閉じるでは変更
 主な実装は`IconToolbar::layout_tools`、`App::set_edit_mode`、`App::choose_tool`、`App::start_selection`、`Renderer::draw_selection_lines`。設定ファイルの既存キーは継続使用する。
 
 0.61.0の編集モード検証は[過去の記録](verification/0.61.0-editor-related.json)に保持する。0.62.0では、新しい選択操作・Alpha・手のひら・設定タブ再表示を専用自動操縦と実製品EXEで確認する。[変更仕様](gvn-selection-interaction-0.62.md)。
+
+0.78.1では、上部ツールバーから直接トリミングを開始できる。閲覧中は左の編集ツールバーを表示せず、枠・ハンドル・回転・上部数値欄・適用/取消だけを使う。もともと編集モードの場合は左ツール列を維持する。キャンバスサイズ変更は従来の画面を維持する。関連App6ケースと配布版の主要10経路を確認した。[確認記録](verification/0.78.1-crop-toolbar-related.json)。
