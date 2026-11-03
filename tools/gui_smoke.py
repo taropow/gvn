@@ -2,10 +2,11 @@
 import json, subprocess, sys, tempfile
 from pathlib import Path
 exe=Path(sys.argv[1]);fixtures=Path(__file__).resolve().parents[1]/'tests'/'fixtures'
-cases={'display-alpha.png':(512,384,1),'psd-16-3.psd':(3,2,1),'disposal.gif':(6,4,4),'blend.apng':(6,4,4),'excluded.png':(6,4,4),'images.zip':(3,2,1)}
+cases={'display-alpha.png':(512,384,1),'psd-16-3.psd':(3,2,1),'disposal.gif':(6,4,4),'blend.apng':(6,4,4),'excluded.png':(6,4,4),'images.zip':(3,2,1),'webp/alpha.webp':(3,2,1),'webp/animation.webp':(4,4,3),'webp/exif-6.webp':(3,2,1)}
 with tempfile.TemporaryDirectory(prefix='GVN-gui-test-') as temporary:
     for name,expected in cases.items():
         report=Path(temporary)/(name+'.json')
+        report.parent.mkdir(parents=True,exist_ok=True)
         result=subprocess.run([str(exe),'--smoke',str(fixtures/name),str(report)],timeout=25)
         assert result.returncode==0,(name,result.returncode)
         data=json.loads(report.read_text())

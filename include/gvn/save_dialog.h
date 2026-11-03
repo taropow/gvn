@@ -31,7 +31,13 @@ enum : DWORD {
     GifUncompressed,
     GifTransparency,
     GifIndex,
-    GifMatte
+    GifMatte,
+    Webp = 30600,
+    WebpLossless,
+    WebpQuality,
+    WebpMethod,
+    WebpAlpha,
+    WebpMatte
 };
 }
 // Native common save dialog plus per-format controls. Cancel leaves options unchanged.

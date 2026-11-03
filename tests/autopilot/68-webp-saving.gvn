@@ -1,0 +1,50 @@
+copy_fixture	webp/alpha.webp	assets/alpha.webp
+open	${output}/assets/alpha.webp
+wait
+remember_saving	initial
+save_target	pixels/cancelled.webp
+command	SaveAs
+save_type	Webp
+save_layout
+save_expect_control	WebpLossless	true
+save_enabled	WebpQuality	false
+save_enabled	WebpMatte	false
+save_set	WebpLossless	false
+save_enabled	WebpQuality	true
+save_set	WebpQuality	70
+save_cancel
+wait_save
+expect_saving	initial
+save_target	pixels/exact.webp
+command	SaveAs
+save_type	Webp
+save_expect_control	WebpLossless	true
+save_snapshot	webp-save-options.png
+save_accept
+wait_save
+persisted
+expect	error_count	0
+open	${output}/pixels/exact.webp
+wait
+expect_pixel	1	0	0	255	0	128
+expect_pixel	2	0	0	0	255	0
+save_target	pixels/opaque.webp
+command	SaveAs
+save_type	Webp
+save_set	WebpLossless	false
+save_set	WebpQuality	101
+save_accept
+save_error_contains	0～100
+save_set	WebpQuality	90
+save_set	WebpMethod	6
+save_set	WebpAlpha	false
+save_enabled	WebpMatte	true
+save_set	WebpMatte	123456
+save_snapshot	webp-lossy-save-options.png
+answer	OK
+save_accept
+wait_save
+persisted
+settings
+click	Cancel
+expect	error_count	0

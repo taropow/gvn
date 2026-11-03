@@ -1,0 +1,173 @@
+{
+  "generator": "Pillow independent of GVN",
+  "cases": [
+    {
+      "file": "alpha.webp",
+      "frames": [
+        {
+          "width": 3,
+          "height": 2,
+          "duration": 0,
+          "rgba": "alpha.webp.0.rgba"
+        }
+      ],
+      "loop": 1
+    },
+    {
+      "file": "lossy.webp",
+      "frames": [
+        {
+          "width": 32,
+          "height": 24,
+          "duration": 0,
+          "rgba": "lossy.webp.0.rgba"
+        }
+      ],
+      "loop": 1
+    },
+    {
+      "file": "animation.webp",
+      "frames": [
+        {
+          "width": 4,
+          "height": 4,
+          "duration": 40,
+          "rgba": "animation.webp.0.rgba"
+        },
+        {
+          "width": 4,
+          "height": 4,
+          "duration": 80,
+          "rgba": "animation.webp.1.rgba"
+        },
+        {
+          "width": 4,
+          "height": 4,
+          "duration": 120,
+          "rgba": "animation.webp.2.rgba"
+        }
+      ],
+      "loop": 2
+    },
+    {
+      "file": "infinite.webp",
+      "frames": [
+        {
+          "width": 4,
+          "height": 4,
+          "duration": 40,
+          "rgba": "infinite.webp.0.rgba"
+        },
+        {
+          "width": 4,
+          "height": 4,
+          "duration": 80,
+          "rgba": "infinite.webp.1.rgba"
+        },
+        {
+          "width": 4,
+          "height": 4,
+          "duration": 120,
+          "rgba": "infinite.webp.2.rgba"
+        }
+      ],
+      "loop": 0
+    },
+    {
+      "file": "exif-1.webp",
+      "frames": [
+        {
+          "width": 2,
+          "height": 3,
+          "duration": 0,
+          "rgba": "exif-1.webp.0.rgba"
+        }
+      ],
+      "loop": 1
+    },
+    {
+      "file": "exif-2.webp",
+      "frames": [
+        {
+          "width": 2,
+          "height": 3,
+          "duration": 0,
+          "rgba": "exif-2.webp.0.rgba"
+        }
+      ],
+      "loop": 1
+    },
+    {
+      "file": "exif-3.webp",
+      "frames": [
+        {
+          "width": 2,
+          "height": 3,
+          "duration": 0,
+          "rgba": "exif-3.webp.0.rgba"
+        }
+      ],
+      "loop": 1
+    },
+    {
+      "file": "exif-4.webp",
+      "frames": [
+        {
+          "width": 2,
+          "height": 3,
+          "duration": 0,
+          "rgba": "exif-4.webp.0.rgba"
+        }
+      ],
+      "loop": 1
+    },
+    {
+      "file": "exif-5.webp",
+      "frames": [
+        {
+          "width": 3,
+          "height": 2,
+          "duration": 0,
+          "rgba": "exif-5.webp.0.rgba"
+        }
+      ],
+      "loop": 1
+    },
+    {
+      "file": "exif-6.webp",
+      "frames": [
+        {
+          "width": 3,
+          "height": 2,
+          "duration": 0,
+          "rgba": "exif-6.webp.0.rgba"
+        }
+      ],
+      "loop": 1
+    },
+    {
+      "file": "exif-7.webp",
+      "frames": [
+        {
+          "width": 3,
+          "height": 2,
+          "duration": 0,
+          "rgba": "exif-7.webp.0.rgba"
+        }
+      ],
+      "loop": 1
+    },
+    {
+      "file": "exif-8.webp",
+      "frames": [
+        {
+          "width": 3,
+          "height": 2,
+          "duration": 0,
+          "rgba": "exif-8.webp.0.rgba"
+        }
+      ],
+      "loop": 1
+    }
+  ]
+}

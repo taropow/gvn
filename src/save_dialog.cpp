@@ -25,7 +25,7 @@ class Dialog {
     SaveOptions initial;
     SaveFormat current;
     HWND window{}, parent{}, common{};
-    std::array<HWND, 4> panes{};
+    std::array<HWND, 5> panes{};
     std::map<DWORD, HWND> widgets;
     std::wstring extension;
     OPENFILENAMEW file{};
@@ -249,7 +249,7 @@ class Dialog {
         }
     }
     void refresh() {
-        if (file.nFilterIndex < 1 || file.nFilterIndex > 4)
+        if (file.nFilterIndex < 1 || file.nFilterIndex > panes.size())
             throw std::runtime_error("Invalid image save format");
         current = static_cast<SaveFormat>(file.nFilterIndex - 1);
         for (unsigned i = 0; i < panes.size(); ++i)
@@ -265,8 +265,10 @@ class Dialog {
         EnableWindow(widget(id::Dither), current == SaveFormat::Gif ||
                                              (current == SaveFormat::Bmp && selected(id::BmpBits) != 0 &&
                                               selected(id::BmpBits) != 5));
-        static constexpr const wchar_t *lower[]{L"png", L"jpg", L"bmp", L"gif"};
-        static constexpr const wchar_t *upper[]{L"PNG", L"JPG", L"BMP", L"GIF"};
+        EnableWindow(widget(id::WebpQuality), !checked(id::WebpLossless));
+        EnableWindow(widget(id::WebpMatte), !checked(id::WebpAlpha));
+        static constexpr const wchar_t *lower[]{L"png", L"jpg", L"bmp", L"gif", L"webp"};
+        static constexpr const wchar_t *upper[]{L"PNG", L"JPG", L"BMP", L"GIF", L"WEBP"};
         extension = (checked(id::Uppercase) ? upper : lower)[static_cast<unsigned>(current)];
         file.lpstrDefExt = extension.c_str();
         if (parent)
@@ -329,6 +331,15 @@ class Dialog {
             value.matte = number(id::GifMatte, 0xffffff, L"背景色", true);
             result.gif = value;
         });
+        read_pane(SaveFormat::Webp, [&] {
+            auto value = initial.webp;
+            value.lossless = checked(id::WebpLossless);
+            value.preserve_alpha = checked(id::WebpAlpha);
+            value.quality = optional_number(id::WebpQuality, value.quality, 100, L"WebP画質", false, !value.lossless);
+            value.method = number(id::WebpMethod, 6, L"WebP圧縮努力");
+            value.matte = optional_number(id::WebpMatte, value.matte, 0xffffff, L"背景色", true, !value.preserve_alpha);
+            result.webp = value;
+        });
         return result;
     }
     void create() {
@@ -376,6 +387,12 @@ class Dialog {
               static_cast<unsigned>(initial.gif.transparency), 54);
         edit(panes[3], id::GifIndex, L"透過色番号", std::to_wstring(initial.gif.transparent_index), 75);
         edit(panes[3], id::GifMatte, L"背景色 RGB", hex_color(initial.gif.matte), 96);
+        panes[4] = pane(id::Webp, L"WebP 保存設定（現在のコマ）");
+        checkbox(panes[4], id::WebpLossless, L"可逆圧縮（画素を完全に保持）", initial.webp.lossless, 14);
+        edit(panes[4], id::WebpQuality, L"画質 (0～100)", std::to_wstring(initial.webp.quality), 33);
+        edit(panes[4], id::WebpMethod, L"圧縮努力 (0～6)", std::to_wstring(initial.webp.method), 52);
+        checkbox(panes[4], id::WebpAlpha, L"アルファ（透過）を維持", initial.webp.preserve_alpha, 73);
+        edit(panes[4], id::WebpMatte, L"背景色 RGB", hex_color(initial.webp.matte), 95);
         add(window, id::Error, L"Static", L"", SS_LEFT | SS_NOPREFIX, 7, 130, 410, 26);
         refresh();
     }
@@ -398,7 +415,7 @@ class Dialog {
             try {
                 actual = save_format(target);
             } catch (const std::invalid_argument &) {
-                throw Validation{L"拡張子はPNG、JPEG、BMP、GIFを指定してください。"};
+                throw Validation{L"拡張子はPNG、JPEG、BMP、GIF、WebPを指定してください。"};
             }
             if (actual != current) {
                 pending_format = actual;
@@ -486,7 +503,7 @@ class Dialog {
         std::copy(suggested.begin(), suggested.end(), filename.begin());
         if (std::filesystem::path(suggested).has_extension())
             current = save_format(suggested);
-        if (static_cast<unsigned>(current) > 3)
+        if (static_cast<unsigned>(current) >= panes.size())
             throw std::invalid_argument("Invalid initial save format");
         DLGTEMPLATE header{};
         header.style = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | DS_CONTROL | DS_SETFONT;
@@ -525,8 +542,8 @@ class Dialog {
         GlobalUnlock(memory);
         const auto initial_folder = folder.wstring();
         static constexpr const wchar_t filter[] =
-            L"PNG（透明度維持）\0*.png\0JPEG\0*.jpg;*.jpeg\0BMP\0*.bmp\0GIF（静止画）\0*.gif\0\0";
-        static constexpr const wchar_t *extensions[]{L"png", L"jpg", L"bmp", L"gif"};
+            L"PNG（透明度維持）\0*.png\0JPEG\0*.jpg;*.jpeg\0BMP\0*.bmp\0GIF（静止画）\0*.gif\0WebP（静止画）\0*.webp\0\0";
+        static constexpr const wchar_t *extensions[]{L"png", L"jpg", L"bmp", L"gif", L"webp"};
         extension = extensions[static_cast<unsigned>(current)];
         file = {sizeof(file)};
         file.hwndOwner = owner;

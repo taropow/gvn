@@ -1968,7 +1968,7 @@ class App {
             c = static_cast<wchar_t>(towlower(c));
         const bool save_as =
             as || target.empty() || image->animated() ||
-            (ext != L".png" && ext != L".jpg" && ext != L".jpeg" && ext != L".bmp" && ext != L".gif");
+            (ext != L".png" && ext != L".jpg" && ext != L".jpeg" && ext != L".bmp" && ext != L".gif" && ext != L".webp");
         auto proposed = settings.saving;
         if (save_as || settings.save_dialog) {
             auto base = (!current_name.empty() && current_name.find(L'/') == std::wstring::npos)
@@ -1997,12 +1997,13 @@ class App {
         auto extension = target.extension().wstring();
         for (auto &c : extension)
             c = static_cast<wchar_t>(towlower(c));
-        if (extension != L".png") {
+        if (extension != L".png" &&
+            (extension != L".webp" || !proposed.webp.lossless || !proposed.webp.preserve_alpha)) {
             const bool alpha =
                 std::any_of(image->frames.at(player.frame).pixels.begin(),
                             image->frames.at(player.frame).pixels.end(), [](Pixel p) { return p.a != 255; });
             if (alpha &&
-                dialogs.ask(hwnd, L"PNG以外では半透明や色が失われる場合があります。この形式で保存しますか？",
+                dialogs.ask(hwnd, L"この保存設定では半透明や色が失われる場合があります。この形式で保存しますか？",
                             L"保存形式", MB_OKCANCEL | MB_ICONINFORMATION) != IDOK)
                 return false;
         }
@@ -2022,7 +2023,7 @@ class App {
             auto copy = std::make_shared<Image>(*image);
             copy->path = target;
             copy->file_bytes = std::filesystem::file_size(target);
-            const auto saved_format=proposed.last_format==SaveFormat::Png?L"PNG":proposed.last_format==SaveFormat::Jpeg?L"JPEG":proposed.last_format==SaveFormat::Bmp?L"BMP":L"GIF";
+            const auto saved_format=proposed.last_format==SaveFormat::Png?L"PNG":proposed.last_format==SaveFormat::Jpeg?L"JPEG":proposed.last_format==SaveFormat::Bmp?L"BMP":proposed.last_format==SaveFormat::Webp?L"WebP":L"GIF";
             copy->metadata.source_format=saved_format;copy->metadata.source_bytes=copy->file_bytes;
             if(image_metadata){image_metadata->source_format=saved_format;image_metadata->source_bytes=copy->file_bytes;}
             image = std::move(copy);

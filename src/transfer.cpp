@@ -431,7 +431,7 @@ std::filesystem::path export_drag_path(const Image &image,size_t frame,const std
     wchar_t temp[32768]{},guid_text[64]{};GUID guid{};
     require(GetTempPathW(32768,temp)>0&&SUCCEEDED(CoCreateGuid(&guid)),"Cannot create drag export");StringFromGUID2(guid,guid_text,64);
     const auto directory=std::filesystem::path(temp)/L"GVN"/L"drag"/guid_text;std::filesystem::create_directories(directory);
-    const auto ext=format==SaveFormat::Jpeg?L".jpg":format==SaveFormat::Bmp?L".bmp":format==SaveFormat::Gif?L".gif":L".png";
+    const auto ext=format==SaveFormat::Jpeg?L".jpg":format==SaveFormat::Bmp?L".bmp":format==SaveFormat::Gif?L".gif":format==SaveFormat::Webp?L".webp":L".png";
     auto target=directory/(safe+ext);auto configured=options;
     // PNG is the lossless alpha interchange choice, independent of the save dialog's matte settings.
     if(format==SaveFormat::Png)configured.png.transparency=PngTransparency::Alpha;

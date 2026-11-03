@@ -256,6 +256,8 @@ std::vector<Field> fields() {
           &Settings::confirm_unsaved);
     check(Page::Loading, cid::PreserveAlpha, L"アルファを保持する（OFFなら透過画像を背景色と合成）",
           &Settings::preserve_alpha);
+    check(Page::Loading, cid::WebpTransparency, L"透過WebPを透過表示する", &Settings::webp_transparency);
+    check(Page::Loading, cid::WebpAnimation, L"アニメWebPをアニメーション表示する（OFFなら先頭コマのみ）", &Settings::webp_animation);
     check(Page::Loading, cid::BmpTransparency, L"透過BMPを透過表示する", &Settings::bmp_transparency);
     check(Page::Loading, cid::GifTransparency, L"透過GIFを透過表示する（アニメ中は常に有効）",
           &Settings::gif_transparency);
@@ -267,7 +269,7 @@ std::vector<Field> fields() {
           &Settings::transparency_background);
     check(Page::Loading, cid::GifAnimation, L"アニメGIFをアニメーション表示する（OFFなら先頭コマのみ）",
           &Settings::gif_animation);
-    check(Page::Loading, cid::ExifOrientation, L"JPEGのExif情報に従い回転して表示する",
+    check(Page::Loading, cid::ExifOrientation, L"JPEG / WebPのExif情報に従い回転して表示する",
           &Settings::exif_orientation);
     check(Page::Loading, cid::BitfieldTo24, L"ビットフィールド画像を読み込み時に24 BPP化（Alphaは保持）",
           &Settings::bitfield_to24);
@@ -275,9 +277,9 @@ std::vector<Field> fields() {
     check(Page::Loading, cid::SystemFiles, L"システム属性の画像もリストに含める", &Settings::system_files);
     check(Page::Loading, cid::ProtectedFiles, L"隠し＋システム属性の画像もリストに含める",
           &Settings::protected_files);
-    check(Page::Loading, cid::Autoplay, L"GIF / APNGを開いたら自動再生する", &Settings::animation_autoplay);
+    check(Page::Loading, cid::Autoplay, L"GIF / APNG / WebPを開いたら自動再生する", &Settings::animation_autoplay);
     check(Page::Loading, cid::AnimationLoop, L"アニメーションを繰り返し再生する", &Settings::animation_loop);
-    check(Page::Loading, cid::AnimationFileLoops, L"GIF / APNGの指定回数に従う（解除すると無限）",
+    check(Page::Loading, cid::AnimationFileLoops, L"GIF / APNG / WebPの指定回数に従う（解除すると無限）",
           &Settings::animation_file_loops);
     check(Page::Loading, cid::PrefetchEnabled, L"隣の画像を先読みする", &Settings::prefetch_enabled);
     number(Page::Loading, cid::CacheMiB, L"画像キャッシュ容量（MiB、0で無効）", &Settings::cache_mib, 0,

@@ -1,0 +1,85 @@
+{
+  "version": "0.80.0",
+  "library": {
+    "name": "libwebp",
+    "version": "1.6.0",
+    "revision": "4fa21912338357f89e4fd51cf2368325b59e9bd9",
+    "linkage": "static"
+  },
+  "implemented": [
+    "WebP lossy/lossless RGBA decoding",
+    "WebP animation, alpha and EXIF orientation",
+    "WebP static saving: lossless/lossy quality, method, alpha, matte and EXIF DPI",
+    "WebP current-frame export and source-animation overwrite protection",
+    "persistent read/save settings and native save dialog",
+    "WebP in folder/ZIP navigation and named drag export"
+  ],
+  "validation": {
+    "webp_read_contracts": 12,
+    "webp_save_contracts": 7,
+    "independent_Pillow_save_oracle": true,
+    "save_related_ctest_groups": 9,
+    "application_save_regression": {
+      "cases": 13,
+      "failed": 0,
+      "names": [
+        "webp_save_as_overwrite_metadata_and_undo_preserve_alpha",
+        "webp_save_animation_frame_keeps_original_movie_and_undo",
+        "webp_open_navigate_copy_export_and_setting_reload_use_native_pixels",
+        "webp_preferences_native_controls_apply_cancel_reset_and_reload",
+        "save_format_proposals_commit_only_after_success",
+        "save_command_routes_each_format_options_to_actual_files",
+        "save_as_copy_keeps_edited_original_source_selection_and_undo",
+        "save_as_copy_exports_current_animation_frame_without_rebinding_or_flattening",
+        "save_as_copy_keeps_clipboard_alpha_document_and_previous_undo_location",
+        "save_copy_policy_still_commits_real_overwrites_and_can_enable_legacy_binding",
+        "bottom_export_drag_original_edited_clipboard_and_animation",
+        "image_info_save_retarget_and_undo_report_the_actual_saved_file_format",
+        "resolution_save_clipboard_drag_and_animation_frame_use_document_metadata"
+      ]
+    },
+    "native_scenarios": [
+      {
+        "name": "27-saving-options.gvn",
+        "passed": true
+      },
+      {
+        "name": "67-webp.gvn",
+        "passed": true
+      },
+      {
+        "name": "68-webp-saving.gvn",
+        "passed": true
+      }
+    ],
+    "native_operations": {
+      "27-saving-options.gvn": 876,
+      "67-webp.gvn": 41,
+      "68-webp-saving.gvn": 50
+    }
+  },
+  "limits": [
+    "Saving an animated input outputs only the displayed frame",
+    "WebP 2 (.wp2) is unsupported",
+    "ICC profile payload preservation on save is not implemented"
+  ],
+  "last_full_application_suite": {
+    "version": "0.79.0",
+    "cases": 292,
+    "failures": 5,
+    "failed_cases": [
+      "native_controls_and_menu",
+      "captionless_control_drag_respects_customization_and_cleans_capture",
+      "slideshow_window_preserves_animation_alpha_selection_and_undo",
+      "color_depth_animation_confirm_current_frame_alpha_and_undo_keep_original_animation",
+      "live_resize_restores_quality_preserves_document_and_removes_empty_toolbar_row"
+    ],
+    "comparison": "Three cases also fail in the saved pre-WebP test executable; the old 0.78.1 executable already has 29 toolbar buttons while a test expects 28. The remaining async-render sample test also fails in isolation; its implementation was not changed for WebP.",
+    "rerun_scope_for_0_80_0": "Save-related and WebP tests were rerun; the full legacy suite was not rerun."
+  },
+  "reproduction": {
+    "build": "cmake --build .cache/webp-build --config Release --target GVN gvn_webp_tests gvn_webp_save_tests gvn_saving_tests gvn_app_tests gvn_autopilot --parallel 4",
+    "test": "ctest --test-dir .cache/webp-build -C Release --output-on-failure -R \"^(settings|webp|webp_saving|webp_saving_oracle|codecs|loader|save_codecs|save_codecs_oracle|saving_dependency_integrity)$\"",
+    "ui": "python tools/run_autopilot.py .cache/webp-build/Release/gvn_autopilot.exe --scenario tests/autopilot/27-saving-options.gvn --scenario tests/autopilot/67-webp.gvn --scenario tests/autopilot/68-webp-saving.gvn"
+  }
+}

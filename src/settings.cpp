@@ -436,6 +436,8 @@ void Settings::load(const std::filesystem::path &path) {
     GVN_BOOL(gif_background);
     GVN_BOOL(png_background);
     GVN_BOOL(gif_animation);
+    GVN_BOOL(webp_transparency);
+    GVN_BOOL(webp_animation);
     GVN_BOOL(bitfield_to24);
     GVN_BOOL(exif_orientation);
     GVN_BOOL(prefetch_enabled);
@@ -503,6 +505,11 @@ void Settings::load(const std::filesystem::path &path) {
     GVN_SAVE_BOOL("gif_uncompressed", gif.uncompressed);
     GVN_SAVE_BOOL("jpeg_progressive", jpeg.progressive);
     GVN_SAVE_BOOL("png_interlaced", png.interlaced);
+    GVN_SAVE_BOOL("webp_lossless", webp.lossless);
+    GVN_SAVE_BOOL("webp_preserve_alpha", webp.preserve_alpha);
+    GVN_SAVE_INT("webp_quality", webp.quality, 0, 100);
+    GVN_SAVE_INT("webp_method", webp.method, 0, 6);
+    GVN_SAVE_INT("webp_matte", webp.matte, 0, 0xffffff);
     GVN_SAVE_INT("png_compression", png.compression, 0, 9);
     GVN_SAVE_INT("jpeg_quality", jpeg.quality, 0, 100);
     GVN_SAVE_INT("gif_transparent_index", gif.transparent_index, 0, 255);
@@ -514,7 +521,7 @@ void Settings::load(const std::filesystem::path &path) {
 #undef GVN_SAVE_BOOL
 #undef GVN_SAVE_INT
     saving.last_format =
-        static_cast<SaveFormat>(saved_number(L"last_format", static_cast<int>(saving.last_format), 0, 3));
+        static_cast<SaveFormat>(saved_number(L"last_format", static_cast<int>(saving.last_format), 0, 4));
     saving.bmp_bits = saved_number(L"bmp_bits", saving.bmp_bits, 0, 24);
     if (saving.bmp_bits != 0 && saving.bmp_bits != 1 && saving.bmp_bits != 4 && saving.bmp_bits != 8 &&
         saving.bmp_bits != 16 && saving.bmp_bits != 24)
@@ -907,6 +914,11 @@ void Settings::save(const std::filesystem::path &path) const {
     GVN_FORMAT_SAVE("gif_uncompressed", gif.uncompressed);
     GVN_FORMAT_SAVE("jpeg_progressive", jpeg.progressive);
     GVN_FORMAT_SAVE("png_interlaced", png.interlaced);
+    GVN_FORMAT_SAVE("webp_lossless", webp.lossless);
+    GVN_FORMAT_SAVE("webp_preserve_alpha", webp.preserve_alpha);
+    GVN_FORMAT_SAVE("webp_quality", webp.quality);
+    GVN_FORMAT_SAVE("webp_method", webp.method);
+    GVN_FORMAT_SAVE("webp_matte", webp.matte);
     GVN_FORMAT_SAVE("png_compression", png.compression);
     GVN_FORMAT_SAVE("jpeg_quality", jpeg.quality);
     GVN_FORMAT_SAVE("gif_transparent_index", gif.transparent_index);
@@ -996,6 +1008,8 @@ void Settings::save(const std::filesystem::path &path) const {
     GVN_SAVE(gif_background);
     GVN_SAVE(png_background);
     GVN_SAVE(gif_animation);
+    GVN_SAVE(webp_transparency);
+    GVN_SAVE(webp_animation);
     GVN_SAVE(bitfield_to24);
     GVN_SAVE(exif_orientation);
     GVN_SAVE(prefetch_enabled);

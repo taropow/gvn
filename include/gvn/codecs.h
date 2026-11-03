@@ -14,6 +14,9 @@ Image load_image(const std::filesystem::path &path, size_t limit = kDecodeLimit,
 Image decode_psd(std::span<const uint8_t> bytes, size_t limit,const CancelCheck &cancel = {});
 Image decode_animation(std::span<const uint8_t> bytes, size_t limit, const LoadingOptions &options = {},const CancelCheck &cancel = {});
 bool is_apng(std::span<const uint8_t> bytes);
+bool is_webp(std::span<const uint8_t> bytes);
+Image decode_webp(std::span<const uint8_t> bytes, size_t limit, const LoadingOptions &options = {},
+                  const CancelCheck &cancel = {});
 std::vector<uint8_t> encode(const Image &image, size_t frame, const std::wstring &extension,
                             float quality = 0.93f,const ImageMetadata *metadata=nullptr);
 void save_image(const Image &image, size_t frame, const std::filesystem::path &path, float quality = 0.93f,

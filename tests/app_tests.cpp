@@ -7060,6 +7060,7 @@ void background_changes_preserve_image_animation_copy_save_and_ole() {
 #include "status_app_cases.inc"
 #include "startup_app_cases.inc"
 #include "context_app_cases.inc"
+#include "webp_app_cases.inc"
 };
 } // namespace gvn
 
@@ -7467,3 +7468,8 @@ APP_TEST(resize_toolbar_cached_geometry_matches_forced_native_relayout)
 APP_TEST(paste_status_erase_stays_themed_during_document_updates)
 APP_TEST(startup_background_is_initialized_before_first_renderer_frame)
 APP_TEST(help_opens_markdown_with_association_fallback_without_changing_image)
+
+APP_TEST(webp_open_navigate_copy_export_and_setting_reload_use_native_pixels)
+APP_TEST(webp_preferences_native_controls_apply_cancel_reset_and_reload)
+APP_TEST(webp_save_as_overwrite_metadata_and_undo_preserve_alpha)
+APP_TEST(webp_save_animation_frame_keeps_original_movie_and_undo)

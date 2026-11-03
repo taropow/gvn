@@ -44,6 +44,9 @@ try {
         'zlib.txt' = 'third_party\zlib\LICENSE'
         'libjpeg-turbo.txt' = 'third_party\libjpeg-turbo\LICENSE.md'
         'libjpeg-IJG.txt' = 'third_party\libjpeg-turbo\README.ijg'
+        'libwebp.txt' = 'third_party\libwebp\COPYING'
+        'libwebp-patents.txt' = 'third_party\libwebp\PATENTS'
+        'libwebp-authors.txt' = 'third_party\libwebp\AUTHORS'
         'giflib.txt' = 'third_party\giflib\COPYING'
         'manifest.json' = 'third_party\manifest.json'
     }

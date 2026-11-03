@@ -43,12 +43,19 @@ struct GifSaveOptions {
     uint32_t matte{0xffffff};
     bool operator==(const GifSaveOptions &) const = default;
 };
-enum class SaveFormat { Png, Jpeg, Bmp, Gif };
+struct WebpSaveOptions {
+    bool lossless{true}, preserve_alpha{true};
+    int quality{90}, method{4};
+    uint32_t matte{0xffffff};
+    bool operator==(const WebpSaveOptions &) const = default;
+};
+enum class SaveFormat { Png, Jpeg, Bmp, Gif, Webp };
 struct SaveOptions {
     PngSaveOptions png;
     JpegSaveOptions jpeg;
     BmpSaveOptions bmp;
     GifSaveOptions gif;
+    WebpSaveOptions webp;
     SaveFormat last_format{SaveFormat::Png};
     unsigned bmp_bits{}; // 0: matching indexed/retained RGB16 depth, otherwise 24; or 1/4/8/16/24.
     bool dither{true}, keep_times{}, uppercase_extension{};
@@ -76,4 +83,6 @@ std::vector<uint8_t> encode_gif(const IndexedRaster &image, const GifSaveOptions
 // Saving is independent of the display decoder. Default PNG keeps every RGBA byte.
 std::vector<uint8_t> encode_png(const Image &image, size_t frame, const PngSaveOptions &options = {},const ImageMetadata *metadata=nullptr,const CancelCheck &cancel={});
 std::vector<uint8_t> encode_jpeg(const Image &image, size_t frame, const JpegSaveOptions &options = {},const ImageMetadata *metadata=nullptr);
+std::vector<uint8_t> encode_webp(const Image &image, size_t frame, const WebpSaveOptions &options = {},
+                                 const ImageMetadata *metadata=nullptr,const CancelCheck &cancel={});
 } // namespace gvn

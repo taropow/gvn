@@ -117,6 +117,8 @@ Image decode(std::span<const uint8_t> bytes, const std::wstring &, size_t limit,
     check_cancelled(cancel);
     if (bytes.empty() || bytes.size() > 512ull * 1024 * 1024)
         throw std::runtime_error("Invalid source size");
+    if (is_webp(bytes))
+        return decode_webp(bytes, limit, options, cancel);
     if (bytes.size() >= 4 && std::memcmp(bytes.data(), "8BPS", 4) == 0)
         return decode_psd(bytes, limit,cancel);
     if (bytes.size() >= 54 && bytes[0] == 'B' && bytes[1] == 'M' && bytes[29] == 0 &&

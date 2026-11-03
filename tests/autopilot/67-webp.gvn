@@ -1,0 +1,41 @@
+settings
+tab	Loading
+set	Autoplay	false
+click	OK
+copy_fixture	webp/alpha.webp	webp/1.WEBP
+copy_fixture	webp/animation.webp	webp/2.webp
+open	${output}/webp/1.WEBP
+wait
+expect	width	3
+expect	height	2
+expect	frames	1
+expect_pixel	1	0	0	255	0	128
+command	Next
+wait
+expect	frames	3
+expect	file_loops	2
+player	FrameNext
+expect	frame	1
+expect	playing	false
+expect_pixel	1	1	0	255	0	128
+settings
+tab	Loading
+set	WebpAnimation	false
+set	WebpTransparency	false
+snapshot	webp-loading-settings.png
+click	ApplyButton
+wait
+expect	frames	1
+persisted
+click	OK
+expect	settings_open	false
+expect_pixel	1	1	0	255	0	255
+settings
+tab	Loading
+set	WebpAnimation	true
+set	WebpTransparency	true
+click	OK
+wait
+expect	frames	3
+persisted
+snapshot	webp-animation.png

@@ -129,6 +129,7 @@ struct Settings {
     bool preserve_alpha{true}, bmp_transparency{true}, gif_transparency{true}, png_transparency{true},
         gif_background{}, png_background{}, gif_animation{true}, exif_orientation{true}, system_files{},
         protected_files{};
+    bool webp_transparency{true}, webp_animation{true};
     uint32_t transparency_background{0xffffff};
     int gif_speed{};
     int view_rotation{};
@@ -139,7 +140,7 @@ struct Settings {
     LoadingOptions loading_options() const {
         return {preserve_alpha,          bmp_transparency, gif_transparency, png_transparency,
                 gif_background,          png_background,   gif_animation,    exif_orientation,
-                transparency_background, gif_speed,        view_rotation,bitfield_to24};
+                transparency_background, gif_speed,        view_rotation,bitfield_to24,webp_transparency,webp_animation};
     }
     int checker_size{8};
     bool window_center{}, window_toolbar_min{true}, restore_maximized{true}, restore_fullscreen{}, caption{true},

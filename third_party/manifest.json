@@ -67,5 +67,15 @@
     "revision": "111c9be5188f7350c2eac9ddaedd8cca3d7bf394",
     "files": 3,
     "source_files_sha256": "226ce7a416b670ec82b9d0b57e2ed77cf56f261d876f027e26a759bc529645e7"
+  },
+  {
+    "name": "libwebp",
+    "repository": "https://chromium.googlesource.com/webm/libwebp",
+    "version": "1.6.0",
+    "revision": "4fa21912338357f89e4fd51cf2368325b59e9bd9",
+    "archive_url": "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.6.0.tar.gz",
+    "archive_sha256": "e4ab7009bf0629fd11982d4c2aa83964cf244cffba7347ecd39019a9e38c4564",
+    "files": 367,
+    "source_files_sha256": "97c615dd3e7a973679490a10c0ca0e0c135222b9e4eac282aa21548b312804da"
   }
 ]

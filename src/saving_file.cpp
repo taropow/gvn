@@ -18,7 +18,9 @@ SaveFormat save_format(const std::filesystem::path &path) {
         return SaveFormat::Bmp;
     if (extension == L".gif")
         return SaveFormat::Gif;
-    throw std::invalid_argument("Save supports PNG, JPEG, BMP and GIF");
+    if (extension == L".webp")
+        return SaveFormat::Webp;
+    throw std::invalid_argument("Save supports PNG, JPEG, BMP, GIF and WebP");
 }
 namespace {
 struct File {
@@ -106,6 +108,8 @@ std::vector<uint8_t> encode_for_save(const Image &image, size_t frame, SaveForma
     }
     case SaveFormat::Gif:
         return encode_gif(image, frame, options.gif, options.dither);
+    case SaveFormat::Webp:
+        return encode_webp(image, frame, options.webp, metadata);
     default:
         throw std::invalid_argument("Invalid save format");
     }
@@ -114,7 +118,7 @@ std::filesystem::path save_target(std::filesystem::path path, const SaveOptions 
     if (path.empty() || path.filename().empty())
         throw std::invalid_argument("An image filename is required");
     if (!path.has_extension()) {
-        static constexpr const wchar_t *extensions[]{L".png", L".jpg", L".bmp", L".gif"};
+        static constexpr const wchar_t *extensions[]{L".png", L".jpg", L".bmp", L".gif", L".webp"};
         if (static_cast<unsigned>(options.last_format) >= std::size(extensions))
             throw std::invalid_argument("Invalid default save format");
         std::wstring extension = extensions[static_cast<unsigned>(options.last_format)];

@@ -952,11 +952,12 @@ std::filesystem::path choose_image_file(HWND owner, bool save, const std::filesy
     const COMDLG_FILTERSPEC save_types[]{{L"PNG（透明度維持）", L"*.png"},
                                          {L"JPEG", L"*.jpg;*.jpeg"},
                                          {L"BMP", L"*.bmp"},
-                                         {L"GIF（静止画）", L"*.gif"}};
+                                         {L"GIF（静止画）", L"*.gif"},
+                                         {L"WebP（静止画）", L"*.webp"}};
     const COMDLG_FILTERSPEC open_types[]{
-        {L"画像・ZIP", L"*.png;*.apng;*.gif;*.jpg;*.jpeg;*.jpe;*.bmp;*.psd;*.tif;*.tiff;*.ico;*.zip"},
+        {L"画像・ZIP", L"*.png;*.apng;*.gif;*.jpg;*.jpeg;*.jpe;*.bmp;*.psd;*.tif;*.tiff;*.ico;*.webp;*.zip"},
         {L"すべて", L"*.*"}};
-    dialog->SetFileTypes(save ? 4 : 2, save ? save_types : open_types);
+    dialog->SetFileTypes(save ? 5 : 2, save ? save_types : open_types);
     dialog->SetTitle(save ? L"画像を保存" : L"画像・ZIPを開く");
     if (save) {
         dialog->SetDefaultExtension(L"png");

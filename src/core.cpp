@@ -398,7 +398,7 @@ bool supported(const std::filesystem::path &path) {
     const auto ext = lower(path.extension().wstring());
     return ext == L".png" || ext == L".apng" || ext == L".gif" || ext == L".jpg" || ext == L".jpeg" ||
            ext == L".jpe" || ext == L".bmp" || ext == L".psd" || ext == L".tif" || ext == L".tiff" ||
-           ext == L".ico";
+           ext == L".ico" || ext == L".webp";
 }
 void sort_files(std::vector<FileEntry> &files, Sort mode, bool reverse, bool natural, uint32_t seed) {
     auto by_name = [&](const FileEntry &a, const FileEntry &b) {

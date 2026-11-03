@@ -5,9 +5,11 @@ namespace gvn {
 inline void finish_loading(Image &image, const LoadingOptions &options,
                            std::optional<Pixel> file_background = {}) {
     const bool gif = image.format == L"GIF", png = image.format == L"PNG" || image.format == L"APNG";
-    if (!gif && !png && image.format != L"BMP")
+    const bool webp = image.format == L"WebP";
+    if (!gif && !png && !webp && image.format != L"BMP")
         return;
     const bool transparent = gif   ? (image.animated() || options.gif_transparency)
+                             : webp ? options.webp_transparency
                              : png ? options.png_transparency
                                    : options.bmp_transparency;
     if (transparent && options.preserve_alpha)

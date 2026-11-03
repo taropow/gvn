@@ -194,7 +194,9 @@ enum : int {
     SlideLoop,
     SlideNextFolder,
     SlideSubtree,
-    BitfieldTo24
+    BitfieldTo24,
+    WebpTransparency = 700,
+    WebpAnimation
 };
 constexpr int KeyList = 400, KeyEdit = 401, KeyAssign = 402, KeySlots = 403, KeyRemove = 404, KeyFirst = 405,
               KeyAdd = 406, KeyHelp = 407, KeyCapture = 408, DestinationList = 410, DestinationEdit = 411,

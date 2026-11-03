@@ -45,7 +45,7 @@ void EditorChrome::create(HWND parent,bool editing){
     if(!control(Name)){
         add(Name,L"EDIT",export_default.empty()?L"画像":export_default.c_str(),ES_AUTOHSCROLL,bottom);SendMessageW(control(Name),EM_SETLIMITTEXT,120,0);
         add(Format,L"COMBOBOX",L"",CBS_DROPDOWNLIST|CBS_OWNERDRAWFIXED|CBS_HASSTRINGS|WS_VSCROLL,bottom);
-        for(auto label:{L".png",L".jpg",L".bmp",L".gif"})SendMessageW(control(Format),CB_ADDSTRING,0,reinterpret_cast<LPARAM>(label));
+        for(auto label:{L".png",L".jpg",L".bmp",L".gif",L".webp"})SendMessageW(control(Format),CB_ADDSTRING,0,reinterpret_cast<LPARAM>(label));
         SendMessageW(control(Format),CB_SETCURSEL,0,0);
         auto drag=add(Drag,L"BUTTON",L"ドラッグ",BS_OWNERDRAW,bottom);
         SetWindowSubclass(drag,drag_procedure,1,reinterpret_cast<DWORD_PTR>(this));
@@ -220,6 +220,6 @@ void EditorChrome::reset_export_name(){
     SYSTEMTIME now{};GetLocalTime(&now);export_default=timestamp_name(now);
     if(control(Name)){filling=true;put(Name,export_default);filling=false;}
 }
-SaveFormat EditorChrome::export_format() const {const auto value=SendMessageW(control(Format),CB_GETCURSEL,0,0);return value==1?SaveFormat::Jpeg:value==2?SaveFormat::Bmp:value==3?SaveFormat::Gif:SaveFormat::Png;}
+SaveFormat EditorChrome::export_format() const {const auto value=SendMessageW(control(Format),CB_GETCURSEL,0,0);return value==1?SaveFormat::Jpeg:value==2?SaveFormat::Bmp:value==3?SaveFormat::Gif:value==4?SaveFormat::Webp:SaveFormat::Png;}
 void EditorChrome::error(const std::wstring &value){if(!top)return;put(Error,value);if(!value.empty()){RECT r{};GetClientRect(top,&r);SetWindowPos(control(Error),HWND_TOP,4,r.bottom-18,r.right-8,18,SWP_NOACTIVATE|SWP_SHOWWINDOW);}else ShowWindow(control(Error),SW_HIDE);}
 } // namespace gvn

@@ -631,6 +631,8 @@ const std::map<std::string, int> preference_ids{
     P(BmpTransparency),
     P(GifTransparency),
     P(PngTransparency),
+    P(WebpTransparency),
+    P(WebpAnimation),
     P(GifBackground),
     P(PngBackground),
     P(GifAnimation),
@@ -719,7 +721,7 @@ const std::map<std::string, DWORD> save_ids{
     C(PngColor),  C(PngMatte),      C(Jpeg),           C(JpegProgressive), C(JpegQuality),
     C(JpegMatte), C(Bmp),           C(BmpTopDown),     C(BmpRle),          C(BmpBits),
     C(BmpMatte),  C(Gif),           C(GifInterlaced),  C(GifUncompressed), C(GifTransparency),
-    C(GifIndex),  C(GifMatte)
+    C(GifIndex),  C(GifMatte), C(Webp), C(WebpLossless), C(WebpQuality), C(WebpMethod), C(WebpAlpha), C(WebpMatte)
 #undef C
 };
 } // namespace
@@ -3741,6 +3743,8 @@ struct Autopilot {
                         saved.activate_dropped == app.settings.activate_dropped,
                     "INI instance/activation options differ");
             require(saved.comic_options() == app.settings.comic_options(), "INI comic options differ");
+            require(saved.webp_transparency == app.settings.webp_transparency &&
+                        saved.webp_animation == app.settings.webp_animation, "INI WebP options differ");
             require(saved.gif_speed == app.settings.gif_speed, "INI GIF style differs");
             require(saved.view_rotation == app.settings.view_rotation, "INI view rotation differs");
             require(saved.animation_file_loops == app.settings.animation_file_loops,
@@ -3964,7 +3968,7 @@ struct Autopilot {
             const auto dialog = save_window();
             const auto combo = GetDlgItem(dialog, cmb1);
             own(combo);
-            const std::map<std::string, unsigned> formats{{"Png", 0}, {"Jpeg", 1}, {"Bmp", 2}, {"Gif", 3}};
+            const std::map<std::string, unsigned> formats{{"Png", 0}, {"Jpeg", 1}, {"Bmp", 2}, {"Gif", 3}, {"Webp", 4}};
             if (op == "save_type") {
                 SetFocus(combo);
                 SendMessageW(combo, CB_SHOWDROPDOWN, TRUE, 0);

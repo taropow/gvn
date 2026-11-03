@@ -11,12 +11,15 @@ struct LoadingOptions {
     int view_rotation{};
     // Raw decode/clipboard keeps source precision. The viewer passes its ON default explicitly.
     bool bitfield_to24{};
+    bool webp_transparency{true}, webp_animation{true};
     bool operator==(const LoadingOptions &) const = default;
     uint32_t flags() const {
         return static_cast<uint32_t>(preserve_alpha) | (bmp_transparency << 1) | (gif_transparency << 2) |
                (png_transparency << 3) | (gif_background << 4) | (png_background << 5) |
                (gif_animation << 6) | (exif_orientation << 7) | (static_cast<uint32_t>(gif_speed) << 8) |
-               (static_cast<uint32_t>(view_rotation) << 11) | (static_cast<uint32_t>(bitfield_to24) << 15);
+               (static_cast<uint32_t>(view_rotation) << 11) | (static_cast<uint32_t>(bitfield_to24) << 15) |
+               (static_cast<uint32_t>(webp_transparency) << 16) |
+               (static_cast<uint32_t>(webp_animation) << 17);
     }
 };
 } // namespace gvn
