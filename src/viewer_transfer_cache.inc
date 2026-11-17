@@ -1,10 +1,10 @@
-    SIZE copy_current_selection() {
+    SIZE copy_current_selection(ClipboardBackground background=ClipboardBackground::PreserveAlpha) {
         cancel_async_copy();
         const auto metadata=current_metadata();
         if(selection.empty()){
             // The document is immutable for this synchronous command; no full
             // still_frame allocation is needed merely to encode one frame.
-            copy_image(hwnd,*image,player.frame,std::nullopt,&metadata);
+            copy_image(hwnd,*image,player.frame,std::nullopt,&metadata,background);
             return {LONG(image->width),LONG(image->height)};
         }
         const auto area=selection.clipped(image->width,image->height);
@@ -14,7 +14,7 @@
         for(int y=0;y<area.h;++y)for(int x=0;x<area.w;++x)
             selected.frames[0].pixels[size_t(y)*area.w+x]=area.contains(x+area.x,y+area.y)
                 ?source[size_t(y+area.y)*image->width+x+area.x]:Pixel{};
-        copy_image(hwnd,selected,0,SelectionOrigin{selection.x,selection.y,image->width,image->height},&metadata);
+        copy_image(hwnd,selected,0,SelectionOrigin{selection.x,selection.y,image->width,image->height},&metadata,background);
         return {area.w,area.h};
     }
     struct PreparedExport {

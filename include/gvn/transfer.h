@@ -10,11 +10,12 @@
 #include <memory>
 
 namespace gvn {
+enum class ClipboardBackground { PreserveAlpha, White };
 // Owns prepared HGLOBAL payloads until the UI transfers them to the clipboard.
 class PreparedClipboardImage {
     struct Data;
     std::unique_ptr<Data> data;
-    friend PreparedClipboardImage prepare_clipboard_image(const Image &,size_t,std::optional<SelectionOrigin>,const ImageMetadata *,const CancelCheck &);
+    friend PreparedClipboardImage prepare_clipboard_image(const Image &,size_t,std::optional<SelectionOrigin>,const ImageMetadata *,const CancelCheck &,ClipboardBackground);
     friend bool publish_clipboard_image(HWND,PreparedClipboardImage &&,std::optional<DWORD>);
     friend bool render_clipboard_image(PreparedClipboardImage &,UINT);
 public:
@@ -22,7 +23,7 @@ public:
     PreparedClipboardImage(PreparedClipboardImage &&) noexcept;
     PreparedClipboardImage &operator=(PreparedClipboardImage &&) noexcept;
 };
-PreparedClipboardImage prepare_clipboard_image(const Image &,size_t,std::optional<SelectionOrigin> origin={},const ImageMetadata *metadata=nullptr,const CancelCheck &cancel={});
+PreparedClipboardImage prepare_clipboard_image(const Image &,size_t,std::optional<SelectionOrigin> origin={},const ImageMetadata *metadata=nullptr,const CancelCheck &cancel={},ClipboardBackground background=ClipboardBackground::PreserveAlpha);
 bool publish_clipboard_image(HWND,PreparedClipboardImage &&,std::optional<DWORD> expected_sequence={});
 void announce_clipboard_image(HWND,bool positioned);
 // WM_RENDERFORMAT already has the receiver's clipboard lock; do not reopen it.
@@ -31,7 +32,8 @@ bool publish_delayed_clipboard_image(HWND,PreparedClipboardImage &);
 // Packed DIB payloads use straight alpha. PNG remains the preferred interchange.
 std::vector<uint8_t> make_dibv5(const Image &image, size_t frame);
 Image read_dib(std::span<const uint8_t> data);
-void copy_image(HWND owner, const Image &image, size_t frame,std::optional<SelectionOrigin> origin=std::nullopt,const ImageMetadata *metadata=nullptr);
+void copy_image(HWND owner, const Image &image, size_t frame,std::optional<SelectionOrigin> origin=std::nullopt,const ImageMetadata *metadata=nullptr,ClipboardBackground background=ClipboardBackground::PreserveAlpha);
+void copy_clipboard_text(HWND owner, const std::wstring &text);
 Image paste_image(HWND owner);
 // Pixel data retains alpha; file references go through the viewer's normal open path.
 using ClipboardContent = std::variant<Image, std::filesystem::path>;

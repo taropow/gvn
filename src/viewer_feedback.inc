@@ -30,6 +30,10 @@
         }
     }
     void feedback_cancel(){if(feedback_busy){toast.dismiss();feedback_busy=false;++feedback_epoch;}}
+    void finish_image_copy(UINT id,SIZE size,const std::wstring *key=nullptr){
+        feedback_done(id,(id==CopyOnWhite?L"白背景でコピーしました · ":L"コピーしました · ")+
+                          std::to_wstring(size.cx)+L"×"+std::to_wstring(size.cy),key);
+    }
     void cancel_load_feedback(){
         if(load_feedback&&load_feedback->epoch==feedback_epoch)feedback_cancel();
         load_feedback.reset();

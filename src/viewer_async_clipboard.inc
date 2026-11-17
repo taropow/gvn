@@ -1,5 +1,5 @@
     struct CopyFeedback {
-        uint64_t sequence{},epoch{};DWORD clipboard_sequence{};std::wstring key;
+        uint64_t sequence{},epoch{};DWORD clipboard_sequence{};UINT command{};std::wstring key;
         std::vector<std::pair<UINT,bool>> deferred;
     };
     std::unique_ptr<ClipboardCopyWorker> clipboard_worker;
@@ -12,7 +12,7 @@
         if(copy_feedback&&copy_feedback->epoch==feedback_epoch)feedback_cancel();
         copy_feedback.reset();prepared_copy.reset();
     }
-    bool start_async_copy(){
+    bool start_async_copy(UINT id,ClipboardBackground background){
         const auto area=selection.empty()?Rect{0,0,int(image->width),int(image->height)}:
             intersect(selection,{0,0,int(image->width),int(image->height)});
         if(uint64_t(std::max(0,area.w))*std::max(0,area.h)<1024ull*1024)return false;
@@ -21,8 +21,8 @@
             clipboard_worker=std::make_unique<ClipboardCopyWorker>([window]{PostMessageW(window,kCopyReady,0,0);},clipboard_encoder);}
         announce_clipboard_image(hwnd,!selection.empty());
         const auto clipboard_sequence=GetClipboardSequenceNumber();
-        const auto sequence=clipboard_worker->request({image,player.frame,selection,current_metadata()});
-        copy_feedback=CopyFeedback{sequence,feedback_epoch,clipboard_sequence,feedback_shortcut(Copy),{}};
+        const auto sequence=clipboard_worker->request({image,player.frame,selection,current_metadata(),background});
+        copy_feedback=CopyFeedback{sequence,feedback_epoch,clipboard_sequence,id,feedback_shortcut(id),{}};
         return true;
     }
     bool defer_copy_paste(UINT id,bool keyboard){
@@ -64,6 +64,6 @@
         }catch(...){SetTimer(hwnd,kCopyRetryTimer,50,nullptr);return;}
         const auto size=prepared_copy->size;auto pending=std::move(*copy_feedback);
         copy_feedback.reset();prepared_copy.reset();
-        if(pending.epoch==feedback_epoch)feedback_done(Copy,L"コピーしました · "+std::to_wstring(size.cx)+L"×"+std::to_wstring(size.cy),&pending.key);
+        if(pending.epoch==feedback_epoch)finish_image_copy(pending.command,size,&pending.key);
         for(const auto &[id,keyboard]:pending.deferred)command(id,keyboard);
     }

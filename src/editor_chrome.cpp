@@ -21,7 +21,7 @@ AnnotationLayout annotation_layout(int width,EditorPanel mode,bool details){
 std::wstring numeric(double value){std::wostringstream out;out<<std::fixed<<std::setprecision(2)<<value;
     auto s=out.str();while(s.size()>1&&s.back()==L'0')s.pop_back();if(s.back()==L'.')s.pop_back();return s;}
 }
-EditorChrome::~EditorChrome(){if(font)DeleteObject(font);if(drag_icon)DestroyIcon(drag_icon);}
+EditorChrome::~EditorChrome(){if(font)DeleteObject(font);if(drag_icon)DestroyIcon(drag_icon);if(temp_path_icon)DestroyIcon(temp_path_icon);}
 void EditorChrome::position(HWND child,int x,int y,int w,int h){
     const RECT next{x,y,x+w,y+h};const auto previous=placements.find(child);
     const bool moved=previous==placements.end()||!EqualRect(&previous->second,&next);
@@ -38,7 +38,7 @@ void EditorChrome::create(HWND parent,bool editing){
     WNDCLASSW cls{};cls.lpfnWndProc=procedure;cls.hInstance=GetModuleHandleW(nullptr);cls.hCursor=LoadCursorW(nullptr,IDC_ARROW);
     cls.hbrBackground=ui_brush(ui_palette().surface);cls.lpszClassName=L"GVN.EditorChrome";RegisterClassW(&cls);
     if(!top)top=CreateWindowExW(0,cls.lpszClassName,L"編集オプション",WS_CHILD|WS_CLIPCHILDREN,0,0,1,1,parent,nullptr,cls.hInstance,this);
-    if(!bottom)bottom=CreateWindowExW(0,cls.lpszClassName,L"ファイルをドラッグ",WS_CHILD|WS_CLIPCHILDREN,0,0,1,1,parent,nullptr,cls.hInstance,this);
+    if(!bottom)bottom=CreateWindowExW(0,cls.lpszClassName,L"ファイル出力",WS_CHILD|WS_CLIPCHILDREN,0,0,1,1,parent,nullptr,cls.hInstance,this);
     auto add=[&](int id,const wchar_t *kind,const wchar_t *value,DWORD style,HWND host){
         auto child=CreateWindowExW(0,kind,value,WS_CHILD|WS_TABSTOP|style|(wcscmp(kind,L"EDIT")==0?WS_BORDER:0),0,0,1,1,host,reinterpret_cast<HMENU>(INT_PTR(id)),cls.hInstance,nullptr);
         controls[id]=child;apply_ui_theme(child,false);if(font)SendMessageW(child,WM_SETFONT,reinterpret_cast<WPARAM>(font),FALSE);return child;};
@@ -49,6 +49,14 @@ void EditorChrome::create(HWND parent,bool editing){
         SendMessageW(control(Format),CB_SETCURSEL,0,0);
         auto drag=add(Drag,L"BUTTON",L"ドラッグ",BS_OWNERDRAW,bottom);
         SetWindowSubclass(drag,drag_procedure,1,reinterpret_cast<DWORD_PTR>(this));
+        const auto path=add(TempPath,L"BUTTON",L"一時保存パス",BS_OWNERDRAW,bottom);
+        if(const auto tip=CreateWindowExW(0,TOOLTIPS_CLASSW,nullptr,WS_POPUP|TTS_ALWAYSTIP,
+                                         CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,bottom,nullptr,cls.hInstance,nullptr)){
+            TTTOOLINFOW info{sizeof(info)};
+            info.hwnd=bottom;info.uFlags=TTF_IDISHWND|TTF_SUBCLASS;info.uId=reinterpret_cast<UINT_PTR>(path);
+            info.lpszText=const_cast<wchar_t *>(L"一時保存パス：画像を一時保存し、フルパスをコピー");
+            SendMessageW(tip,TTM_ADDTOOLW,0,reinterpret_cast<LPARAM>(&info));
+        }
     }
     apply_ui_theme(top,false);apply_ui_theme(bottom,false);
     if(!editing||control(Width))return;
@@ -102,15 +110,18 @@ LRESULT CALLBACK EditorChrome::procedure(HWND window,UINT message,WPARAM w,LPARA
         const int x=(area.right-diameter)/2,y=(area.bottom-diameter)/2;Ellipse(item->hDC,x,y,x+diameter,y+diameter);SelectObject(item->hDC,old);DeleteObject(fill);
         if(item->itemState&ODS_FOCUS){InflateRect(&area,-3,-3);DrawFocusRect(item->hDC,&area);}return TRUE;
     }
-    if(self&&message==WM_DRAWITEM&&reinterpret_cast<DRAWITEMSTRUCT *>(l)->CtlID==Drag){
+    if(self&&message==WM_DRAWITEM&&(reinterpret_cast<DRAWITEMSTRUCT *>(l)->CtlID==Drag||reinterpret_cast<DRAWITEMSTRUCT *>(l)->CtlID==TempPath)){
         const auto item=reinterpret_cast<DRAWITEMSTRUCT *>(l);auto area=item->rcItem;
-        FillRect(item->hDC,&area,ui_brush(self->drag_hot&&!(item->itemState&ODS_DISABLED)?ui_palette().selected:ui_palette().surface));
+        const bool drag=item->CtlID==Drag,enabled=!(item->itemState&ODS_DISABLED);
+        FillRect(item->hDC,&area,ui_brush(enabled&&((drag&&self->drag_hot)||(item->itemState&ODS_SELECTED))?ui_palette().selected:ui_palette().surface));
         const auto dpi=GetDpiForWindow(window);const int icon=MulDiv(18,dpi,96);
-        if(!self->drag_icon)self->drag_icon=command_icon(ArmDrag,icon);
-        const auto focus=area;const bool compact=area.right-area.left<MulDiv(90,dpi,96);
-        DrawIconEx(item->hDC,compact?(area.right-icon)/2:area.left+MulDiv(12,dpi,96),(area.bottom-icon)/2,self->drag_icon,icon,icon,0,nullptr,DI_NORMAL);
-        area.left+=MulDiv(36,dpi,96);SetBkMode(item->hDC,TRANSPARENT);SetTextColor(item->hDC,(item->itemState&ODS_DISABLED)?ui_palette().muted:ui_palette().text);
-        const auto old=SelectObject(item->hDC,self->font);if(!compact)DrawTextW(item->hDC,L"ドラッグ",-1,&area,DT_LEFT|DT_VCENTER|DT_SINGLELINE);SelectObject(item->hDC,old);
+        auto &glyph=drag?self->drag_icon:self->temp_path_icon;
+        if(!glyph)glyph=command_icon(drag?ArmDrag:Copy,icon);
+        const auto focus=area;const bool compact=area.right-area.left<MulDiv(86,dpi,96);
+        const int x=compact?area.left+(area.right-area.left-icon)/2:area.left+MulDiv(drag?12:5,dpi,96);
+        DrawIconEx(item->hDC,x,area.top+(area.bottom-area.top-icon)/2,glyph,icon,icon,0,nullptr,DI_NORMAL);
+        area.left=x+icon+MulDiv(5,dpi,96);SetBkMode(item->hDC,TRANSPARENT);SetTextColor(item->hDC,enabled?ui_palette().text:ui_palette().muted);
+        const auto old=SelectObject(item->hDC,self->font);if(!compact)DrawTextW(item->hDC,drag?L"ドラッグ":L"一時保存パス",-1,&area,DT_LEFT|DT_VCENTER|DT_SINGLELINE);SelectObject(item->hDC,old);
         if(item->itemState&ODS_FOCUS){area=focus;InflateRect(&area,-3,-3);DrawFocusRect(item->hDC,&area);}return TRUE;
     }
     return DefWindowProcW(window,message,w,l);
@@ -169,17 +180,24 @@ int EditorChrome::layout_top(HWND parent,int width,int y,UINT new_dpi,bool visib
 }
 void EditorChrome::layout_status(HWND parent,HWND status,const RECT &bounds,UINT new_dpi,bool visible,bool enabled){
     if(!visible){if(bottom)ShowWindow(bottom,SW_HIDE);return;}create(parent,false);
-    if(palette_generation!=ui_theme_generation()){palette_generation=ui_theme_generation();if(drag_icon){DestroyIcon(drag_icon);drag_icon=nullptr;}InvalidateRect(bottom,nullptr,TRUE);}
+    const auto clear_icons=[&]{for(auto icon:{&drag_icon,&temp_path_icon})if(*icon){DestroyIcon(*icon);*icon=nullptr;}};
+    if(palette_generation!=ui_theme_generation()){palette_generation=ui_theme_generation();clear_icons();InvalidateRect(bottom,nullptr,TRUE);}
     if(GetParent(bottom)!=status){SetParent(bottom,status);placements.erase(bottom);}
-    if(dpi!=new_dpi||!font){if(font)DeleteObject(font);if(drag_icon){DestroyIcon(drag_icon);drag_icon=nullptr;}dpi=new_dpi;font=CreateFontW(-MulDiv(12,dpi,96),0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,0,0,DEFAULT_QUALITY,DEFAULT_PITCH,L"Yu Gothic UI");
+    if(dpi!=new_dpi||!font){if(font)DeleteObject(font);clear_icons();dpi=new_dpi;font=CreateFontW(-MulDiv(12,dpi,96),0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,0,0,DEFAULT_QUALITY,DEFAULT_PITCH,L"Yu Gothic UI");
         for(auto [id,c]:controls)SendMessageW(c,WM_SETFONT,reinterpret_cast<WPARAM>(font),TRUE);for(auto [id,c]:labels)SendMessageW(c,WM_SETFONT,reinterpret_cast<WPARAM>(font),TRUE);}
     auto px=[&](int n){return MulDiv(n,new_dpi,96);};const int width=std::max(1L,bounds.right-bounds.left),height=std::max(1L,bounds.bottom-bounds.top);
-    const int format_width=std::min(px(68),std::max(px(48),width/5)),drag_width=width<px(260)?px(24):px(104),gap=width<px(260)?px(3):px(6),name_width=std::max(1,width-format_width-drag_width-2*gap);
+    const int drag_width=width>=px(340)?px(94):std::min(px(24),width/4);
+    const int path_width=width>=px(240)?px(104):std::min(px(24),width/4);
+    const int gap=width>=px(240)?px(6):std::min(px(3),width/16);
+    const int format_width=width>=px(300)?px(62):std::min(px(54),width/3);
+    const int name_width=std::max(1,width-drag_width-path_width-format_width-3*gap);
     if(format_dpi!=new_dpi){SendMessageW(control(Format),CB_SETITEMHEIGHT,WPARAM(-1),px(18));SendMessageW(control(Format),CB_SETITEMHEIGHT,0,px(18));format_dpi=new_dpi;}
     position(bottom,bounds.left,bounds.top,width,height);
     const int y=std::max(0,(height-px(24))/2);
-    position(control(Drag),0,y,drag_width,px(24));position(control(Name),drag_width+gap,y,name_width,px(24));position(control(Format),drag_width+name_width+2*gap,y,format_width,px(180));
-    for(int id:{Name,Format,Drag})if(bool(IsWindowEnabled(control(id)))!=enabled)EnableWindow(control(id),enabled);
+    position(control(Drag),0,y,drag_width,px(24));position(control(TempPath),drag_width+gap,y,path_width,px(24));
+    const int name_left=drag_width+path_width+2*gap;
+    position(control(Name),name_left,y,name_width,px(24));position(control(Format),name_left+name_width+gap,y,format_width,px(180));
+    for(int id:{Name,Format,Drag,TempPath})if(bool(IsWindowEnabled(control(id)))!=enabled)EnableWindow(control(id),enabled);
 }
 void EditorChrome::sync_effect_controls(){
     const bool outline=SendMessageW(control(Outline),BM_GETCHECK,0,0)==BST_CHECKED,shadow=SendMessageW(control(Shadow),BM_GETCHECK,0,0)==BST_CHECKED;

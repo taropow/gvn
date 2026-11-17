@@ -113,7 +113,7 @@
             const int width=MulDiv(logical,dpi,96);app.editor_chrome.layout_status(app.hwnd,app.status,{0,0,width,MulDiv(26,dpi,96)},dpi,true,true);
             CHECK(GetParent(app.editor_chrome.bottom)==app.status);
             RECT previous{},panel{};GetClientRect(app.editor_chrome.bottom,&panel);
-            for(int id:{editor_id::Drag,editor_id::Name,editor_id::Format}){RECT r{};GetWindowRect(app.editor_chrome.control(id),&r);MapWindowPoints(nullptr,app.editor_chrome.bottom,reinterpret_cast<POINT *>(&r),2);
+            for(int id:{editor_id::Drag,editor_id::TempPath,editor_id::Name,editor_id::Format}){RECT r{};GetWindowRect(app.editor_chrome.control(id),&r);MapWindowPoints(nullptr,app.editor_chrome.bottom,reinterpret_cast<POINT *>(&r),2);
                 CHECK(r.left>=previous.right&&r.top>=0&&r.right<=width&&r.bottom<=panel.bottom);CHECK(std::abs((r.top+r.bottom)-(previous.top+previous.bottom))<=MulDiv(4,dpi,96)||id==editor_id::Drag);previous=r;}}
         app.layout();
         std::vector<std::filesystem::path> exported;
@@ -128,6 +128,36 @@
         CHECK(exported[0].filename()==L"テスト画像.png"&&exported[1].extension()==L".jpg"&&exported[2].extension()==L".bmp"&&exported[3].extension()==L".gif");
         for(const auto &p:exported)std::filesystem::remove_all(p.parent_path());
         CHECK(app.image==original&&!app.modified);command(ToolCrop);CHECK(!IsWindowEnabled(drag));command(CancelSelection);CHECK(IsWindowEnabled(drag));
+    }
+    void status_temp_export_copies_current_image_path_and_preserves_document() {
+        ShowWindow(app.hwnd,SW_SHOWNOACTIVATE);app.settings.confirm_unsaved=false;
+        CHECK(!skitch_visible(app.editor_chrome.bottom));
+        const auto original=copy(L"alpha.png",L"source.png");
+        const auto original_bytes=read_file(original);
+        open(original);command(FlipH);
+        const auto edited=app.image;const auto undo=app.undo_image;
+        CHECK(app.modified);
+        const auto button=app.editor_chrome.control(editor_id::TempPath);
+        CHECK(button&&skitch_visible(button)&&IsWindowEnabled(button));
+        SetWindowTextW(app.editor_chrome.control(editor_id::Name),L"共有 テスト");
+        app.settings.saving.png.transparency=PngTransparency::Opaque;
+        const auto click=[&]{SendMessageW(button,BM_CLICK,0,0);return std::filesystem::path(file_name_clipboard_value());};
+        const auto first=click();
+        CHECK(first.is_absolute()&&first.filename()==L"共有 テスト.png"&&first!=original);
+        CHECK(std::filesystem::equivalent(first.parent_path().parent_path(),std::filesystem::temp_directory_path()/L"GVN"/L"drag"));
+        CHECK(load_image(first).frames[0].pixels==edited->frames[0].pixels);
+        const auto second=click();
+        CHECK(first!=second&&std::filesystem::exists(first)&&std::filesystem::exists(second));
+        CHECK(app.image==edited&&app.undo_image==undo&&app.modified&&read_file(original)==original_bytes);
+        command(ToolCrop);CHECK(!IsWindowEnabled(button));
+        CHECK(click()==second);command(CancelSelection);CHECK(IsWindowEnabled(button));
+        auto animated=load_image(fixture(L"blend.apng"));CHECK(animated.animated());
+        app.replace(std::move(animated),false,true);app.player.playing=false;app.player.seek(1);
+        SendMessageW(app.editor_chrome.control(editor_id::Format),CB_SETCURSEL,4,0);
+        app.settings.saving.webp.lossless=true;app.settings.saving.webp.preserve_alpha=true;
+        const auto webp=click();const auto decoded=load_image(webp);
+        CHECK(webp.extension()==L".webp"&&!decoded.animated()&&decoded.frames[0].pixels==app.image->frames[1].pixels);
+        for(const auto &p:{first,second,webp}){CHECK(std::filesystem::remove(p));CHECK(std::filesystem::remove(p.parent_path()));}
     }
     void annotation_effect_controls_and_multiple_undo_redo_are_transactional(){
         ShowWindow(app.hwnd,SW_SHOWNOACTIVATE);app.settings.confirm_unsaved=false;app.replace(new_image(320,200),false,true);command(ToolPen);command(Actual);

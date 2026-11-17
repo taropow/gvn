@@ -210,6 +210,7 @@
         add(m, DeleteSelection,L"選択範囲を削除\tDelete（選択中）");
         separator(m);
         add(m, Copy, L"コピー（アルファ維持）\tCtrl+C");
+        add(m, CopyOnWhite, std::wstring(command_name(CopyOnWhite)));
         add(m, Cut, L"切り取り\tCtrl+X");
         add(m, Paste, L"貼り付け\tCtrl+V");
         add(m, PasteSelection,L"選択範囲でペースト");

@@ -5,14 +5,14 @@ namespace {
 Rect copy_area(const ClipboardCopyRequest &r){return intersect(r.selection,{0,0,int(r.image->width),int(r.image->height)});}
 }
 PreparedClipboardImage prepare_clipboard_copy(const ClipboardCopyRequest &r,const CancelCheck &cancel){
-    if(r.selection.empty())return prepare_clipboard_image(*r.image,r.frame,{},&r.metadata,cancel);
+    if(r.selection.empty())return prepare_clipboard_image(*r.image,r.frame,{},&r.metadata,cancel,r.background);
     const auto area=copy_area(r);if(area.empty())throw std::invalid_argument("Empty clipboard selection");
     auto selected=new_image(area.w,area.h);const auto &pixels=r.image->frames.at(r.frame).pixels;
     for(int y=0;y<area.h;++y){check_cancelled(cancel);
         for(int x=0;x<area.w;++x)selected.frames[0].pixels[size_t(y)*area.w+x]=r.selection.contains(x+area.x,y+area.y)
             ?pixels[size_t(y+area.y)*r.image->width+x+area.x]:Pixel{};
     }
-    return prepare_clipboard_image(selected,0,SelectionOrigin{r.selection.x,r.selection.y,r.image->width,r.image->height},&r.metadata,cancel);
+    return prepare_clipboard_image(selected,0,SelectionOrigin{r.selection.x,r.selection.y,r.image->width,r.image->height},&r.metadata,cancel,r.background);
 }
 ClipboardCopyWorker::ClipboardCopyWorker(std::function<void()> callback,Encoder encode):
     notify(std::move(callback)),encoder(encode?std::move(encode):Encoder(prepare_clipboard_copy)),thread([this](std::stop_token stop){run(stop);}){}

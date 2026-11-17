@@ -62,12 +62,27 @@
         try{dialogs.file_drag(path);}catch(...){if(image==source)player.playing=was_playing;update();throw;}
         if(image==source)player.playing=was_playing;update();
     }
+    void copy_temporary_export_path() {
+        if(!image||loading||floating||cropping)return;
+        feedback_begin(editor_id::TempPath,L"画像を一時保存中…");
+        try {
+            const auto metadata=current_metadata();
+            const auto path=export_drag_path(*image,player.frame,editor_chrome.text(editor_id::Name),
+                                             editor_chrome.export_format(),settings.saving,&metadata);
+            copy_clipboard_text(hwnd,path.wstring());
+        } catch (...) {
+            feedback_cancel();
+            throw;
+        }
+        feedback_done(editor_id::TempPath,L"一時保存パスをコピーしました");
+    }
     void editor_notification(int id,int code) {
         using namespace editor_id;
         // Editing native text fields must keep their keyboard focus and IME.
         if(id==Apply){FeedbackCommand feedback(*this,CommitSelection,false);if(cropping)commit_crop();else if(floating){if(floating->text_annotation)refresh_text();else apply_editor_bounds();commit_floating();}SetFocus(hwnd);return;}
         if(id==Cancel){command(CancelSelection);SetFocus(hwnd);return;}
         if(id==Drag){export_drag();return;}
+        if(id==TempPath&&code==BN_CLICKED){copy_temporary_export_path();SetFocus(hwnd);return;}
         if(id==Details){editor_chrome.notification(id,code);layout();update();return;}
         if(editor_chrome.notification(id,code)){refresh_text();return;}
         if(id==TextUpdate){try{refresh_text();editor_chrome.error(L"");}catch(const std::exception &e){editor_chrome.error(widen(e.what()));}return;}

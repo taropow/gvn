@@ -105,7 +105,8 @@ std::filesystem::path clipboard_file() {
     return {};
 }
 } // namespace
-static void fill_dibv5(std::span<uint8_t> result,const Image &image,size_t frame,const CancelCheck &cancel={}) {
+static void fill_dibv5(std::span<uint8_t> result,const Image &image,size_t frame,const CancelCheck &cancel={},
+                       ClipboardBackground background=ClipboardBackground::PreserveAlpha) {
     const size_t count = checked_image_pixels(image.width, image.height);
     const auto &pixels = image.frames.at(frame).pixels;
     require(pixels.size() == count, "Invalid frame");
@@ -127,7 +128,15 @@ static void fill_dibv5(std::span<uint8_t> result,const Image &image,size_t frame
     memcpy(result.data(), &header, sizeof(header));
     for(size_t at=0;at<count;){
         check_cancelled(cancel);const auto length=std::min<size_t>(65536,count-at);
-        detail::swizzle_rgba(reinterpret_cast<const uint8_t *>(pixels.data()+at),result.data()+sizeof(header)+at*4,length);at+=length;
+        auto *row=result.data()+sizeof(header)+at*4;
+        if(background==ClipboardBackground::White){
+            for(size_t i=0;i<length;++i){
+                const auto pixel=pixels[at+i];
+                const auto color=pixel.a==255?pixel:over(pixel,{255,255,255,255});
+                row[i*4]=color.b;row[i*4+1]=color.g;row[i*4+2]=color.r;row[i*4+3]=255;
+            }
+        }else detail::swizzle_rgba(reinterpret_cast<const uint8_t *>(pixels.data()+at),row,length);
+        at+=length;
     }
 }
 std::vector<uint8_t> make_dibv5(const Image &image,size_t frame) {
@@ -254,12 +263,13 @@ PreparedClipboardImage::~PreparedClipboardImage()=default;
 PreparedClipboardImage::PreparedClipboardImage(PreparedClipboardImage &&) noexcept=default;
 PreparedClipboardImage &PreparedClipboardImage::operator=(PreparedClipboardImage &&) noexcept=default;
 PreparedClipboardImage prepare_clipboard_image(const Image &image,size_t frame,std::optional<SelectionOrigin> origin,
-                                               const ImageMetadata *metadata,const CancelCheck &cancel) {
+                                               const ImageMetadata *metadata,const CancelCheck &cancel,ClipboardBackground background) {
     check_cancelled(cancel);PngSaveOptions options;options.compression=1;
+    if(background==ClipboardBackground::White)options.transparency=PngTransparency::Opaque;
     const auto png=encode_png(image,frame,options,metadata,cancel);check_cancelled(cancel);
     PreparedClipboardImage result;
     result.data=std::make_unique<PreparedClipboardImage::Data>(png,sizeof(BITMAPV5HEADER)+checked_image_pixels(image.width,image.height)*4);
-    fill_dibv5(result.data->dib.writable(),image,frame,cancel);
+    fill_dibv5(result.data->dib.writable(),image,frame,cancel,background);
     if(origin){
         const auto header=selection_clipboard_header(png.size(),image.width,image.height,*origin);
         result.data->positioned=std::make_unique<Global>(header.size()+png.size());
@@ -281,8 +291,8 @@ bool publish_clipboard_image(HWND owner,PreparedClipboardImage &&prepared,std::o
     if(prepared.data->positioned)prepared.data->positioned->publish(position_format);
     prepared.data.reset();return true;
 }
-void copy_image(HWND owner,const Image &image,size_t frame,std::optional<SelectionOrigin> origin,const ImageMetadata *metadata) {
-    auto prepared=prepare_clipboard_image(image,frame,origin,metadata);
+void copy_image(HWND owner,const Image &image,size_t frame,std::optional<SelectionOrigin> origin,const ImageMetadata *metadata,ClipboardBackground background) {
+    auto prepared=prepare_clipboard_image(image,frame,origin,metadata,{},background);
     (void)publish_clipboard_image(owner,std::move(prepared));
 }
 void announce_clipboard_image(HWND owner,bool positioned){
@@ -386,6 +396,12 @@ Image paste_image(HWND owner) {
     if (auto image = std::get_if<Image>(&content))
         return std::move(*image);
     throw std::runtime_error("Clipboard contains a file path rather than image pixels");
+}
+void copy_clipboard_text(HWND owner, const std::wstring &text) {
+    Global memory(std::span(reinterpret_cast<const uint8_t *>(text.c_str()), (text.size()+1)*sizeof(wchar_t)));
+    Clipboard clipboard(owner);
+    require(EmptyClipboard()!=0, "Cannot empty the clipboard");
+    memory.publish(CF_UNICODETEXT);
 }
 SelectionClipboard paste_selection_clipboard(HWND owner,const std::function<void()> &decoding) {
     bool invalid{};

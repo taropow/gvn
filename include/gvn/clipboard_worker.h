@@ -9,6 +9,7 @@
 namespace gvn {
 struct ClipboardCopyRequest {
     std::shared_ptr<const Image> image;size_t frame{};SelectionRegion selection;ImageMetadata metadata;
+    ClipboardBackground background{ClipboardBackground::PreserveAlpha};
 };
 PreparedClipboardImage prepare_clipboard_copy(const ClipboardCopyRequest &,const CancelCheck &cancel={});
 struct ClipboardCopyResult {

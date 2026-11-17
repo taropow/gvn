@@ -34,6 +34,7 @@ const std::vector<CommandInfo> &command_catalog() {
             {ToggleToolbar, L"ツールバー"},
             {ToggleStatus, L"ステータスバー"},
             {Copy, L"コピー（アルファ維持）"},
+            {CopyOnWhite, L"透過なしでコピー（白背景）"},
             {Paste, L"貼り付け"},
             {PasteSelection,L"選択範囲でペースト"},
             {CommitSelection,L"貼り付けを確定"},

@@ -7,7 +7,8 @@ namespace gvn {
 namespace editor_id {
 enum : int { Color=7000, Width, Opacity, Font, TextSize, Text, X, Y, W, H, Angle, Scale, Anchor,
     Apply, Cancel, Name, Format, Drag, Hint, Error, TextUpdate,
-    Outline, OutlineColor, OutlineWidth, Shadow, ShadowColor, ShadowOffset, ShadowBlur, ShadowOpacity, Details, Last };
+    Outline, OutlineColor, OutlineWidth, Shadow, ShadowColor, ShadowOffset, ShadowBlur, ShadowOpacity, Details,
+    TempPath, Last };
 }
 enum class EditorPanel { None, Pen, Text, Crop, Transform };
 class EditorChrome {
@@ -15,7 +16,7 @@ class EditorChrome {
     HFONT font{};UINT dpi{};
     UINT anchor_dpi{},format_dpi{};
     uint64_t palette_generation{};
-    HICON drag_icon{};
+    HICON drag_icon{}, temp_path_icon{};
     bool details_open{};
     bool filling{},drag_pending{},drag_hot{};POINT drag_start{};
     std::map<int,HWND> controls;

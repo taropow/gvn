@@ -1,4 +1,50 @@
     bool feedback_visible() const{return app.toast.window()&&(GetWindowLongPtrW(app.toast.window(),GWL_STYLE)&WS_VISIBLE);}
+    void edit_menu_copy_on_white_in_png_dib_and_async() {
+        ShowWindow(app.hwnd,SW_SHOWNOACTIVATE);
+        const auto menu_state=[&]{
+            const auto edit=GetSubMenu(app.main_menu,1);
+            SendMessageW(app.hwnd,WM_INITMENUPOPUP,reinterpret_cast<WPARAM>(edit),1);
+            return GetMenuState(edit,CopyOnWhite,MF_BYCOMMAND);
+        };
+        CHECK(menu_state()!=UINT(-1)&&(menu_state()&MF_GRAYED));
+        const Pixel transparent{15,22,38,0},red{255,0,0,128},solid{12,34,56,255};
+        const Pixel white{255,255,255,255},pink{255,127,127,255};
+        auto image=new_image(4,4);std::ranges::fill(image.frames[0].pixels,solid);
+        image.frames[0].pixels[0]=transparent;image.frames[0].pixels[1]=red;
+        app.replace(std::move(image),false,true);
+        const auto source=app.image;const auto pixels=source->frames[0].pixels;
+        CHECK(menu_state()!=UINT(-1)&&!(menu_state()&MF_GRAYED));
+        auto verify_both=[&](const std::vector<Pixel> &expected){
+            CHECK(paste_image(app.hwnd).frames[0].pixels==expected);
+            CHECK(OpenClipboard(app.hwnd));
+            struct Close{~Close(){CloseClipboard();}} close;
+            const auto handle=GetClipboardData(CF_DIBV5);CHECK(handle);
+            const auto *data=static_cast<const uint8_t *>(GlobalLock(handle));CHECK(data);
+            struct Unlock{HGLOBAL value;~Unlock(){GlobalUnlock(value);}} unlock{handle};
+            CHECK(read_dib({data,GlobalSize(handle)}).frames[0].pixels==expected);
+        };
+        auto expected=pixels;expected[0]=white;expected[1]=pink;
+        SendMessageW(app.hwnd,WM_COMMAND,CopyOnWhite,0);
+        verify_both(expected);CHECK(app.toast.text().starts_with(L"白背景でコピーしました"));
+        CHECK(app.image==source&&app.image->frames[0].pixels==pixels&&!app.modified);
+        command(Copy);verify_both(pixels);
+
+        const std::array<FloatPoint,3> triangle{{{0,0},{5,0},{0,5}}};
+        app.selection=SelectionRegion::polygon(triangle,4,4);
+        CHECK(!app.selection.empty()&&app.selection.contains(1,0)&&!app.selection.contains(3,3));
+        command(CopyOnWhite);
+        const auto selected=paste_selection_clipboard(app.hwnd);
+        CHECK(selected.origin&&selected.origin->canvas_width==4&&selected.image.width==4&&selected.image.height==4);
+        CHECK(selected.image.frames[0].pixels[1]==pink&&selected.image.frames[0].pixels.back()==white);
+        CHECK(app.selection.contains(1,0)&&app.image==source);
+
+        auto large=new_image(1024,1024);std::ranges::fill(large.frames[0].pixels,red);app.replace(std::move(large),false,true);
+        command(CopyOnWhite);CHECK(app.copy_feedback&&app.clipboard_worker);
+        CHECK(app.clipboard_worker->wait_idle(std::chrono::seconds(10)));pump();
+        CHECK(!app.copy_feedback&&app.toast.text().starts_with(L"白背景でコピーしました"));
+        verify_both(std::vector<Pixel>(1024*1024,pink));
+        CHECK(app.image->frames[0].pixels.front()==red&&notices.empty());
+    }
     void feedback_copy_paste_alpha_shortcuts_and_timer(){
         ShowWindow(app.hwnd,SW_SHOWNOACTIVATE);app.settings.confirm_unsaved=false;
         app.replace(selection_fixture(64,48),false,true);const auto pixels=app.image->frames[0].pixels;

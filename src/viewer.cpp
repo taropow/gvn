@@ -2931,12 +2931,11 @@ class App {
             player.set_loop(settings.animation_loop, settings.animation_file_loops);
             break;
         case Copy:
+        case CopyOnWhite:
             if (image) {
                 cancel_async_copy();feedback_begin(id,L"コピー中…");
-                if(!start_async_copy()){
-                    const auto copied=copy_current_selection();
-                    feedback_done(id,L"コピーしました · "+std::to_wstring(copied.cx)+L"×"+std::to_wstring(copied.cy));
-                }
+                const auto background=id==CopyOnWhite?ClipboardBackground::White:ClipboardBackground::PreserveAlpha;
+                if(!start_async_copy(id,background))finish_image_copy(id,copy_current_selection(background));
             }
             break;
         case Paste:
@@ -4172,6 +4171,7 @@ class App {
                 SetFocus(GetNextDlgTabItem(host,message.hwnd,(GetKeyState(VK_SHIFT)&0x8000)!=0));return true;}
             if(message.message==WM_KEYDOWN&&message.wParam==VK_RETURN&&GetDlgCtrlID(message.hwnd)!=editor_id::Text){
                 const int id=GetDlgCtrlID(message.hwnd);
+                if(id==editor_id::TempPath){SendMessageW(message.hwnd,BM_CLICK,0,0);return true;}
                 if(id>=editor_id::X&&id<=editor_id::Scale)
                     SendMessageW(editor_chrome.top,WM_COMMAND,MAKEWPARAM(id,EN_KILLFOCUS),reinterpret_cast<LPARAM>(message.hwnd));
                 SetFocus(hwnd);return true;}

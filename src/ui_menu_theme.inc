@@ -14,7 +14,7 @@ struct MenuIcons {
     std::map<std::tuple<UINT,int,bool,bool>,HICON> cache;
     ~MenuIcons(){for(auto [key,icon]:cache)if(icon)DestroyIcon(icon);}
     HICON get(UINT command,int size,bool disabled){
-        if(command==FileCopy||command==CopyPath||command==CopyFileName||command==CopyFolderPath||command==CopyFolderName)command=Copy;
+        if(command==FileCopy||command==CopyPath||command==CopyFileName||command==CopyFolderPath||command==CopyFolderName||command==CopyOnWhite)command=Copy;
         else if(command==FileMove||(command>=ExternalBase&&command<ExternalBase+9)||command==External)command=ArmDrag;
         else if(command==RenameFile)command=ToolPen;
         const auto key=std::tuple{command,size,disabled,colors.dark};
