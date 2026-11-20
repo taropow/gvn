@@ -2,19 +2,19 @@
 
 Windows 10/11 x64用の軽量な画像ビューアです。C++20・Win32・Direct2Dで実装しています。
 
+[バージョンごとの変更履歴](CHANGELOG.md) · [操作説明](docs/gvn-manual.md)
+
 ## 使い始める
 
 リポジトリには[配布用EXE](portable/GVN.exe)と必要な同梱ファイルを`portable/`に含めています。リポジトリのZIPをダウンロードした場合は、`portable`フォルダー内の`GVN.exe`を起動してください。
 
-配布ZIP `GVN-0.80.3.zip` をフォルダーごと展開して使うこともできます。インストーラー、Python、開発ツール、追加プラグインは不要です。
+配布版は **0.80.3** です。配布ZIP `GVN-0.80.3.zip` を受け取った場合は、全体を展開して `GVN.exe` を起動してください。インストーラー、Python、開発ツール、追加プラグインは不要です。
 
 画像をウィンドウへドロップするか、Ctrl+Oで開けます。操作説明はF1またはツールバーの「？」で開きます。[操作説明を読む](docs/gvn-manual.md)。
 
 配布物は実行ファイル・操作説明・アイコン・チェックサム・第三者ライセンスだけです。ソースコード、開発資料、テストデータ、検証画像、個人設定は配布ZIPに含めません。ZIP全体を展開して使用してください。
 
 ## 主な機能
-
-0.77.0では高画質表示の非同期化を拡大し、古い読み込みの途中取消と大画像コピーの非同期処理を追加しました。[操作応答の改善](docs/gvn-interactive-hotpaths.md)。
 
 - PNG・JPEG・BMP・TIFF・ICO・PSD・WebPの表示、GIF・APNG・WebPのアニメーション再生、ZIP内画像の閲覧。
 - PNG・JPEG・BMP・GIF・WebPへの保存。WebPは可逆圧縮と透明度の保持に対応。
@@ -36,9 +36,9 @@ powershell -NoProfile -File tools/build.ps1
 powershell -NoProfile -File tools/package.ps1 -BuildDirectory ./build -SkipDailyUpdate
 ```
 
-配布ZIPは`dist/GVN-<バージョン>.zip`に生成します。`-SkipDailyUpdate`を省略すると開発環境の普段使い用フォルダーも更新します。ビルド・検証用のソースや資料はGitHubリポジトリ側に保持し、利用者向けのZIPから除外します。
+配布ZIPは`dist/GVN-<バージョン>.zip`に生成します。`-SkipDailyUpdate`を省略すると開発環境の普段使い用フォルダーも更新します。ビルド・検証用のソースや資料はリポジトリに保存します。
 
 - [配布物の構成と検証](docs/gvn-distribution.md)
-- [変更履歴・以前の開発記録](docs/gvn-release-history.md)
+- [以前の開発記録](docs/gvn-release-history.md)
 - [機能対応表](docs/gvn-feature-matrix.md)・[作業リスト](docs/gvn-worklist.md)
 - [第三者ライブラリの使用版](third_party/manifest.json)
