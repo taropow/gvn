@@ -102,7 +102,8 @@ std::vector<Field> fields() {
     check(Page::General, cid::CutTransparent, L"切り取り領域を透明にする", &Settings::cut_transparent);
     color(Page::General, cid::CutColor, L"切り取りの背景色", &Settings::cut_color);
     check(Page::General, cid::History, L"最近開いたフォルダを保存する", &Settings::remember_history);
-    check(Page::General, cid::PasteNew, L"選択範囲がないときは新規画像に貼り付ける", &Settings::paste_new);
+    combo(Page::General, cid::PasteMode, L"クリップボード画像の貼り付け", &Settings::paste_mode,
+          {L"新規画像にする", L"現在のキャンバスに貼り付ける", L"画像全体を差し替えて保存先を維持する"});
     check(Page::General, cid::ReopenLast, L"起動時に前回終了時のファイルを開く", &Settings::reopen_last);
     check(Page::General, cid::DisableIme, L"画像表示中はIMEを無効にする（文字入力画面を除く）",
           &Settings::disable_ime);

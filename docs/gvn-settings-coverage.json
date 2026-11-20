@@ -117,12 +117,13 @@
     "state": "実装済み",
     "implementation": [
       "src/viewer.cpp:Paste",
-      "src/preferences.cpp:PasteNew"
+      "src/preferences.cpp:PasteMode"
     ],
     "evidence": [
-      "app:customization_changes_real_paste_undo_and_shortcut_dispatch"
+      "app:customization_changes_real_paste_undo_and_shortcut_dispatch",
+      "app:clipboard_replace_keeps_file_and_confirms_overwrite"
     ],
-    "note": "選択なし貼り付けの新規/現在画像を選べる。現画像への半透明合成、領域外・隠れたRGB・文書参照先、再度ONにした新規貼り付けを確認。"
+    "note": "新規画像、現在のキャンバス内への貼り付け、画像全体の差し替えから選べる。差し替えでは貼り付け画像の寸法に変わり、元の保存先を維持する。"
   },
   {
     "id": "S008",
@@ -3432,13 +3433,14 @@
     "reference_behavior": "0.42の変更",
     "state": "実装済み",
     "implementation": [
-      "include/gvn/settings.h:paste_new"
+      "include/gvn/settings.h:paste_mode"
     ],
     "evidence": [
       "app:customization_changes_real_paste_undo_and_shortcut_dispatch",
-      "app:clipboard_new_document_undo_identity"
+      "app:clipboard_new_document_undo_identity",
+      "settings:clipboard_paste_mode_keeps_legacy_preferences"
     ],
-    "note": "既定は選択なし貼り付けで新規文書。OFFにした場合も実合成を確認。"
+    "note": "既定は選択なし貼り付けで新規文書。旧設定のオン・オフは新規・キャンバス内の各モードに移行する。"
   },
   {
     "id": "S184",

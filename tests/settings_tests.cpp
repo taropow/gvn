@@ -4,6 +4,28 @@
 #include <fstream>
 #include <tuple>
 using namespace gvn;
+TEST(clipboard_paste_mode_keeps_legacy_preferences) {
+    const auto path = std::filesystem::temp_directory_path() /
+                      (L"GVN-paste-mode-" + std::to_wstring(GetCurrentProcessId()) + L".ini");
+    CHECK(Settings{}.paste_mode == PasteNewImage);
+    for (const auto &[legacy, expected] : {std::pair{L"0", PasteIntoCanvas}, std::pair{L"1", PasteNewImage}}) {
+        CHECK(WritePrivateProfileStringW(L"Viewer", L"paste_mode", nullptr, path.c_str()));
+        CHECK(WritePrivateProfileStringW(L"Viewer", L"paste_new", legacy, path.c_str()));
+        Settings restored;
+        restored.load(path);
+        CHECK(restored.paste_mode == expected);
+    }
+    Settings settings;
+    settings.paste_mode = PasteReplaceImage;
+    settings.save(path);
+    Settings restored;
+    restored.load(path);
+    CHECK(restored.paste_mode == PasteReplaceImage);
+    CHECK(WritePrivateProfileStringW(L"Viewer", L"paste_mode", L"99", path.c_str()));
+    restored.load(path);
+    CHECK(restored.paste_mode == PasteNewImage);
+    std::filesystem::remove(path);
+}
 TEST(save_format_options_roundtrip_every_field_and_enum) {
     const auto path = std::filesystem::temp_directory_path() /
                       (L"GVN-save-options-" + std::to_wstring(GetCurrentProcessId()) + L".ini");
@@ -688,7 +710,8 @@ TEST(settings_customization_persists_and_history_can_be_disabled) {
                       (L"GVN-customization-" + std::to_wstring(GetCurrentProcessId()) + L".ini");
     Settings settings;
     settings.remember(L"C:\\old history");
-    settings.undo_enabled = settings.remember_history = settings.paste_new = false;
+    settings.undo_enabled = settings.remember_history = false;
+    settings.paste_mode = PasteIntoCanvas;
     settings.full_nearest = settings.full_hide_cursor = settings.title_path = settings.topmost = true;
     settings.animation_autoplay = settings.confirm_overwrite = settings.confirm_delete = false;
     CHECK(!settings.confirm_unsaved);
@@ -703,7 +726,7 @@ TEST(settings_customization_persists_and_history_can_be_disabled) {
     settings.save(file);
     Settings read;
     read.load(file);
-    CHECK(!read.undo_enabled && !read.remember_history && !read.paste_new && read.history.empty());
+    CHECK(!read.undo_enabled && !read.remember_history && read.paste_mode == PasteIntoCanvas && read.history.empty());
     read.remember(L"C:\\must not be retained");
     CHECK(read.history.empty());
     CHECK(read.full_nearest && read.full_hide_cursor && read.title_path && read.topmost);

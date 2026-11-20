@@ -11,7 +11,7 @@ expect	settings.undo_enabled	true
 expect	settings.cut_transparent	true
 expect	settings.cut_color	0
 expect	settings.remember_history	true
-expect	settings.paste_new	true
+expect	settings.paste_mode	0
 expect	settings.reopen_last	false
 expect	settings.disable_ime	true
 expect	settings.grid	1
@@ -26,7 +26,7 @@ set	Undo	false
 set	CutTransparent	false
 set	CutColor	123456
 set	History	false
-set	PasteNew	false
+set	PasteMode	1
 set	ReopenLast	true
 set	DisableIme	false
 scroll_page	bottom
@@ -39,7 +39,7 @@ expect_checked	Undo	false
 expect_checked	CutTransparent	false
 expect_text	CutColor	123456
 expect_checked	History	false
-expect_checked	PasteNew	false
+expect_selection	PasteMode	1
 expect_checked	ReopenLast	true
 expect_checked	DisableIme	false
 expect_text	Grid	23
@@ -56,7 +56,7 @@ expect	settings.undo_enabled	false
 expect	settings.cut_transparent	false
 expect	settings.cut_color	1193046
 expect	settings.remember_history	false
-expect	settings.paste_new	false
+expect	settings.paste_mode	1
 expect	settings.reopen_last	true
 expect	settings.disable_ime	false
 expect	settings.grid	23
@@ -72,7 +72,7 @@ expect_checked	Undo	true
 expect_checked	CutTransparent	true
 expect_text	CutColor	000000
 expect_checked	History	true
-expect_checked	PasteNew	true
+expect_selection	PasteMode	0
 expect_checked	ReopenLast	false
 expect_checked	DisableIme	true
 expect_text	Grid	1
@@ -87,7 +87,7 @@ expect	settings.undo_enabled	false
 expect	settings.cut_transparent	false
 expect	settings.cut_color	1193046
 expect	settings.remember_history	false
-expect	settings.paste_new	false
+expect	settings.paste_mode	1
 expect	settings.reopen_last	true
 expect	settings.disable_ime	false
 expect	settings.grid	23
@@ -100,7 +100,7 @@ expect	settings.undo_enabled	false
 expect	settings.cut_transparent	false
 expect	settings.cut_color	1193046
 expect	settings.remember_history	false
-expect	settings.paste_new	false
+expect	settings.paste_mode	1
 expect	settings.reopen_last	true
 expect	settings.disable_ime	false
 expect	settings.grid	23
@@ -126,7 +126,7 @@ expect_checked	Undo	true
 expect_checked	CutTransparent	true
 expect_text	CutColor	000000
 expect_checked	History	true
-expect_checked	PasteNew	true
+expect_selection	PasteMode	0
 expect_checked	ReopenLast	false
 expect_checked	DisableIme	true
 expect_text	Grid	1
@@ -147,7 +147,7 @@ expect	settings.undo_enabled	true
 expect	settings.cut_transparent	true
 expect	settings.cut_color	0
 expect	settings.remember_history	true
-expect	settings.paste_new	true
+expect	settings.paste_mode	0
 expect	settings.reopen_last	false
 expect	settings.disable_ime	true
 expect	settings.grid	1
@@ -171,7 +171,7 @@ expect	settings.undo_enabled	true
 expect	settings.cut_transparent	true
 expect	settings.cut_color	0
 expect	settings.remember_history	true
-expect	settings.paste_new	true
+expect	settings.paste_mode	0
 expect	settings.reopen_last	false
 expect	settings.disable_ime	true
 expect	settings.grid	1
@@ -189,7 +189,7 @@ set	Undo	false
 set	CutTransparent	false
 set	CutColor	123456
 set	History	false
-set	PasteNew	false
+set	PasteMode	1
 set	ReopenLast	true
 set	DisableIme	false
 scroll_page	bottom
@@ -203,7 +203,7 @@ expect	settings.undo_enabled	false
 expect	settings.cut_transparent	false
 expect	settings.cut_color	1193046
 expect	settings.remember_history	false
-expect	settings.paste_new	false
+expect	settings.paste_mode	1
 expect	settings.reopen_last	true
 expect	settings.disable_ime	false
 expect	settings.grid	23
@@ -218,7 +218,7 @@ expect_checked	Undo	true
 expect_checked	CutTransparent	true
 expect_text	CutColor	000000
 expect_checked	History	true
-expect_checked	PasteNew	true
+expect_selection	PasteMode	0
 expect_checked	ReopenLast	false
 expect_checked	DisableIme	true
 expect_text	Grid	1
@@ -239,7 +239,7 @@ expect	settings.undo_enabled	false
 expect	settings.cut_transparent	false
 expect	settings.cut_color	1193046
 expect	settings.remember_history	false
-expect	settings.paste_new	false
+expect	settings.paste_mode	1
 expect	settings.reopen_last	true
 expect	settings.disable_ime	false
 expect	settings.grid	23
@@ -254,7 +254,7 @@ expect_checked	Undo	true
 expect_checked	CutTransparent	true
 expect_text	CutColor	000000
 expect_checked	History	true
-expect_checked	PasteNew	true
+expect_selection	PasteMode	0
 expect_checked	ReopenLast	false
 expect_checked	DisableIme	true
 expect_text	Grid	1
@@ -270,7 +270,7 @@ expect	settings.undo_enabled	true
 expect	settings.cut_transparent	true
 expect	settings.cut_color	0
 expect	settings.remember_history	true
-expect	settings.paste_new	true
+expect	settings.paste_mode	0
 expect	settings.reopen_last	false
 expect	settings.disable_ime	true
 expect	settings.grid	1
@@ -288,7 +288,7 @@ set	Undo	false
 set	CutTransparent	false
 set	CutColor	123456
 set	History	false
-set	PasteNew	false
+set	PasteMode	1
 set	ReopenLast	true
 set	DisableIme	false
 scroll_page	bottom
@@ -302,7 +302,7 @@ expect	settings.undo_enabled	false
 expect	settings.cut_transparent	false
 expect	settings.cut_color	1193046
 expect	settings.remember_history	false
-expect	settings.paste_new	false
+expect	settings.paste_mode	1
 expect	settings.reopen_last	true
 expect	settings.disable_ime	false
 expect	settings.grid	23
@@ -320,7 +320,7 @@ expect_checked	Undo	true
 expect_checked	CutTransparent	true
 expect_text	CutColor	000000
 expect_checked	History	true
-expect_checked	PasteNew	true
+expect_selection	PasteMode	0
 expect_checked	ReopenLast	false
 expect_checked	DisableIme	true
 expect_text	Grid	1
@@ -336,7 +336,7 @@ expect	settings.undo_enabled	true
 expect	settings.cut_transparent	true
 expect	settings.cut_color	0
 expect	settings.remember_history	true
-expect	settings.paste_new	true
+expect	settings.paste_mode	0
 expect	settings.reopen_last	false
 expect	settings.disable_ime	true
 expect	settings.grid	1
@@ -352,7 +352,12 @@ key	Ctrl+A
 key	Ctrl+X
 expect_pixel	0	0	0	0	0	0
 key	Ctrl+V
-expect_same	source	true
+expect_pixel	0	0	255	0	0	255
+expect_pixel	1	0	0	255	0	128
+expect_pixel	2	0	0	0	0	0
+expect_pixel	0	1	10	20	30	64
+expect_pixel	1	1	250	240	230	255
+expect_pixel	2	1	0	0	0	0
 expect	settings.checker_size	17
 expect	settings.zoom_step	75
 persisted

@@ -140,6 +140,7 @@ Image decode_gif_framewise(std::span<const uint8_t> bytes, size_t limit, const L
     image.width = width;
     image.height = height;
     image.format = L"GIF";
+    image.metadata.source_animation = extensions.frames.size() > 1;
     image.file_loops = !extensions.loops ? 1 : !*extensions.loops ? 0 : *extensions.loops;
     if (extensions.loops && *extensions.loops && options.gif_speed != 2 && options.gif_speed != 3)
         ++image.file_loops;
@@ -288,6 +289,7 @@ Image decode_animation(std::span<const uint8_t> bytes, size_t limit, const Loadi
     image.width = source->width;
     image.height = source->height;
     image.format = source->type == PLUM_IMAGE_GIF ? L"GIF" : L"APNG";
+    image.metadata.source_animation = source->frames > 1;
     if (loops && loops->size >= 4)
         std::memcpy(&image.file_loops, loops->data, 4);
     if (gif) {

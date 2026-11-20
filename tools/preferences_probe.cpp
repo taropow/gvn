@@ -110,10 +110,10 @@ void general_reset_contract(HWND owner) {
                        {preference_id::Undo, &Settings::undo_enabled},
                        {CutTransparent, &Settings::cut_transparent},
                        {preference_id::History, &Settings::remember_history},
-                       {PasteNew, &Settings::paste_new},
                        {ReopenLast, &Settings::reopen_last},
                        {DisableIme, &Settings::disable_ime}};
     Settings defaults, seed;
+    seed.paste_mode = PasteReplaceImage;
     for (const auto &flag : flags)
         seed.*flag.member = !(defaults.*flag.member);
     seed.cut_color = 0x123456;
@@ -160,10 +160,13 @@ void general_reset_contract(HWND owner) {
         for (const auto &flag : flags)
             value.*flag.member = defaults.*flag.member;
         value.cut_color = defaults.cut_color;
+        value.paste_mode = defaults.paste_mode;
         value.grid = defaults.grid;
         return value;
     };
     const auto check_controls = [&](PreferencesDialog &dialog, const Settings &expected) {
+        require(SendMessageW(dialog.control(PasteMode), CB_GETCURSEL, 0, 0) == expected.paste_mode,
+                "General reset paste mode differs");
         for (const auto &flag : flags) {
             require(dialog.control(flag.id) != nullptr, "General reset is missing a checkbox");
             require((SendMessageW(dialog.control(flag.id), BM_GETCHECK, 0, 0) == BST_CHECKED) ==

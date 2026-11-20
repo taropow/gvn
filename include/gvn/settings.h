@@ -23,6 +23,7 @@ std::vector<Binding> default_bindings();
 bool parse_key(const std::wstring &text, UINT &key, UINT &modifiers);
 bool assignable_key(const std::wstring &text);
 std::wstring format_key(UINT key, UINT modifiers);
+enum ClipboardPasteMode { PasteNewImage, PasteIntoCanvas, PasteReplaceImage };
 struct Settings {
     static constexpr Rect initial_window_rect{0, 0, 480, 360};
     int ui_theme{},ui_density{};
@@ -79,7 +80,8 @@ struct Settings {
     bool background_tiled{true};
     int background_pattern{2};
     uint32_t background_first{0x202020}, background_second{0x303030};
-    bool undo_enabled{true}, remember_history{true}, paste_new{true}, topmost{}, title_path{},
+    int paste_mode{PasteNewImage};
+    bool undo_enabled{true}, remember_history{true}, topmost{}, title_path{},
         full_hide_cursor{}, full_nearest{}, animation_autoplay{true}, confirm_overwrite{true},
         confirm_delete{true}, confirm_unsaved{};
     bool save_dialog{true}, remember_save_folder{true}, rename_resort{true}, recycle_deleted{true},

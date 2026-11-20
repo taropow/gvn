@@ -50,7 +50,7 @@
         command(Undo);CHECK(app.editor_chrome.text(editor_id::Name)==L"custom-name");open(fixture(L"display-alpha.png"));valid();
         const auto pasted=load_image(fixture(L"alpha.png"));copy_image(app.hwnd,pasted,0);command(NewPaste);valid();
         SetWindowTextW(field,L"clipboard-first");command(NewPaste);valid();CHECK(app.image->frames[0].pixels==pasted.frames[0].pixels);
-        SetWindowTextW(field,L"existing-canvas");app.settings.paste_new=false;command(Paste);valid();
+        SetWindowTextW(field,L"existing-canvas");app.settings.paste_mode=PasteIntoCanvas;command(Paste);valid();
         CHECK(app.image->path.empty());SetWindowTextW(field,L"keep-on-edit");command(FitImage);command(ToolPen);command(ToggleEditor);CHECK(app.editor_chrome.text(editor_id::Name)==L"keep-on-edit");
     }
     void skitch_pen_text_native_controls_alpha_apply_cancel_undo() {

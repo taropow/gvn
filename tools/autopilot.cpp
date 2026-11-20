@@ -517,7 +517,7 @@ const std::map<std::string, int> preference_ids{
     {"CutColorPick", preference_id::CutColor + 5000},
     P(Undo),
     P(History),
-    P(PasteNew),
+    P(PasteMode),
     P(Grid),
     P(Checker),
     P(Background),
@@ -2120,7 +2120,7 @@ struct Autopilot {
         S(full_hide_taskbar)
         S(full_hide_wait)
         S(remember_history)
-        S(paste_new)
+        S(paste_mode)
         S(grid)
         S(checker)
         S(nearest)

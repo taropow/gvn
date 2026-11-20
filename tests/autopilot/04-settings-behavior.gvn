@@ -5,7 +5,7 @@ settings
 tab	General
 set	Undo	false
 set	History	false
-set	PasteNew	false
+set	PasteMode	1
 set	Grid	8
 tab	Zoom
 set	ZoomMode	0
@@ -22,7 +22,7 @@ click	OK
 expect	settings_open	false
 expect	settings.undo_enabled	false
 expect	settings.remember_history	false
-expect	settings.paste_new	false
+expect	settings.paste_mode	1
 expect	settings.grid	8
 open	${output}/pages/1.png
 wait

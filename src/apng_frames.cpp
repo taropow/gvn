@@ -190,6 +190,7 @@ std::optional<Image> decode_apng_framewise(std::span<const uint8_t> bytes, size_
     }
     Image image;
     image.width = c.width; image.height = c.height; image.format = L"APNG"; image.file_loops = c.loops;
+    image.metadata.source_animation = true;
     image.frames.reserve(c.frames.size());
     std::vector<Pixel> canvas(static_cast<size_t>(c.width) * c.height), previous;
     for (size_t i = 0; i < c.frames.size(); ++i) {

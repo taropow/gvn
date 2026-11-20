@@ -144,10 +144,12 @@ Image decode(std::span<const uint8_t> bytes, const std::wstring &, size_t limit,
           "Unsupported or corrupt image");
     GUID format{};
     decoder->GetContainerFormat(&format);
-    if (format == GUID_ContainerFormatGif && options.gif_animation) {
+    bool gif_animation{};
+    if (format == GUID_ContainerFormatGif) {
         UINT count{};
         check(decoder->GetFrameCount(&count), "Cannot read GIF frame count");
-        if (count > 1) {
+        gif_animation = count > 1;
+        if (gif_animation && options.gif_animation) {
             decoder.Reset();
             stream.Reset();
             wic.Reset();
@@ -192,6 +194,7 @@ Image decode(std::span<const uint8_t> bytes, const std::wstring &, size_t limit,
     }
     check_cancelled(cancel);
     Image image;
+    image.metadata.source_animation = gif_animation;
     image.width = width;
     image.height = height;
     image.frames.resize(1);

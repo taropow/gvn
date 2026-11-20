@@ -207,6 +207,11 @@ class App {
     };
     std::optional<LoadRollback> before_load;
     std::optional<Location> undo_location;
+    struct ClipboardReplacement {
+        std::filesystem::path source;
+        bool can_overwrite{};
+    };
+    std::shared_ptr<const ClipboardReplacement> clipboard_replacement, undo_clipboard_replacement;
     struct UndoEntry {
         std::shared_ptr<Image> image;
         std::optional<ImageMetadata> metadata;
@@ -214,9 +219,10 @@ class App {
         Player player;
         std::optional<Location> location;
         std::filesystem::path retarget;
+        std::shared_ptr<const ClipboardReplacement> clipboard_replacement;
     };
     std::vector<UndoEntry> undo_history,redo_history;
-    void clear_undo(){undo_image.reset();undo_metadata.reset();undo_location.reset();undo_player={};undo_history.clear();redo_history.clear();}
+    void clear_undo(){undo_image.reset();undo_metadata.reset();undo_location.reset();undo_player={};undo_clipboard_replacement.reset();undo_history.clear();redo_history.clear();}
     void trim_undo(){
         const uint64_t limit=std::clamp(editing.physical_bytes()/8,uint64_t(16*1024*1024),uint64_t(256*1024*1024));
         uint64_t bytes=undo_image?undo_image->bytes():0;for(const auto &e:undo_history)bytes+=e.image->bytes();for(const auto &e:redo_history)bytes+=e.image->bytes();
@@ -228,8 +234,9 @@ class App {
         if(!settings.undo_enabled){clear_undo();return;}
         // Only references are retained. Reserve before moving any existing state so failure is atomic.
         undo_history.reserve(32);redo_history.reserve(32);
-        if(undo_image)undo_history.push_back({std::move(undo_image),std::move(undo_metadata),undo_modified,std::move(undo_player),std::move(undo_location),{}});
+        if(undo_image)undo_history.push_back({std::move(undo_image),std::move(undo_metadata),undo_modified,std::move(undo_player),std::move(undo_location),{},std::move(undo_clipboard_replacement)});
         redo_history.clear();undo_image=image;undo_metadata=std::move(metadata);undo_modified=modified;
+        undo_clipboard_replacement=clipboard_replacement;
         undo_player=std::move(previous);undo_location=std::move(where);trim_undo();
     }
     void rebind_older_history(const std::filesystem::path &target,bool saved){
@@ -240,25 +247,28 @@ class App {
     void history_step(bool redo){
         if(redo?redo_history.empty():!undo_image)return;
         cancel_load();stop_slideshow();
-        const auto &entry=redo?redo_history.back():UndoEntry{undo_image,undo_metadata,undo_modified,undo_player,undo_location,{}};
+        const auto &entry=redo?redo_history.back():UndoEntry{undo_image,undo_metadata,undo_modified,undo_player,undo_location,{},undo_clipboard_replacement};
         // Location/player/string copies and optional retarget allocation precede stack mutation.
-        UndoEntry target=entry,current{image,image_metadata,modified,player,entry.location?std::optional<Location>(location()):std::nullopt,{}};
+        UndoEntry target=entry,current{image,image_metadata,modified,player,entry.location?std::optional<Location>(location()):std::nullopt,{},clipboard_replacement};
         if(!target.retarget.empty()){auto rebound=std::make_shared<Image>(*target.image);rebound->path=target.retarget;target.image=std::move(rebound);}
         std::optional<UndoEntry> older;
         if(!redo&&!undo_history.empty()){older=undo_history.back();if(!older->retarget.empty()){
             auto rebound=std::make_shared<Image>(*older->image);rebound->path=older->retarget;older->image=std::move(rebound);}}
         undo_history.reserve(32);redo_history.reserve(32);
         if(redo){
-            if(undo_image)undo_history.push_back({std::move(undo_image),std::move(undo_metadata),undo_modified,std::move(undo_player),std::move(undo_location),{}});
+            if(undo_image)undo_history.push_back({std::move(undo_image),std::move(undo_metadata),undo_modified,std::move(undo_player),std::move(undo_location),{},std::move(undo_clipboard_replacement)});
             undo_image=std::move(current.image);undo_metadata=std::move(current.metadata);undo_modified=current.modified;undo_player=std::move(current.player);undo_location=std::move(current.location);
+            undo_clipboard_replacement=std::move(current.clipboard_replacement);
             redo_history.pop_back();
         }else{
             redo_history.push_back(std::move(current));
-            if(undo_history.empty()){undo_image.reset();undo_metadata.reset();undo_location.reset();undo_player={};}
+            if(undo_history.empty()){undo_image.reset();undo_metadata.reset();undo_location.reset();undo_player={};undo_clipboard_replacement.reset();}
             else {auto old=std::move(*older);undo_history.pop_back();
-                undo_image=std::move(old.image);undo_metadata=std::move(old.metadata);undo_modified=old.modified;undo_player=std::move(old.player);undo_location=std::move(old.location);}
+                undo_image=std::move(old.image);undo_metadata=std::move(old.metadata);undo_modified=old.modified;undo_player=std::move(old.player);undo_location=std::move(old.location);
+                undo_clipboard_replacement=std::move(old.clipboard_replacement);}
         }
         image=std::move(target.image);image_metadata=std::move(target.metadata);modified=target.modified;player=std::move(target.player);
+        clipboard_replacement=std::move(target.clipboard_replacement);
         if(target.location)restore_location(std::move(*target.location));
         player.set_loop(settings.animation_loop,settings.animation_file_loops);reset_animation_clock();renderer.invalidate();
         view.set_image(image->width,image->height,settings.keep_zoom);selection=selection.clipped(image->width,image->height);layout();apply_display_policy();
@@ -1210,6 +1220,7 @@ class App {
                     stop_slideshow();
                     reset_animation_clock();
                     image.reset();image_metadata.reset();undo_metadata.reset();
+                    clipboard_replacement.reset();
                     clear_undo();
                     undo_location.reset();
                     modified = loading = removed_current = drag_armed = false;
@@ -1334,6 +1345,7 @@ class App {
         commit_open_history();
         removed_current = false;
         image = std::move(result->image);
+        clipboard_replacement.reset();
         editor_chrome.reset_export_name();
         image_metadata.reset();undo_metadata.reset();
         modified = false;
@@ -1544,7 +1556,8 @@ class App {
         auto next_image = std::make_shared<Image>(std::move(value));
         replace(std::move(next_image),dirty,new_document);
     }
-    void replace(std::shared_ptr<Image> next_image, bool dirty = true, bool new_document = false) {
+    void replace(std::shared_ptr<Image> next_image, bool dirty = true, bool new_document = false,
+                 std::shared_ptr<const ClipboardReplacement> replacement = {}) {
         if(!next_image)throw std::invalid_argument("Empty edited image");
         if(cropping)cancel_crop();
         if(floating)cancel_floating();
@@ -1564,6 +1577,8 @@ class App {
         if (new_document)
             removed_current = false;
         image = std::move(next_image);
+        if (new_document || replacement)
+            clipboard_replacement = std::move(replacement);
         if(new_document)editor_chrome.reset_export_name();
         image_metadata.reset();
         modified = dirty;
@@ -1931,6 +1946,35 @@ class App {
         current_name = L"クリップボード画像";
         update();
     }
+    void replace_current_with_clipboard(Image pasted) {
+        // Roll back a pending open before capturing the displayed file's location.
+        cancel_load(true);
+        auto replacement = clipboard_replacement;
+        if (!replacement) {
+            const auto source = !archive.empty() ? archive : image->path;
+            const auto metadata = current_metadata();
+            bool can_overwrite = false;
+            if (!source.empty() && archive.empty() && !removed_current && !image->animated() &&
+                !metadata.source_animation) {
+                try {
+                    switch (save_format(source)) {
+                    case SaveFormat::Png:  can_overwrite = metadata.source_format == L"PNG"; break;
+                    case SaveFormat::Jpeg: can_overwrite = metadata.source_format == L"JPEG"; break;
+                    case SaveFormat::Bmp:  can_overwrite = metadata.source_format == L"BMP"; break;
+                    case SaveFormat::Gif:  can_overwrite = metadata.source_format == L"GIF"; break;
+                    case SaveFormat::Webp: can_overwrite = metadata.source_format == L"WebP"; break;
+                    }
+                } catch (const std::invalid_argument &) {
+                    // Some readable formats have no writer.
+                }
+            }
+            replacement = std::make_shared<ClipboardReplacement>(ClipboardReplacement{source, can_overwrite});
+        }
+        pasted.path = image->path;
+        stop_slideshow();
+        replace(std::make_shared<Image>(std::move(pasted)), true, false, std::move(replacement));
+        editor_chrome.reset_export_name();
+    }
     std::optional<double> number(const wchar_t *title, const wchar_t *label, double initial, double minimum,
                                  double maximum) {
         auto text = dialogs.text(hwnd, title, label, std::to_wstring(initial));
@@ -1966,11 +2010,18 @@ class App {
         auto ext = target.extension().wstring();
         for (auto &c : ext)
             c = static_cast<wchar_t>(towlower(c));
-        const bool save_as =
-            as || target.empty() || image->animated() ||
-            (ext != L".png" && ext != L".jpg" && ext != L".jpeg" && ext != L".bmp" && ext != L".gif" && ext != L".webp");
+        const bool writable = ext == L".png" || ext == L".jpg" || ext == L".jpeg" ||
+                              ext == L".bmp" || ext == L".gif" || ext == L".webp";
+        const auto replacement = clipboard_replacement;
+        const auto replacement_image = replacement ? image : nullptr;
+        const bool overwrite_replacement = replacement && replacement->can_overwrite && !as &&
+                                           !image->animated() && writable && archive.empty() &&
+                                           !removed_current && same_path(target, replacement->source) &&
+                                           std::filesystem::is_regular_file(target);
+        const bool save_as = as || target.empty() || image->animated() || !writable ||
+                             (replacement && !overwrite_replacement);
         auto proposed = settings.saving;
-        if (save_as || settings.save_dialog) {
+        if (save_as || (settings.save_dialog && !overwrite_replacement)) {
             auto base = (!current_name.empty() && current_name.find(L'/') == std::wstring::npos)
                             ? std::filesystem::path(current_name).stem().wstring() + (save_as ? L"" : ext)
                             : L"image";
@@ -1989,11 +2040,22 @@ class App {
         target = std::filesystem::absolute(target).lexically_normal();
         if (image->animated() && same_disk_file(target, image->path))
             throw std::runtime_error("Save an animation frame to a different file");
-        const bool exists = std::filesystem::exists(target);
-        if (exists && (save_as || settings.confirm_overwrite || !same_path(target, image->path)) &&
-            dialogs.ask(hwnd, L"保存先のファイルを上書きしますか？", target.c_str(),
-                        MB_YESNO | MB_ICONQUESTION) != IDYES)
+        if (replacement && !replacement->can_overwrite &&
+            (same_disk_file(target, replacement->source) || same_disk_file(target, image->path))) {
+            dialogs.ask(hwnd, L"元ファイルを維持するため、別のファイル名を選んでください。", L"名前を付けて保存",
+                        MB_OK | MB_ICONINFORMATION);
             return false;
+        }
+        const bool exists = std::filesystem::exists(target);
+        if (overwrite_replacement) {
+            const auto message = L"「" + target.filename().wstring() + L"」を上書きしますか？";
+            if (dialogs.ask(hwnd, message.c_str(), target.c_str(), MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) != IDYES)
+                return false;
+        } else if (exists && (save_as || settings.confirm_overwrite || !same_path(target, image->path)) &&
+                   dialogs.ask(hwnd, L"保存先のファイルを上書きしますか？", target.c_str(),
+                               MB_YESNO | MB_ICONQUESTION) != IDYES) {
+            return false;
+        }
         auto extension = target.extension().wstring();
         for (auto &c : extension)
             c = static_cast<wchar_t>(towlower(c));
@@ -2007,6 +2069,8 @@ class App {
                             L"保存形式", MB_OKCANCEL | MB_ICONINFORMATION) != IDOK)
                 return false;
         }
+        if (replacement && (image != replacement_image || clipboard_replacement != replacement || loading))
+            return false;
         const auto metadata=current_metadata();
         feedback_begin(as?SaveAs:Save,L"保存中…");
         save_image(*image, player.frame, target, proposed, exists,&metadata);
@@ -2025,8 +2089,10 @@ class App {
             copy->file_bytes = std::filesystem::file_size(target);
             const auto saved_format=proposed.last_format==SaveFormat::Png?L"PNG":proposed.last_format==SaveFormat::Jpeg?L"JPEG":proposed.last_format==SaveFormat::Bmp?L"BMP":proposed.last_format==SaveFormat::Webp?L"WebP":L"GIF";
             copy->metadata.source_format=saved_format;copy->metadata.source_bytes=copy->file_bytes;
+            copy->metadata.source_animation = false;
             if(image_metadata){image_metadata->source_format=saved_format;image_metadata->source_bytes=copy->file_bytes;}
             image = std::move(copy);
+            clipboard_replacement.reset();
             requested = target;
             current_name = target.filename().wstring();
             modified = false;
@@ -2082,6 +2148,7 @@ class App {
             open(files[std::min(index, files.size() - 1)].path, false, false, OpenOrigin::WithinFolder);
         else {
             image.reset();image_metadata.reset();undo_metadata.reset();
+            clipboard_replacement.reset();
             clear_undo();
             undo_location.reset();
             modified = loading = drag_armed = removed_current = false;
@@ -2949,7 +3016,13 @@ class App {
                 break;
             }
             auto pasted = std::move(std::get<Image>(content));
-            if (id == Paste && image && (!selection.empty() || !settings.paste_new)) {
+            if (id == Paste && image && settings.paste_mode == PasteReplaceImage) {
+                replace_current_with_clipboard(std::move(pasted));
+                feedback_done(id, L"画像を差し替えました · " + std::to_wstring(image->width) +
+                                  L"×" + std::to_wstring(image->height));
+                break;
+            }
+            if (id == Paste && image && (!selection.empty() || settings.paste_mode == PasteIntoCanvas)) {
                 const auto rect = selection.empty() ? Rect{0, 0, static_cast<int>(image->width),
                                                            static_cast<int>(image->height)}
                                                     : selection;
@@ -2974,6 +3047,7 @@ class App {
                 stop_slideshow();
                 drag_armed = false;
                 image.reset();image_metadata.reset();undo_metadata.reset();
+                clipboard_replacement.reset();
                 clear_undo();
                 undo_location.reset();
                 modified = loading = false;

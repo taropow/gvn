@@ -40,7 +40,7 @@
         if(f.id==cid::Wheel)return L" ホイール 上 下 拡大 縮小 wheel zoom";
         if(f.id==cid::UiTheme)return L" theme テーマ ダーク ライト dark light 外観";
         if(f.id==cid::UiDensity)return L" 密度 アイコン 大きさ コンパクト 余白";
-        if(f.id==cid::Checker||f.id==cid::PasteNew||f.id==cid::Light||f.id==cid::Dark||f.id==cid::PreserveAlpha)return L" alpha アルファ 透明 クリップボード ペースト";
+        if(f.id==cid::Checker||f.id==cid::PasteMode||f.id==cid::Light||f.id==cid::Dark||f.id==cid::PreserveAlpha)return L" alpha アルファ 透明 クリップボード ペースト";
         return L"";
     }
     void search_changed(){

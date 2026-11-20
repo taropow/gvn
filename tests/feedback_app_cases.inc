@@ -1,4 +1,97 @@
     bool feedback_visible() const{return app.toast.window()&&(GetWindowLongPtrW(app.toast.window(),GWL_STYLE)&WS_VISIBLE);}
+    void clipboard_replace_keeps_file_and_confirms_overwrite() {
+        const auto first = copy(L"alpha.png", L"差し替え.png");
+        const auto second = copy(L"alpha.png", L"second.png");
+        const auto original = load_image(first);
+        const auto original_bytes = read_file(first);
+        app.settings.paste_mode = PasteReplaceImage;
+        app.settings.confirm_overwrite = false;
+        app.settings.save_dialog = true;
+        open(first);
+        const auto old_index = app.index;
+        const auto old_file_count = app.files.size();
+        const auto pasted = selection_fixture(7, 5);
+        copy_image(app.hwnd, pasted, 0);
+        command(SelectAll);
+        command(Paste);
+        CHECK(app.modified && app.selection.empty() && app.image->width == 7 && app.image->height == 5);
+        CHECK(same_path(app.image->path, first) && app.current_name == first.filename().wstring());
+        CHECK(app.requested == first && app.index == old_index && app.files.size() == old_file_count);
+        CHECK(app.image->frames[0].pixels == pasted.frames[0].pixels && read_file(first) == original_bytes);
+        command(Undo);
+        CHECK(!app.modified && !app.clipboard_replacement && app.image->width == original.width &&
+              app.image->height == original.height && app.image->frames[0].pixels == original.frames[0].pixels);
+        command(Redo);
+        CHECK(app.modified && app.clipboard_replacement && app.image->frames[0].pixels == pasted.frames[0].pixels);
+
+        answers.push_back(IDNO);
+        command(Save);
+        CHECK(answers.empty() && save_folders.empty() && notices.back().find(first.filename().wstring()) != std::wstring::npos);
+        CHECK(app.modified && read_file(first) == original_bytes);
+        answers.push_back(IDYES);
+        command(Save);
+        CHECK(answers.empty() && save_folders.empty() && !app.modified && !app.clipboard_replacement);
+        CHECK(load_image(first).frames[0].pixels == pasted.frames[0].pixels);
+
+        command(Paste);
+        answers.push_back(IDNO); // Discard the unsaved edit when opening another file.
+        drop(second);
+        wait();
+        CHECK(answers.empty() && same_path(app.image->path, second) && !app.modified && !app.clipboard_replacement);
+        clipboard_text(first.wstring());
+        command(Paste);
+        wait();
+        CHECK(same_path(app.image->path, first) && !app.modified && !app.clipboard_replacement);
+        copy_image(app.hwnd, pasted, 0);
+        command(NewPaste);
+        CHECK(app.image->path.empty() && !app.clipboard_replacement);
+    }
+    void clipboard_replace_protects_source_formats_and_warns_for_jpeg() {
+        app.settings.paste_mode = PasteReplaceImage;
+        app.settings.save_dialog = false;
+        app.settings.confirm_overwrite = false;
+        app.settings.gif_animation = false;
+        const auto pasted = selection_fixture(7, 5);
+        for (const auto name : {L"psd-8-0.psd", L"disposal.gif", L"images.zip", L"blend.apng"}) {
+            const auto source = copy(name, name);
+            const auto bytes = read_file(source);
+            open(source);
+            if (source.extension() == L".gif")
+                CHECK(!app.image->animated() && app.image->metadata.source_animation);
+            copy_image(app.hwnd, pasted, 0);
+            command(Paste);
+            CHECK(app.image->frames[0].pixels == pasted.frames[0].pixels);
+            if (source.extension() == L".gif") {
+                // Even a deliberate choice of the previous save path must leave the animation intact.
+                paths.push_back(source);
+                command(Save);
+                CHECK(paths.empty() && app.modified && read_file(source) == bytes);
+            }
+            const auto output = temporary / (source.filename().wstring() + L".png");
+            const auto saves = save_folders.size();
+            paths.push_back(output);
+            command(Save);
+            CHECK(paths.empty() && save_folders.size() == saves + 1);
+            CHECK(read_file(source) == bytes && load_image(output).frames[0].pixels == pasted.frames[0].pixels);
+        }
+        const auto jpeg = copy(L"rgb.jpg", L"source.jpg");
+        const auto jpeg_bytes = read_file(jpeg);
+        open(jpeg);
+        copy_image(app.hwnd, pasted, 0);
+        command(Paste);
+        answers = {IDYES, IDCANCEL};
+        const auto notice_count = notices.size();
+        const auto save_count = save_folders.size();
+        command(Save);
+        CHECK(answers.empty() && app.modified && read_file(jpeg) == jpeg_bytes);
+        CHECK(save_folders.size() == save_count && notices.size() == notice_count + 2);
+        CHECK(notices[notice_count].find(jpeg.filename().wstring()) != std::wstring::npos &&
+              notices.back().find(L"半透明") != std::wstring::npos);
+        answers = {IDYES, IDOK};
+        command(Save);
+        const auto saved = load_image(jpeg);
+        CHECK(answers.empty() && !app.modified && saved.width == pasted.width && saved.height == pasted.height);
+    }
     void edit_menu_copy_on_white_in_png_dib_and_async() {
         ShowWindow(app.hwnd,SW_SHOWNOACTIVATE);
         const auto menu_state=[&]{

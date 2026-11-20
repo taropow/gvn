@@ -345,7 +345,11 @@ void Settings::load(const std::filesystem::path &path) {
     GVN_BOOL(slide_subtree);
     GVN_BOOL(undo_enabled);
     GVN_BOOL(remember_history);
-    GVN_BOOL(paste_new);
+    const int legacy_paste_mode = integer(L"paste_new", paste_mode != PasteIntoCanvas, 0, 1)
+                                      ? PasteNewImage : PasteIntoCanvas;
+    const int configured_paste_mode = integer(L"paste_mode", legacy_paste_mode, -1, PasteReplaceImage + 1);
+    paste_mode = configured_paste_mode >= PasteNewImage && configured_paste_mode <= PasteReplaceImage
+                     ? configured_paste_mode : legacy_paste_mode;
     GVN_BOOL(topmost);
     GVN_BOOL(title_path);
     GVN_BOOL(full_hide_cursor);
@@ -856,7 +860,8 @@ void Settings::save(const std::filesystem::path &path) const {
     GVN_SAVE(slide_subtree);
     GVN_SAVE(undo_enabled);
     GVN_SAVE(remember_history);
-    GVN_SAVE(paste_new);
+    GVN_SAVE(paste_mode);
+    integer(L"paste_new", paste_mode != PasteIntoCanvas);
     GVN_SAVE(topmost);
     GVN_SAVE(title_path);
     GVN_SAVE(full_hide_cursor);

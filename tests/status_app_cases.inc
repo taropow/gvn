@@ -22,7 +22,7 @@
             ~EraseProbe(){RemoveWindowSubclass(status,message,903);SelectObject(dc,old);DeleteObject(bitmap);DeleteDC(dc);}
         } probe(app.status);
         for(int theme:{2,1}){
-            auto settings=app.settings;settings.ui_theme=theme;settings.paste_new=true;app.apply_settings(settings);
+            auto settings=app.settings;settings.ui_theme=theme;settings.paste_mode=PasteNewImage;app.apply_settings(settings);
             command(CloseImage);const auto before=probe.checks;
             auto input=selection_fixture(80,60);const auto pixels=input.frames[0].pixels;
             copy_image(app.hwnd,input,0);command(Paste);

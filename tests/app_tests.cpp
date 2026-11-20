@@ -1589,7 +1589,7 @@ struct AppAudit {
         CHECK(!app.modified && app.image->frames[0].pixels == source.frames[0].pixels);
         CHECK(app.folder == first.parent_path() && app.files.size() == 1);
         command(SelectAll);
-        app.settings.paste_new = false;
+        app.settings.paste_mode = PasteIntoCanvas;
         for (const auto name : {L"psd-16-3.psd", L"disposal.gif", L"blend.apng"}) {
             const auto next = copy(name, name);
             clipboard_text(next.wstring());
@@ -3636,7 +3636,7 @@ struct AppAudit {
     void new_window_received_empty_and_image_skip_previous_file_reopen() {
         app.settings.reopen_last = true;
         app.settings.last_file = fixture(L"rgb.bmp").wstring();
-        app.settings.paste_new = false;
+        app.settings.paste_mode = PasteIntoCanvas;
         app.open_new_window(std::monostate{});
         CHECK(!app.image && !app.loading);
         const auto source = load_image(fixture(L"alpha.png"));
@@ -4386,7 +4386,8 @@ struct AppAudit {
         const auto file = copy(L"alpha.png", L"base.png");
         open(file);
         auto next = app.settings;
-        next.undo_enabled = next.remember_history = next.paste_new = false;
+        next.undo_enabled = next.remember_history = false;
+        next.paste_mode = PasteIntoCanvas;
         next.set_keys(ArmDrag, {});
         next.set_keys(FlipH, {L"F12"});
         app.apply_settings(next);
@@ -4413,7 +4414,8 @@ struct AppAudit {
         app.message(WM_KEYDOWN, VK_F12, 0);
         CHECK(app.image->frames[0].pixels == pasted);
         next = app.settings;
-        next.undo_enabled = next.paste_new = true;
+        next.undo_enabled = true;
+        next.paste_mode = PasteNewImage;
         app.apply_settings(next);
         answers.push_back(IDNO); // Explicitly discard the modified current document when starting a new one.
         command(Paste);
@@ -7444,6 +7446,8 @@ APP_TEST(daily_hotpaths_benchmark)
 APP_TEST(daily_reused_menu_matches_rebuilt_state_and_navigation)
 
 APP_TEST(feedback_copy_paste_alpha_shortcuts_and_timer)
+APP_TEST(clipboard_replace_keeps_file_and_confirms_overwrite)
+APP_TEST(clipboard_replace_protects_source_formats_and_warns_for_jpeg)
 APP_TEST(edit_menu_copy_on_white_in_png_dib_and_async)
 APP_TEST(feedback_silent_paste_failures_keep_document_and_pending_edit)
 APP_TEST(feedback_settings_independent_sound_throttle_and_reused_window)

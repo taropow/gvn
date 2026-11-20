@@ -112,6 +112,7 @@ Image decode_webp(std::span<const uint8_t> bytes, size_t limit, const LoadingOpt
     const size_t stride = checked_pixels(width, height, frames, limit)/frames;
     Image image;
     image.width = width; image.height = height; image.format = L"WebP";
+    image.metadata.source_animation = (flags & ANIMATION_FLAG) != 0;
     image.file_loops = flags & ANIMATION_FLAG ? WebPDemuxGetI(demux.get(), WEBP_FF_LOOP_COUNT) : 1;
     image.frames.reserve(frames);
     if (!(flags & ANIMATION_FLAG)) {

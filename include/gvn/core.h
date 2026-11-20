@@ -82,7 +82,7 @@ struct ImageMetadata {
     uint32_t original_width{},original_height{},original_bpp{};
     double dpi_x{72},dpi_y{72};
     bool operator==(const ImageMetadata &) const = default;
-    bool dpi_defined{},icc_profile{};
+    bool dpi_defined{},icc_profile{},source_animation{};
     uint32_t icc_bytes{};
     ImageColorType original_color_type{ImageColorType::Unknown};
     std::wstring source_format;

@@ -31,7 +31,7 @@ enum : int {
     UiTheme=650,UiDensity,ToolbarOverflow,ToastEnabled,CommandSound,ToastViewCommands,ToastDuration,ContextMode,
     Undo = 200,
     History,
-    PasteNew,
+    PasteMode,
     Grid,
     Checker,
     Background,
